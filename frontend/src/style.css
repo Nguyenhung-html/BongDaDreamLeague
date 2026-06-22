@@ -1,0 +1,132 @@
+/* =====================================================
+   DreamLeague — Design tokens
+   Lấy từ bộ nhận diện logo: xanh navy + xanh lá + trắng
+   ===================================================== */
+:root {
+  --navy-900: #0a2540;
+  --navy-800: #0e3258;
+  --navy-700: #163e6b;
+  --navy-600: #20517f;
+
+  --green-700: #1f7a34;
+  --green-600: #2c9b41;
+  --green-500: #3fb454;
+  --green-100: #e3f5e6;
+  --green-50: #f1faf2;
+
+  --white: #ffffff;
+  --gray-50: #f6f8f7;
+  --gray-100: #eef1f0;
+  --gray-300: #d7dedb;
+  --gray-500: #8a9690;
+  --gray-600: #5c6b66;
+  --gray-700: #3a443f;
+
+  --gold: #e8b339;
+
+  --font-display: 'Be Vietnam Pro', sans-serif;
+  --font-score: 'Oswald', sans-serif;
+
+  --radius-sm: 8px;
+  --radius-md: 14px;
+  --radius-lg: 22px;
+  --container: 1180px;
+
+  --shadow-card: 0 10px 30px rgba(10, 37, 64, 0.08);
+  --shadow-card-hover: 0 16px 40px rgba(10, 37, 64, 0.14);
+}
+
+* { box-sizing: border-box; }
+html { scroll-behavior: smooth; }
+body {
+  margin: 0;
+  font-family: var(--font-display);
+  color: var(--navy-900);
+  background: var(--white);
+  -webkit-font-smoothing: antialiased;
+}
+h1, h2, h3, h4, p, ul { margin: 0; }
+a { text-decoration: none; color: inherit; }
+ul { list-style: none; padding: 0; }
+button { font-family: inherit; cursor: pointer; }
+img { max-width: 100%; display: block; }
+
+.container {
+  width: 100%;
+  max-width: var(--container);
+  margin: 0 auto;
+  padding: 0 24px;
+}
+
+.eyebrow {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 13px;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--green-600);
+}
+.eyebrow::before {
+  content: '';
+  width: 18px;
+  height: 2px;
+  background: var(--green-600);
+  border-radius: 2px;
+}
+
+.section-title {
+  font-size: clamp(26px, 3.4vw, 38px);
+  font-weight: 700;
+  color: var(--navy-900);
+  line-height: 1.25;
+  margin-top: 10px;
+}
+
+.section-sub {
+  margin-top: 12px;
+  font-size: 16px;
+  color: var(--gray-600);
+  line-height: 1.7;
+  max-width: 560px;
+}
+
+.btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  padding: 13px 26px;
+  border-radius: 999px;
+  font-weight: 600;
+  font-size: 15px;
+  border: 1.5px solid transparent;
+  transition: transform 0.15s ease, box-shadow 0.15s ease, background 0.15s ease;
+}
+.btn:active { transform: scale(0.97); }
+
+.btn-primary {
+  background: var(--green-600);
+  color: var(--white);
+  box-shadow: 0 8px 20px rgba(44, 155, 65, 0.32);
+}
+.btn-primary:hover { background: var(--green-700); }
+
+.btn-outline {
+  background: transparent;
+  border-color: rgba(255, 255, 255, 0.4);
+  color: var(--white);
+}
+.btn-outline:hover { background: rgba(255, 255, 255, 0.12); }
+
+.btn-ghost-navy {
+  background: transparent;
+  border-color: var(--navy-900);
+  color: var(--navy-900);
+}
+.btn-ghost-navy:hover { background: var(--navy-900); color: var(--white); }
+
+@media (max-width: 640px) {
+  .section-title { font-size: 26px; }
+}

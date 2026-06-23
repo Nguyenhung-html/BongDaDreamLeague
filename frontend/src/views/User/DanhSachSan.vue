@@ -239,9 +239,9 @@
                 </div>
                 <div class="san-card__actions">
                   <!-- ✅ Dùng router-link sang trang chi tiết riêng thay vì mở modal -->
-                  <router-link :to="`/san-bong/${san.id}`" class="btn-chitiet">
-                    Chi tiết
-                  </router-link>
+                  <router-link :to="`/san/${san.id}`" class="btn-chitiet">
+  Chi tiết
+</router-link>
                   <router-link :to="`/dat-san/${san.id}`" class="btn-datsan">
                     Đặt sân
                   </router-link>
@@ -292,7 +292,7 @@ const heroSlides = [
     title: 'Không cần gọi điện',
     sub: 'Chọn giờ, chọn sân, thanh toán online — xác nhận ngay trong 30 giây',
     stat1: { val: '30s', label: 'Xác nhận' },
-    stat2: { val: '50%', label: 'Phí đặt cọc' },
+    stat2: { val: '0đ', label: 'Phí đặt cọc' },
     stat3: { val: '24/7', label: 'Hỗ trợ' },
   },
 ]

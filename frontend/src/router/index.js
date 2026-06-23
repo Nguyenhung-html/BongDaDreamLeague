@@ -1,5 +1,8 @@
 import { createRouter, createWebHistory } from 'vue-router'
 
+import DangNhap from '../views/Auth/DangNhap.vue'
+import DangKy from '../views/Auth/DangKy.vue'
+
 // Views - User
 import TrangChu from '../views/user/TrangChu.vue'
 import DanhSachSan from '../views/user/DanhSachSan.vue'
@@ -27,6 +30,9 @@ import QuanLyDanhGia from '../views/admin/QuanLyDanhGia.vue'
 import ThongKeDoanhThu from '../views/admin/ThongKeDoanhThu.vue'
 
 const routes = [
+{ path: '/dang-nhap', name: 'DangNhap', component: DangNhap, meta: { layout: 'auth' } },
+  { path: '/dang-ky', name: 'DangKy', component: DangKy, meta: { layout: 'auth' } },
+
   // ---- User ----
   { path: '/', name: 'TrangChu', component: TrangChu, meta: { layout: 'user' } },
   { path: '/san', name: 'DanhSachSan', component: DanhSachSan, meta: { layout: 'user' } },

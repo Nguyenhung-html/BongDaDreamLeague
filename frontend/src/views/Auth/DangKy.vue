@@ -417,3 +417,165 @@ function socialNotice() {
   }, 3500)
 }
 </script>
+
+<style scoped>
+/* Kế thừa toàn bộ khung Layout từ trang đăng nhập */
+.auth-page { display: flex; min-height: 100vh; width: 100%; background-color: var(--white); font-family: var(--font-display); color: var(--navy-900); }
+.auth-visual { flex: 1; position: relative; background: linear-gradient(135deg, var(--navy-900) 0%, var(--navy-700) 100%); padding: 60px; display: flex; flex-direction: column; justify-content: space-between; overflow: hidden; }
+.auth-visual__glow { position: absolute; border-radius: 50%; pointer-events: none; }
+.auth-visual__glow--1 { width: 400px; height: 400px; background: var(--green-600); filter: blur(140px); opacity: 0.15; top: -100px; left: -100px; }
+.auth-visual__glow--2 { width: 350px; height: 350px; background: var(--green-500); filter: blur(120px); opacity: 0.12; bottom: -80px; right: -80px; }
+.auth-visual__pitch { position: absolute; inset: 0; width: 100%; height: 100%; opacity: 0.08; pointer-events: none; }
+.auth-visual__top { position: relative; z-index: 2; }
+.auth-brand { display: inline-flex; align-items: center; gap: 10px; font-size: 22px; color: var(--white); font-weight: 500; }
+.auth-brand span strong { color: var(--green-500); font-weight: 800; }
+.auth-visual__body { position: relative; z-index: 2; margin: auto 0; }
+.auth-visual__title { font-size: clamp(32px, 3.5vw, 44px); font-weight: 700; color: var(--white); line-height: 1.25; margin-top: 16px; }
+.auth-visual__title span { color: var(--green-500); }
+.auth-visual__desc { margin-top: 16px; font-size: 15.5px; color: var(--gray-300); line-height: 1.65; max-width: 480px; }
+.auth-features { margin-top: 36px; display: flex; flex-direction: column; gap: 16px; }
+.auth-feature { display: flex; align-items: center; gap: 12px; color: var(--white); font-size: 14.5px; font-weight: 500; }
+.auth-feature__icon { width: 24px; height: 24px; background: rgba(255, 255, 255, 0.1); border-radius: 50%; display: flex; align-items: center; justify-content: center; }
+.auth-visual__stats { position: relative; z-index: 2; display: flex; gap: 48px; border-top: 1px solid rgba(255, 255, 255, 0.1); padding-top: 32px; }
+.auth-stat__num { font-family: var(--font-score); font-size: 32px; font-weight: 700; color: var(--white); line-height: 1; }
+.auth-stat__num span { color: var(--green-500); }
+.auth-stat__label { font-size: 13px; color: var(--gray-500); margin-top: 6px; }
+.auth-form-panel { flex: 1; background-color: var(--gray-50); display: flex; align-items: center; justify-content: center; padding: 40px 24px; }
+.auth-form-card { width: 100%; max-width: 520px; background-color: var(--white); padding: 40px; border-radius: var(--radius-lg); box-shadow: var(--shadow-card); }
+.auth-form-card__mobile-brand { display: none; }
+.auth-back { display: inline-flex; align-items: center; gap: 8px; font-size: 14px; font-weight: 600; color: var(--gray-600); margin-bottom: 24px; transition: color 0.15s ease; }
+.auth-back:hover { color: var(--green-600); }
+.auth-brand--on-light { color: var(--navy-900); margin-bottom: 28px; }
+.auth-form-card__head h1 { font-size: 28px; font-weight: 700; color: var(--navy-900); }
+.auth-form-card__head p { font-size: 14.5px; color: var(--gray-600); line-height: 1.5; margin-top: 6px; margin-bottom: 28px; }
+.auth-alert { display: flex; align-items: flex-start; gap: 10px; padding: 14px 16px; border-radius: var(--radius-sm); margin-bottom: 20px; font-size: 14px; line-height: 1.4; }
+.auth-alert--error { background-color: #fdf2f2; border: 1px solid #fbd5d5; color: #b13030; }
+.auth-alert--success { background-color: var(--green-50); border: 1px solid var(--green-100); color: var(--green-700); }
+.auth-form { display: flex; flex-direction: column; }
+.field { margin-bottom: 20px; display: flex; flex-direction: column; }
+.field__label { font-size: 14px; font-weight: 600; color: var(--navy-900); margin-bottom: 8px; }
+.field__input-wrap { display: flex; align-items: center; background-color: var(--white); border: 1.5px solid var(--gray-100); border-radius: var(--radius-sm); padding: 0 14px; height: 48px; transition: border-color 0.15s ease, box-shadow 0.15s ease; }
+.field__input-wrap:focus-within { border-color: var(--green-600); box-shadow: 0 0 0 3.5px var(--green-50); }
+.field__input-wrap--error { border-color: #ef4444 !important; background-color: #fffafb; }
+.field__input-wrap--error:focus-within { box-shadow: 0 0 0 3.5px #fef2f2; }
+.field__icon { color: var(--gray-500); display: flex; align-items: center; justify-content: center; }
+.field__input-wrap input { flex: 1; border: none; background: transparent; padding: 0 12px; font-family: var(--font-display); font-size: 14.5px; color: var(--navy-900); height: 100%; outline: none; }
+.field__input-wrap input::placeholder { color: var(--gray-500); }
+.field__toggle { background: none; border: none; color: var(--gray-500); padding: 4px; display: flex; align-items: center; justify-content: center; transition: color 0.15s ease; }
+.field__toggle:hover { color: var(--navy-900); }
+.field__error { color: #ef4444; font-size: 12.5px; margin-top: 6px; font-weight: 500; }
+.check { display: inline-flex; align-items: flex-start; gap: 10px; font-size: 14px; color: var(--gray-600); cursor: pointer; user-select: none; line-height: 1.4; margin-bottom: 24px; }
+.check input { position: absolute; opacity: 0; cursor: pointer; height: 0; width: 0; }
+.check__box { width: 18px; height: 18px; background-color: var(--white); border: 1.5px solid var(--gray-300); border-radius: 4px; position: relative; transition: background-color 0.15s, border-color 0.15s; flex-shrink: 0; margin-top: 1px; }
+.check input:checked ~ .check__box { background-color: var(--green-600); border-color: var(--green-600); }
+.check__box::after { content: ""; position: absolute; display: none; left: 5px; top: 2px; width: 4px; height: 8px; border: solid var(--white); border-width: 0 2px 2px 0; transform: rotate(45deg); }
+.check input:checked ~ .check__box::after { display: block; }
+.check a { color: var(--green-600); font-weight: 600; }
+.check a:hover { text-decoration: underline; }
+.btn-block { width: 100%; height: 48px; border: none; border-radius: 999px; cursor: pointer; }
+.spinner { width: 18px; height: 18px; border: 2px solid rgba(255, 255, 255, 0.3); border-top-color: var(--white); border-radius: 50%; animation: spin 0.8s linear infinite; margin-right: 8px; }
+@keyframes spin { to { transform: rotate(360deg); } }
+.auth-divider { display: flex; align-items: center; text-align: center; color: var(--gray-500); font-size: 13px; font-weight: 500; margin: 24px 0; }
+.auth-divider::before, .auth-divider::after { content: ""; flex: 1; border-bottom: 1px solid var(--gray-100); }
+.auth-divider::before { margin-right: 16px; }
+.auth-divider::after { margin-left: 16px; }
+.social-row { display: flex; gap: 14px; margin-bottom: 24px; }
+.social-btn { flex: 1; display: flex; align-items: center; justify-content: center; gap: 10px; height: 46px; background-color: var(--white); border: 1.5px solid var(--gray-100); border-radius: var(--radius-sm); font-size: 14px; font-weight: 600; color: var(--navy-900); transition: background-color 0.15s, border-color 0.15s; }
+.social-btn:hover { background-color: var(--gray-50); border-color: var(--gray-300); }
+.auth-switch { text-align: center; font-size: 14.5px; color: var(--gray-600); }
+.auth-switch a { color: var(--green-600); font-weight: 700; transition: color 0.15s; }
+.auth-switch a:hover { color: var(--green-700); text-decoration: underline; }
+
+/* ========================================================
+   ĐỊNH DẠNG RIÊNG CHO CÁC THÀNH PHẦN ĐẶC THÙ CỦA TRANG ĐĂNG KÝ
+   ======================================================== */
+
+/* Hàng ngang chứa Email và Số điện thoại */
+.field-row {
+  display: flex;
+  gap: 16px;
+}
+.field-row .field {
+  flex: 1;
+}
+
+/* Thanh đo độ mạnh mật khẩu (Password Strength Meter) */
+.password-strength {
+  display: flex;
+  gap: 6px;
+  margin-top: 8px;
+}
+
+.password-strength__bar {
+  flex: 1;
+  height: 5px;
+  background-color: var(--gray-100);
+  border-radius: 999px;
+  transition: background-color 0.2s ease;
+}
+
+/* Các cấp độ lấp đầy màu cho thanh độ mạnh mật khẩu */
+.password-strength__bar--filled-1 {
+  background-color: #ef4444; /* Rất yếu / Yếu: Đỏ rực */
+}
+.password-strength__bar--filled-2 {
+  background-color: #f59e0b; /* Trung bình: Cam nhạt */
+}
+.password-strength__bar--filled-3 {
+  background-color: var(--green-500); /* Khá mạnh / Mạnh: Xanh lá chủ đạo */
+}
+
+.password-strength__label {
+  font-size: 12.5px;
+  color: var(--gray-600);
+  margin-top: 6px;
+  font-weight: 600;
+}
+
+/* ===== ĐÁP ỨNG GIAO DIỆN DI ĐỘNG (RESPONSIVE) ===== */
+@media (max-width: 1024px) {
+  .auth-visual { display: none; }
+  .auth-form-panel { background-color: var(--white); padding: 24px 16px; }
+  .auth-form-card { box-shadow: none; padding: 10px; max-width: 100%; }
+  .auth-form-card__mobile-brand { display: inline-flex; }
+  .field-row { flex-direction: column; gap: 0; }
+}
+
+/* Hàng ngang chứa Email và Số điện thoại */
+.field-row {
+  display: flex;
+  gap: 16px;
+  width: 100%;
+}
+
+.field-row .field {
+  flex: 1;
+  min-width: 0; /* Ép thẻ con phải thu nhỏ theo kích thước thẻ cha, chống tràn */
+}
+
+.field__input-wrap {
+  display: flex; 
+  align-items: center; 
+  background-color: var(--white); 
+  border: 1.5px solid var(--gray-100); 
+  border-radius: var(--radius-sm); 
+  padding: 0 14px; 
+  height: 48px; 
+  transition: border-color 0.15s ease, box-shadow 0.15s ease;
+  width: 100%; /* Đảm bảo vỏ bọc không vượt quá 100% cột */
+}
+
+.field__input-wrap input { 
+  flex: 1; 
+  min-width: 0; /* Ép input không được giữ kích thước mặc định */
+  width: 100%;
+  border: none; 
+  background: transparent; 
+  padding: 0 12px; 
+  font-family: var(--font-display); 
+  font-size: 14.5px; 
+  color: var(--navy-900); 
+  height: 100%; 
+  outline: none; 
+}
+</style>

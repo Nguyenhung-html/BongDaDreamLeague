@@ -151,14 +151,14 @@
 </template>
 
 <script setup>
-import { ref, computed, onMounted, onUnmounted } from 'vue'
-import { useRouter } from 'vue-router'
+import { ref, computed, onMounted, onUnmounted, watch } from 'vue'
+import { useRouter, useRoute } from 'vue-router'
 import logo from '../Image/logo DreamLeague.webp'
 
-
 const router = useRouter()
+const route = useRoute() // Thêm route để theo dõi chuyển trang
 
-// Auth state
+// ===== AUTH STATE =====
 const dangNhap = ref(false)
 const tenNguoiDung = ref('')
 const soThongBao = ref(3)
@@ -173,6 +173,23 @@ const ngayHomNay = computed(() => {
   return new Date().toLocaleDateString('vi-VN', {
     weekday: 'long', day: '2-digit', month: '2-digit', year: 'numeric'
   })
+})
+
+// ===== KIỂM TRA ĐĂNG NHẬP =====
+function kiemTraDangNhap() {
+  const token = localStorage.getItem('token')
+  if (token) {
+    dangNhap.value = true
+    tenNguoiDung.value = localStorage.getItem('hoTen') || 'Người dùng'
+  } else {
+    dangNhap.value = false
+    tenNguoiDung.value = ''
+  }
+}
+
+// MẸO: Lắng nghe mỗi khi chuyển trang (từ Đăng nhập -> Trang chủ) thì check lại token
+watch(() => route.path, () => {
+  kiemTraDangNhap()
 })
 
 // ===== DỮ LIỆU SÂN NỘI BỘ =====
@@ -223,15 +240,23 @@ function xoaTimKiem() {
   showGợiY.value = false
 }
 
-// Dropdown account
+// ===== DROPDOWN ACCOUNT & ĐĂNG XUẤT =====
 const showDropdown = ref(false)
 const menuOpen = ref(false)
 const accountRef = ref(null)
 
 function dangXuat() {
+  // 1. Xóa sạch dữ liệu trong Local Storage
+  localStorage.removeItem('token')
+  localStorage.removeItem('hoTen')
+  localStorage.removeItem('vaiTro')
+  
+  // 2. Reset lại giao diện
   dangNhap.value = false
   tenNguoiDung.value = ''
   showDropdown.value = false
+  
+  // 3. Đẩy người dùng về trang chủ
   router.push('/')
 }
 
@@ -244,7 +269,12 @@ function onClickOutside(e) {
   }
 }
 
-onMounted(() => document.addEventListener('click', onClickOutside))
+onMounted(() => {
+  document.addEventListener('click', onClickOutside)
+  // Gọi hàm kiểm tra ngay khi mở web
+  kiemTraDangNhap() 
+})
+
 onUnmounted(() => document.removeEventListener('click', onClickOutside))
 </script>
 

@@ -389,26 +389,47 @@ function validateAll() {
 
 async function onSubmit() {
   errorMessage.value = ''
+  infoMessage.value = ''
+  
+  // Kiểm tra validate form trước khi gọi API
   if (!validateAll()) return
 
   submitting.value = true
   try {
-    // ⚠️ Backend chưa hoàn thiện: authService.register() hiện chỉ trả về Promise
-    // giả lập (resolve) để dựng giao diện trước. Khi API thật sẵn sàng, hãy kiểm tra
-    // res.user/res.token và xử lý lỗi (vd. email/số điện thoại đã tồn tại) tại đây.
-    await authService.register({
-      hoTen: form.hoTen,
-      email: form.email,
-      soDienThoai: form.soDienThoai,
-      password: form.password
+    // 1. GỌI API THẬT XUỐNG SPRING BOOT (ĐĂNG KÝ)
+    const response = await fetch('http://localhost:8080/api/xac-thuc/dang-ky', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json'
+      },
+      // Map đúng tên biến với DTO DangKyYeuCau của Spring Boot
+      body: JSON.stringify({
+        hoTen: form.hoTen,
+        email: form.email,
+        soDienThoai: form.soDienThoai,
+        matKhau: form.password,
+        diaChi: "" // Giao diện của bạn chưa có ô nhập địa chỉ nên tạm truyền chuỗi rỗng
+      })
     })
+
+    // 2. NẾU BỊ LỖI (Ví dụ: Email hoặc SĐT đã tồn tại)
+    if (!response.ok) {
+      // Vì controller backend đang trả về chuỗi (String) khi có lỗi, ta dùng .text()
+      const errorText = await response.text()
+      throw new Error(errorText || 'Đăng ký thất bại!')
+    }
+
+    // 3. THÀNH CÔNG: Chuyển hướng sang trang đăng nhập và báo thành công
     router.push({ path: '/dang-nhap', query: { registered: '1' } })
+    
   } catch (err) {
-    errorMessage.value = 'Đăng ký không thành công. Email hoặc số điện thoại có thể đã được sử dụng.'
+    // 4. HIỂN THỊ LỖI LÊN GIAO DIỆN
+    errorMessage.value = err.message || 'Đăng ký không thành công. Vui lòng thử lại.'
   } finally {
     submitting.value = false
   }
 }
+
 
 function socialNotice() {
   infoMessage.value = 'Đăng ký bằng mạng xã hội sẽ sớm được hỗ trợ.'

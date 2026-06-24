@@ -1,5 +1,6 @@
 package com.dream.sanbong.service;
 
+import com.dream.sanbong.config.JwtUtils; 
 import com.dream.sanbong.dto.DangKyYeuCau;
 import com.dream.sanbong.dto.DangNhapYeuCau;
 import com.dream.sanbong.dto.XacThucPhanHoi;
@@ -14,10 +15,12 @@ public class XacThucServiceImpl implements XacThucService {
 
     private final NguoiDungRepository nguoiDungRepo;
     private final BCryptPasswordEncoder maHoaMatKhau;
+    private final JwtUtils jwtUtils; 
 
-    public XacThucServiceImpl(NguoiDungRepository nguoiDungRepo) {
+    public XacThucServiceImpl(NguoiDungRepository nguoiDungRepo, JwtUtils jwtUtils) {
         this.nguoiDungRepo = nguoiDungRepo;
         this.maHoaMatKhau = new BCryptPasswordEncoder();
+        this.jwtUtils = jwtUtils;
     }
 
     @Override
@@ -46,8 +49,12 @@ public class XacThucServiceImpl implements XacThucService {
 
     @Override
     public XacThucPhanHoi xuLyDangNhap(DangNhapYeuCau yeuCau) {
-        NguoiDung nguoiDung = nguoiDungRepo.findByEmail(yeuCau.getEmail())
-                .orElseThrow(() -> new RuntimeException("Lỗi: Email không tồn tại!"));
+        
+        // ĐÃ SỬA CHỖ NÀY: Gọi hàm tìm bằng Email HOẶC Số điện thoại.
+        // Vì Vue truyền chuỗi nhập (có thể là email hoặc sđt) vào biến "email",
+        // nên ta ném biến đó vào cả 2 tham số để Spring tự lục tìm trong database.
+        NguoiDung nguoiDung = nguoiDungRepo.findByEmailOrSoDienThoai(yeuCau.getEmail(), yeuCau.getEmail())
+                .orElseThrow(() -> new RuntimeException("Lỗi: Tài khoản không tồn tại!"));
 
         if (!nguoiDung.isTrangThai()) {
             throw new RuntimeException("Lỗi: Tài khoản của bạn đã bị khóa!");
@@ -57,12 +64,11 @@ public class XacThucServiceImpl implements XacThucService {
             throw new RuntimeException("Lỗi: Sai mật khẩu!");
         }
 
-        // Tạm thời trả về token rỗng, sau này ghép JWT thực tế vào đây
-        String tokenGiaLap = "chu-gi-do-rat-dai-cua-jwt";
+        String tokenThiet = jwtUtils.generateToken(nguoiDung.getEmail(), nguoiDung.getVaiTro().name());
 
         return new XacThucPhanHoi(
                 "Đăng nhập thành công!",
-                tokenGiaLap,
+                tokenThiet, 
                 nguoiDung.getId(),
                 nguoiDung.getHoTen(),
                 nguoiDung.getVaiTro().name()

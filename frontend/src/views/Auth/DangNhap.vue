@@ -274,20 +274,42 @@ async function onSubmit() {
 
   submitting.value = true
   try {
-    // ⚠️ Backend chưa hoàn thiện: authService.login() hiện chỉ trả về Promise
-    // giả lập (resolve) để dựng giao diện trước. Khi API thật sẵn sàng:
-    // 1) kiểm tra res.user / res.token trả về từ server
-    // 2) lưu token thực sự (vd. cookie httpOnly hoặc localStorage có hạn dùng)
-    // 3) điều hướng theo vai trò (user/staff/admin) nếu cần
-    await authService.login({ ...form })
-    localStorage.setItem('dreamleague_user', JSON.stringify({ identifier: form.identifier }))
+    // 1. GỌI API THẬT XUỐNG SPRING BOOT
+    const response = await fetch('http://localhost:8080/api/xac-thuc/dang-nhap', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json'
+      },
+      body: JSON.stringify({
+        email: form.identifier, 
+        matKhau: form.password
+      })
+    })
+
+    // 2. NẾU SPRING BOOT BÁO LỖI (Sai pass, không tồn tại user...)
+    if (!response.ok) {
+      const errorText = await response.text()
+      throw new Error(errorText || 'Đăng nhập thất bại!')
+    }
+
+    // 3. NẾU THÀNH CÔNG: Lấy cục data JSON từ backend trả về
+    const data = await response.json()
+
+    // 4. LƯU THÔNG TIN THẬT VÀO LOCAL STORAGE
+    localStorage.setItem('token', data.token)
+    localStorage.setItem('hoTen', data.hoTen)
+    localStorage.setItem('vaiTro', data.vaiTro)
+
+    // 5. Chuyển hướng về trang chủ
     router.push('/')
   } catch (err) {
-    errorMessage.value = 'Email/số điện thoại hoặc mật khẩu không đúng. Vui lòng thử lại.'
+    // Hiển thị lỗi thật từ Backend lên màn hình
+    errorMessage.value = err.message || 'Email hoặc mật khẩu không đúng. Vui lòng thử lại.'
   } finally {
     submitting.value = false
   }
 }
+
 
 function socialNotice() {
   infoMessage.value = 'Đăng nhập bằng mạng xã hội sẽ sớm được hỗ trợ.'

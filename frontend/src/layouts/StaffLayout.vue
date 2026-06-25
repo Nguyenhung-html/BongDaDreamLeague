@@ -147,6 +147,12 @@ const sidebarOpen = ref(false)
 const isMobile = ref(false)
 const userInitial = computed(() => 'N')
 
+// ===== AUTH STATE =====
+const dangNhap = ref(false)
+const tenNguoiDung = ref('')
+const vaiTro = ref('')
+const showDropdown = ref(false)
+
 const breadcrumbLabel = computed(() => {
   const labels = {
     '/staff': 'Dashboard',
@@ -170,7 +176,19 @@ function isActive(path) {
 }
 
 function logout() {
-  localStorage.removeItem('dreamleague_user')
+  localStorage.removeItem('token')
+  localStorage.removeItem('hoTen')
+  localStorage.removeItem('isLoggedIn')
+  localStorage.removeItem('userRole')
+  localStorage.removeItem('vaiTro') // Xóa nốt cả key cũ phòng hờ
+
+  // Đưa các biến cục bộ về trạng thái ban đầu để giao diện biến đổi ngay lập tức
+  dangNhap.value = false
+  tenNguoiDung.value = ''
+  vaiTro.value = ''
+  showDropdown.value = false
+
+  alert('Đã đăng xuất tài khoản thành công!')
   router.push('/dang-nhap')
 }
 

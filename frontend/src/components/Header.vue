@@ -27,12 +27,12 @@
       
       <!-- [THÊM MỚI] Nút truy cập lại trang quản lý (Nằm ngay bên trái khối User) -->
       <router-link 
-        v-if="vaiTro === 'STAFF' || vaiTro === 'ADMIN'" 
-        :to="vaiTro === 'ADMIN' ? '/admin' : '/staff'" 
+        v-if="vaiTro === 'Staff' || vaiTro === 'Admin'" 
+        :to="vaiTro === 'Admin' ? '/admin' : '/staff'" 
         class="btn-auth btn-auth--fill"
         style="background-color: var(--green-600); color: #fff; padding: 8px 16px; font-size: 14px; border-radius: 6px; text-decoration: none; font-weight: 500;"
       >
-        {{ vaiTro === 'ADMIN' ? 'Quay Lại Trang Admin' : 'Quay Lại Trang Staff' }}
+        {{ vaiTro === 'Admin' ? 'Quay Lại Trang Admin' : 'Quay Lại Trang Staff' }}
       </router-link>
 
       <!-- Khối thông tin User -->
@@ -43,7 +43,7 @@
           
           <!-- [CẬP NHẬT] Hiển thị chức danh động thay vì cố định chữ Khách hàng -->
           <span class="topbar__user-role">
-            {{ vaiTro === 'ADMIN' ? 'Admin' : (vaiTro === 'STAFF' ? 'Nhân viên' : 'Khách hàng') }}
+            {{ vaiTro === 'Admin' ? 'Admin' : (vaiTro === 'Staff' ? 'Nhân viên' : 'Khách hàng') }}
           </span>
         </div>
         <svg width="14" height="14" viewBox="0 0 24 24" fill="none" :style="{ transform: showDropdown ? 'rotate(180deg)' : '', transition: '0.2s' }">
@@ -57,18 +57,18 @@
               <p class="dropdown__user-name">{{ tenNguoiDung }}</p>
               <!-- Hiển thị vai trò trong dropdown luôn cho đồng bộ -->
               <p class="dropdown__user-email">
-                {{ vaiTro === 'ADMIN' ? 'Quản trị viên' : (vaiTro === 'STAFF' ? 'Tài khoản nhân viên' : 'Khách hàng') }}
+                {{ vaiTro === 'Admin' ? 'Quản trị viên' : (vaiTro === 'Staff' ? 'Tài khoản nhân viên' : 'Khách hàng') }}
               </p>
             </div>
           </div>
           <div class="dropdown__divider"></div>
           
           <!-- Thêm một lối tắt vào trang quản lý ngay bên trong Menu Dropdown phòng trường hợp cần -->
-          <router-link v-if="vaiTro === 'STAFF' || vaiTro === 'ADMIN'" :to="vaiTro === 'ADMIN' ? '/admin' : '/staff'" class="dropdown__item" style="color: var(--green-600); font-weight: 600;">
+          <router-link v-if="vaiTro === 'Staff' || vaiTro === 'Admin'" :to="vaiTro === 'ADMIN' ? '/admin' : '/staff'" class="dropdown__item" style="color: var(--green-600); font-weight: 600;">
             <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7"><rect x="3" y="3" width="18" height="18" rx="2"/><path d="M9 3v18M3 9h18"/></svg>
             Vào trang quản lý
           </router-link>
-          <div v-if="vaiTro === 'STAFF' || vaiTro === 'ADMIN'" class="dropdown__divider"></div>
+          <div v-if="vaiTro === 'Staff' || vaiTro === 'Admin'" class="dropdown__divider"></div>
 
           <router-link to="/thong-tin-ca-nhan" class="dropdown__item">
             <svg width="16" height="16" viewBox="0 0 24 24" fill="none"><circle cx="12" cy="8" r="4" stroke="currentColor" stroke-width="1.7"/><path d="M4 20c0-4 3.6-7 8-7s8 3 8 7" stroke="currentColor" stroke-width="1.7" stroke-linecap="round"/></svg>
@@ -82,10 +82,6 @@
             <svg width="16" height="16" viewBox="0 0 24 24" fill="none"><path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9" stroke="currentColor" stroke-width="1.7"/><path d="M13.73 21a2 2 0 0 1-3.46 0" stroke="currentColor" stroke-width="1.7"/></svg>
             Thông báo
             <span class="dropdown__badge">{{ soThongBao }}</span>
-          </router-link>
-          <router-link to="/doi-mat-khau" class="dropdown__item">
-            <svg width="16" height="16" viewBox="0 0 24 24" fill="none"><rect x="5" y="11" width="14" height="10" rx="2" stroke="currentColor" stroke-width="1.7"/><path d="M8 11V7a4 4 0 0 1 8 0v4" stroke="currentColor" stroke-width="1.7" stroke-linecap="round"/></svg>
-            Đổi mật khẩu
           </router-link>
           <div class="dropdown__divider"></div>
           <button class="dropdown__item dropdown__item--danger" @click="dangXuat">
@@ -116,7 +112,7 @@
             placeholder="Tìm sân A1, A2, B1... hoặc loại sân"
             @input="onInput"
             @keyup.enter="timKiem"
-            @focus="showGợiY = ketQuaGoiY.length > 0"
+            @focus="showGoiY = ketQuaGoiY.length > 0"
           />
           <button v-if="tuKhoa" class="search-clear" @click="xoaTimKiem">
             <svg width="14" height="14" viewBox="0 0 24 24" fill="none"><path d="M18 6L6 18M6 6l12 12" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"/></svg>
@@ -126,7 +122,7 @@
           </button>
 
           <!-- Dropdown gợi ý -->
-          <div class="search-dropdown" v-show="showGợiY && ketQuaGoiY.length > 0">
+          <div class="search-dropdown" v-show="showGoiY && ketQuaGoiY.length > 0">
             <div
               v-for="item in ketQuaGoiY"
               :key="item.id"
@@ -188,13 +184,13 @@ import { useRouter, useRoute } from 'vue-router'
 import logo from '../Image/logo DreamLeague.webp'
 
 const router = useRouter()
-const route = useRoute() // Thêm route để theo dõi chuyển trang
+const route = useRoute() 
 
 // ===== AUTH STATE =====
 const dangNhap = ref(false)
 const tenNguoiDung = ref('')
 const soThongBao = ref(3)
-const vaiTro = ref('') // [MỚI THÊM] Biến lưu vai trò (ADMIN/STAFF) để hiển thị nút điều hướng
+const vaiTro = ref('') // Sẽ nhận các giá trị chuẩn hóa: 'Admin', 'Staff', hoặc 'User'
 
 const tenVietTat = computed(() => {
   if (!tenNguoiDung.value) return '?'
@@ -208,21 +204,24 @@ const ngayHomNay = computed(() => {
   })
 })
 
-// ===== KIỂM TRA ĐĂNG NHẬP =====
+// ===== KIỂM TRA ĐĂNG NHẬP (ĐÃ ĐỒNG BỘ VỚI ROUTER MỚI) =====
 function kiemTraDangNhap() {
   const token = localStorage.getItem('token')
-  if (token) {
+  const isLoggedIn = localStorage.getItem('isLoggedIn') === 'true'
+
+  if (token && isLoggedIn) {
     dangNhap.value = true
     tenNguoiDung.value = localStorage.getItem('hoTen') || 'Người dùng'
-    vaiTro.value = localStorage.getItem('vaiTro') || '' // [MỚI THÊM] Lấy vai trò khi đăng nhập thành công
+    // ĐỔI TỪ 'vaiTro' THÀNH 'userRole' ĐỂ ĐỌC ĐÚNG GIÁ TRỊ CHUẨN HÓA ('Admin', 'Staff')
+    vaiTro.value = localStorage.getItem('userRole') || '' 
   } else {
     dangNhap.value = false
     tenNguoiDung.value = ''
-    vaiTro.value = '' // [MỚI THÊM] Reset vai trò nếu không có token
+    vaiTro.value = '' 
   }
 }
 
-// MẸO: Lắng nghe mỗi khi chuyển trang (từ Đăng nhập -> Trang chủ) thì check lại token
+// Theo dõi sát sao mỗi khi chuyển trang để cập nhật giao diện ngay lập tức mà không cần F5
 watch(() => route.path, () => {
   kiemTraDangNhap()
 })
@@ -234,12 +233,12 @@ const danhSachSan = [
   { id: 3, maSan: 'A3', ten: 'Sân 5 người — A3', loai: 'san5', gia: '350.000', tuKhoa: ['a3', 'sân 5', 'san 5', 'san5'] },
   { id: 4, maSan: 'B1', ten: 'Sân 7 người — B1', loai: 'san7', gia: '650.000', tuKhoa: ['b1', 'sân 7', 'san 7', 'san7'] },
   { id: 5, maSan: 'B2', ten: 'Sân 7 người — B2', loai: 'san7', gia: '650.000', tuKhoa: ['b2', 'sân 7', 'san 7', 'san7'] },
-  { id: 6, maSan: 'B3', ten: 'Sân 7 người — B3', loai: 'san7', gia: '650.000', tuKhoa: ['b3', 'sân 7', 'san 7', 'san7'] },
+  { id: 6, maSan: 'B3', tile: 'Sân 7 người — B3', loai: 'san7', gia: '650.000', tuKhoa: ['b3', 'sân 7', 'san 7', 'san7'] },
 ]
 
 // ===== TÌM KIẾM NỘI BỘ =====
 const tuKhoa = ref('')
-const showGợiY = ref(false)
+const showGoiY = ref(false)
 const searchRef = ref(null)
 
 const ketQuaGoiY = computed(() => {
@@ -253,26 +252,26 @@ const ketQuaGoiY = computed(() => {
 })
 
 function onInput() {
-  showGợiY.value = ketQuaGoiY.value.length > 0
+  showGoiY.value = ketQuaGoiY.value.length > 0
 }
 
 function timKiem() {
   if (tuKhoa.value.trim()) {
-    showGợiY.value = false
+    showGoiY.value = false
     router.push({ path: '/san', query: { q: tuKhoa.value } })
     tuKhoa.value = ''
   }
 }
 
 function chonGoiY(item) {
-  showGợiY.value = false
+  showGoiY.value = false
   tuKhoa.value = ''
   router.push(`/dat-san/${item.id}`)
 }
 
 function xoaTimKiem() {
   tuKhoa.value = ''
-  showGợiY.value = false
+  showGoiY.value = false
 }
 
 // ===== DROPDOWN ACCOUNT & ĐĂNG XUẤT =====
@@ -281,19 +280,21 @@ const menuOpen = ref(false)
 const accountRef = ref(null)
 
 function dangXuat() {
-  // 1. Xóa sạch dữ liệu trong Local Storage
+  // Xóa sạch toàn bộ session đăng nhập cũ
   localStorage.removeItem('token')
   localStorage.removeItem('hoTen')
-  localStorage.removeItem('vaiTro')
-  
-  // 2. Reset lại giao diện
+  localStorage.removeItem('isLoggedIn')
+  localStorage.removeItem('userRole')
+  localStorage.removeItem('vaiTro') // Xóa nốt cả key cũ phòng hờ
+
+  // Đưa các biến cục bộ về trạng thái ban đầu để giao diện biến đổi ngay lập tức
   dangNhap.value = false
   tenNguoiDung.value = ''
-  vaiTro.value = '' // [MỚI THÊM] Xóa vai trò khi đăng xuất
+  vaiTro.value = ''
   showDropdown.value = false
-  
-  // 3. Đẩy người dùng về trang chủ
-  router.push('/')
+
+  alert('Đã đăng xuất tài khoản thành công!')
+  router.push('/dang-nhap')
 }
 
 function onClickOutside(e) {
@@ -301,17 +302,18 @@ function onClickOutside(e) {
     showDropdown.value = false
   }
   if (searchRef.value && !searchRef.value.contains(e.target)) {
-    showGợiY.value = false
+    showGoiY.value = false
   }
 }
 
 onMounted(() => {
   document.addEventListener('click', onClickOutside)
-  // Gọi hàm kiểm tra ngay khi mở web
-  kiemTraDangNhap() 
+  kiemTraDangNhap() // Gọi hàm kiểm tra ngay khi vừa mount trang chủ
 })
 
-onUnmounted(() => document.removeEventListener('click', onClickOutside))
+onUnmounted(() => {
+  document.removeEventListener('click', onClickOutside)
+})
 </script>
 
 <style scoped>

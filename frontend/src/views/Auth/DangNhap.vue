@@ -286,7 +286,7 @@ async function onSubmit() {
       })
     })
 
-    // 2. NẾU SPRING BOOT BÁO LỖI (Sai pass, không tồn tại user...)
+    // 2. NẾU SPRING BOOT BÁO LỖI
     if (!response.ok) {
       const errorText = await response.text()
       throw new Error(errorText || 'Đăng nhập thất bại!')
@@ -295,23 +295,27 @@ async function onSubmit() {
     // 3. NẾU THÀNH CÔNG: Lấy cục data JSON từ backend trả về
     const data = await response.json()
 
-    // 4. LƯU THÔNG TIN THẬT VÀO LOCAL STORAGE
+    // 4. CHUẨN HÓA VAI TRÒ ĐỂ KHỚP VỚI ROUTER (Chuyển ADMIN -> Admin, STAFF -> Staff, USER -> User)
+    let standardizedRole = 'User' // Mặc định nếu không khớp là User
+    if (data.vaiTro === 'ADMIN') standardizedRole = 'Admin'
+    if (data.vaiTro === 'STAFF') standardizedRole = 'Staff'
+
+    // 5. LƯU THÔNG TIN VÀO LOCAL STORAGE (Đúng key, đúng định dạng router cần)
     localStorage.setItem('token', data.token)
     localStorage.setItem('hoTen', data.hoTen)
-    localStorage.setItem('vaiTro', data.vaiTro)
+    localStorage.setItem('isLoggedIn', 'true')       // Thêm dòng này để router biết đã đăng nhập!
+    localStorage.setItem('userRole', standardizedRole) // Lưu vai trò đã chuẩn hóa ('Admin', 'Staff', 'User')
 
-    // 5. [MỚI CẬP NHẬT] ĐIỀU HƯỚNG THEO VAI TRÒ (ROLE)
-    // Lưu ý: Kiểm tra xem Spring Boot của bạn trả về chuỗi viết hoa hay viết thường (Ví dụ: "ADMIN" hay "admin")
-    if (data.vaiTro === 'ADMIN') {
+    // 6. ĐIỀU HƯỚNG THEO VAI TRÒ
+    if (standardizedRole === 'Admin') {
       router.push('/admin')
-    } else if (data.vaiTro === 'STAFF') {
+    } else if (standardizedRole === 'Staff') {
       router.push('/staff')
     } else {
-      router.push('/') // Khách hàng bình thường thì về trang chủ
+      router.push('/') // Khách hàng về trang chủ
     }
 
   } catch (err) {
-    // Hiển thị lỗi thật từ Backend lên màn hình
     errorMessage.value = err.message || 'Email hoặc mật khẩu không đúng. Vui lòng thử lại.'
   } finally {
     submitting.value = false

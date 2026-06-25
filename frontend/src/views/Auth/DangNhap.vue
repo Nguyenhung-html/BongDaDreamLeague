@@ -300,8 +300,16 @@ async function onSubmit() {
     localStorage.setItem('hoTen', data.hoTen)
     localStorage.setItem('vaiTro', data.vaiTro)
 
-    // 5. Chuyển hướng về trang chủ
-    router.push('/')
+    // 5. [MỚI CẬP NHẬT] ĐIỀU HƯỚNG THEO VAI TRÒ (ROLE)
+    // Lưu ý: Kiểm tra xem Spring Boot của bạn trả về chuỗi viết hoa hay viết thường (Ví dụ: "ADMIN" hay "admin")
+    if (data.vaiTro === 'ADMIN') {
+      router.push('/admin')
+    } else if (data.vaiTro === 'STAFF') {
+      router.push('/staff')
+    } else {
+      router.push('/') // Khách hàng bình thường thì về trang chủ
+    }
+
   } catch (err) {
     // Hiển thị lỗi thật từ Backend lên màn hình
     errorMessage.value = err.message || 'Email hoặc mật khẩu không đúng. Vui lòng thử lại.'
@@ -309,7 +317,6 @@ async function onSubmit() {
     submitting.value = false
   }
 }
-
 
 function socialNotice() {
   infoMessage.value = 'Đăng nhập bằng mạng xã hội sẽ sớm được hỗ trợ.'

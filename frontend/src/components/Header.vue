@@ -4,68 +4,100 @@
 
     <!-- THANH 1: Top bar -->
     <div class="topbar">
-      <div class="container topbar__inner">
-        <router-link to="/" class="topbar__brand">
-  <img :src="logo" alt="DreamLeague" class="topbar__logo-img" />
-  <div class="topbar__brand-text">
-    <span class="topbar__brand-name">
-      <strong>Dream</strong>League
-    </span>
-    <span class="topbar__date">
-      {{ ngayHomNay }}
-    </span>
-  </div>
-</router-link>
-        <div v-if="!dangNhap" class="topbar__auth">
-          <router-link to="/dang-nhap" class="btn-auth btn-auth--outline">Đăng nhập</router-link>
-          <router-link to="/dang-ky" class="btn-auth btn-auth--fill">Đăng ký</router-link>
+  <div class="container topbar__inner">
+    <router-link to="/" class="topbar__brand">
+      <img :src="logo" alt="DreamLeague" class="topbar__logo-img" />
+      <div class="topbar__brand-text">
+        <span class="topbar__brand-name">
+          <strong>Dream</strong>League
+        </span>
+        <span class="topbar__date">
+          {{ ngayHomNay }}
+        </span>
+      </div>
+    </router-link>
+
+    <div v-if="!dangNhap" class="topbar__auth">
+      <router-link to="/dang-nhap" class="btn-auth btn-auth--outline">Đăng nhập</router-link>
+      <router-link to="/dang-ky" class="btn-auth btn-auth--fill">Đăng ký</router-link>
+    </div>
+
+    <!-- KHU VỰC ĐÃ ĐĂNG NHẬP -->
+    <div v-else style="display: flex; align-items: center; gap: 16px;">
+      
+      <!-- [THÊM MỚI] Nút truy cập lại trang quản lý (Nằm ngay bên trái khối User) -->
+      <router-link 
+        v-if="vaiTro === 'STAFF' || vaiTro === 'ADMIN'" 
+        :to="vaiTro === 'ADMIN' ? '/admin' : '/staff'" 
+        class="btn-auth btn-auth--fill"
+        style="background-color: var(--green-600); color: #fff; padding: 8px 16px; font-size: 14px; border-radius: 6px; text-decoration: none; font-weight: 500;"
+      >
+        {{ vaiTro === 'ADMIN' ? 'Quay Lại Trang Admin' : 'Quay Lại Trang Staff' }}
+      </router-link>
+
+      <!-- Khối thông tin User -->
+      <div class="topbar__user" ref="accountRef" @click="showDropdown = !showDropdown">
+        <div class="topbar__avatar">{{ tenVietTat }}</div>
+        <div class="topbar__user-info">
+          <span class="topbar__user-name">{{ tenNguoiDung }}</span>
+          
+          <!-- [CẬP NHẬT] Hiển thị chức danh động thay vì cố định chữ Khách hàng -->
+          <span class="topbar__user-role">
+            {{ vaiTro === 'ADMIN' ? 'Admin' : (vaiTro === 'STAFF' ? 'Nhân viên' : 'Khách hàng') }}
+          </span>
         </div>
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" :style="{ transform: showDropdown ? 'rotate(180deg)' : '', transition: '0.2s' }">
+          <path d="M6 9L12 15L18 9" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
+        </svg>
 
-        <div v-else class="topbar__user" ref="accountRef" @click="showDropdown = !showDropdown">
-          <div class="topbar__avatar">{{ tenVietTat }}</div>
-          <div class="topbar__user-info">
-            <span class="topbar__user-name">{{ tenNguoiDung }}</span>
-            <span class="topbar__user-role">Khách hàng</span>
-          </div>
-          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" :style="{ transform: showDropdown ? 'rotate(180deg)' : '', transition: '0.2s' }">
-            <path d="M6 9L12 15L18 9" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
-          </svg>
-
-          <div class="topbar__dropdown" v-show="showDropdown" @click.stop>
-            <div class="dropdown__header">
-              <div class="topbar__avatar topbar__avatar--lg">{{ tenVietTat }}</div>
-              <div>
-                <p class="dropdown__user-name">{{ tenNguoiDung }}</p>
-                <p class="dropdown__user-email">user@dreamleague.vn</p>
-              </div>
+        <div class="topbar__dropdown" v-show="showDropdown" @click.stop>
+          <div class="dropdown__header">
+            <div class="topbar__avatar topbar__avatar--lg">{{ tenVietTat }}</div>
+            <div>
+              <p class="dropdown__user-name">{{ tenNguoiDung }}</p>
+              <!-- Hiển thị vai trò trong dropdown luôn cho đồng bộ -->
+              <p class="dropdown__user-email">
+                {{ vaiTro === 'ADMIN' ? 'Quản trị viên' : (vaiTro === 'STAFF' ? 'Tài khoản nhân viên' : 'Khách hàng') }}
+              </p>
             </div>
-            <div class="dropdown__divider"></div>
-            <router-link to="/thong-tin-ca-nhan" class="dropdown__item">
-              <svg width="16" height="16" viewBox="0 0 24 24" fill="none"><circle cx="12" cy="8" r="4" stroke="currentColor" stroke-width="1.7"/><path d="M4 20c0-4 3.6-7 8-7s8 3 8 7" stroke="currentColor" stroke-width="1.7" stroke-linecap="round"/></svg>
-              Thông tin cá nhân
-            </router-link>
-            <router-link to="/lich-su-dat-san" class="dropdown__item">
-              <svg width="16" height="16" viewBox="0 0 24 24" fill="none"><rect x="3" y="5" width="18" height="16" rx="2" stroke="currentColor" stroke-width="1.7"/><path d="M3 10H21M8 3v4M16 3v4" stroke="currentColor" stroke-width="1.7" stroke-linecap="round"/></svg>
-              Lịch sử đặt sân
-            </router-link>
-            <router-link to="/thong-bao" class="dropdown__item">
-              <svg width="16" height="16" viewBox="0 0 24 24" fill="none"><path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9" stroke="currentColor" stroke-width="1.7"/><path d="M13.73 21a2 2 0 0 1-3.46 0" stroke="currentColor" stroke-width="1.7"/></svg>
-              Thông báo
-              <span class="dropdown__badge">{{ soThongBao }}</span>
-            </router-link>
-            <router-link to="/doi-mat-khau" class="dropdown__item">
-              <svg width="16" height="16" viewBox="0 0 24 24" fill="none"><rect x="5" y="11" width="14" height="10" rx="2" stroke="currentColor" stroke-width="1.7"/><path d="M8 11V7a4 4 0 0 1 8 0v4" stroke="currentColor" stroke-width="1.7" stroke-linecap="round"/></svg>
-              Đổi mật khẩu
-            </router-link>
-            <div class="dropdown__divider"></div>
-            <button class="dropdown__item dropdown__item--danger" @click="dangXuat">
-              <svg width="16" height="16" viewBox="0 0 24 24" fill="none"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4M16 17l5-5-5-5M21 12H9" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"/></svg>
-              Đăng xuất
-            </button>
           </div>
+          <div class="dropdown__divider"></div>
+          
+          <!-- Thêm một lối tắt vào trang quản lý ngay bên trong Menu Dropdown phòng trường hợp cần -->
+          <router-link v-if="vaiTro === 'STAFF' || vaiTro === 'ADMIN'" :to="vaiTro === 'ADMIN' ? '/admin' : '/staff'" class="dropdown__item" style="color: var(--green-600); font-weight: 600;">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7"><rect x="3" y="3" width="18" height="18" rx="2"/><path d="M9 3v18M3 9h18"/></svg>
+            Vào trang quản lý
+          </router-link>
+          <div v-if="vaiTro === 'STAFF' || vaiTro === 'ADMIN'" class="dropdown__divider"></div>
+
+          <router-link to="/thong-tin-ca-nhan" class="dropdown__item">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none"><circle cx="12" cy="8" r="4" stroke="currentColor" stroke-width="1.7"/><path d="M4 20c0-4 3.6-7 8-7s8 3 8 7" stroke="currentColor" stroke-width="1.7" stroke-linecap="round"/></svg>
+            Thông tin cá nhân
+          </router-link>
+          <router-link to="/lich-su-dat-san" class="dropdown__item">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none"><rect x="3" y="5" width="18" height="16" rx="2" stroke="currentColor" stroke-width="1.7"/><path d="M3 10H21M8 3v4M16 3v4" stroke="currentColor" stroke-width="1.7" stroke-linecap="round"/></svg>
+            Lịch sử đặt sân
+          </router-link>
+          <router-link to="/thong-bao" class="dropdown__item">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none"><path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9" stroke="currentColor" stroke-width="1.7"/><path d="M13.73 21a2 2 0 0 1-3.46 0" stroke="currentColor" stroke-width="1.7"/></svg>
+            Thông báo
+            <span class="dropdown__badge">{{ soThongBao }}</span>
+          </router-link>
+          <router-link to="/doi-mat-khau" class="dropdown__item">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none"><rect x="5" y="11" width="14" height="10" rx="2" stroke="currentColor" stroke-width="1.7"/><path d="M8 11V7a4 4 0 0 1 8 0v4" stroke="currentColor" stroke-width="1.7" stroke-linecap="round"/></svg>
+            Đổi mật khẩu
+          </router-link>
+          <div class="dropdown__divider"></div>
+          <button class="dropdown__item dropdown__item--danger" @click="dangXuat">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4M16 17l5-5-5-5M21 12H9" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"/></svg>
+            Đăng xuất
+          </button>
         </div>
       </div>
     </div>
+
+  </div>
+</div>
 
     <!-- THANH 2: Search + Nav bar -->
     <div class="navbar">
@@ -162,6 +194,7 @@ const route = useRoute() // Thêm route để theo dõi chuyển trang
 const dangNhap = ref(false)
 const tenNguoiDung = ref('')
 const soThongBao = ref(3)
+const vaiTro = ref('') // [MỚI THÊM] Biến lưu vai trò (ADMIN/STAFF) để hiển thị nút điều hướng
 
 const tenVietTat = computed(() => {
   if (!tenNguoiDung.value) return '?'
@@ -181,9 +214,11 @@ function kiemTraDangNhap() {
   if (token) {
     dangNhap.value = true
     tenNguoiDung.value = localStorage.getItem('hoTen') || 'Người dùng'
+    vaiTro.value = localStorage.getItem('vaiTro') || '' // [MỚI THÊM] Lấy vai trò khi đăng nhập thành công
   } else {
     dangNhap.value = false
     tenNguoiDung.value = ''
+    vaiTro.value = '' // [MỚI THÊM] Reset vai trò nếu không có token
   }
 }
 
@@ -254,6 +289,7 @@ function dangXuat() {
   // 2. Reset lại giao diện
   dangNhap.value = false
   tenNguoiDung.value = ''
+  vaiTro.value = '' // [MỚI THÊM] Xóa vai trò khi đăng xuất
   showDropdown.value = false
   
   // 3. Đẩy người dùng về trang chủ

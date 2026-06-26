@@ -32,13 +32,15 @@ public class SecurityConfig {
             .cors(cors -> cors.configurationSource(corsConfigurationSource())) // BẬT CORS CHUẨN
             .csrf(csrf -> csrf.disable())
             .authorizeHttpRequests(auth -> auth
-                .requestMatchers("/api/xac-thuc/**").permitAll() // Mở cửa API xác thực
+                .requestMatchers("/api/xac-thuc/**").permitAll()        // Mở cửa API xác thực
+                .requestMatchers(org.springframework.http.HttpMethod.GET, "/api/san-bong/**").permitAll() // Công khai: xem sân
                 .anyRequest().authenticated()
             )
             .addFilterBefore(jwtAuthenticationFilter, UsernamePasswordAuthenticationFilter.class);
             
         return http.build();
     }
+
 
     // Khai báo cấu hình CORS cho phép Vue.js truy cập
     @Bean

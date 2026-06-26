@@ -314,64 +314,33 @@ function stopAutoSlide() {
 }
 
 // ===== DỮ LIỆU SÂN =====
-const danhSachSan = [
-  {
-    id: 1, maSan: 'A1', ten: 'Sân A1 — 5 người', loai: 'san5',
-    kichThuoc: '25 × 16m', gia: '350.000', rating: 4.9, soLuotDanhGia: 128,
-    hot: true,
-    gradient: 'linear-gradient(135deg, #0a2540, #1a4a7a)',
-    tags: ['a1', 'san 5', 'sân 5', 'san5', 'san a', '5 nguoi', '5 người']
-  },
-  {
-    id: 2, maSan: 'A2', ten: 'Sân A2 — 5 người', loai: 'san5',
-    kichThuoc: '25 × 16m', gia: '350.000', rating: 4.8, soLuotDanhGia: 104,
-    hot: false,
-    gradient: 'linear-gradient(135deg, #163e6b, #20517f)',
-    tags: ['a2', 'san 5', 'sân 5', 'san5', 'san a', '5 nguoi', '5 người']
-  },
-  {
-    id: 3, maSan: 'A3', ten: 'Sân A3 — 5 người', loai: 'san5',
-    kichThuoc: '25 × 16m', gia: '320.000', rating: 4.7, soLuotDanhGia: 89,
-    hot: false,
-    gradient: 'linear-gradient(135deg, #0e3258, #1b4f80)',
-    tags: ['a3', 'san 5', 'sân 5', 'san5', 'san a', '5 nguoi', '5 người']
-  },
-  {
-    id: 4, maSan: 'A4', ten: 'Sân A4 — 5 người', loai: 'san5',
-    kichThuoc: '25 × 16m', gia: '350.000', rating: 4.8, soLuotDanhGia: 112,
-    hot: true,
-    gradient: 'linear-gradient(135deg, #1a3a5c, #2563a8)',
-    tags: ['a4', 'san 5', 'sân 5', 'san5', 'san a', '5 nguoi', '5 người']
-  },
-  {
-    id: 5, maSan: 'B1', ten: 'Sân B1 — 7 người', loai: 'san7',
-    kichThuoc: '50 × 30m', gia: '650.000', rating: 4.9, soLuotDanhGia: 96,
-    hot: true,
-    gradient: 'linear-gradient(135deg, #1f7a34, #2c9b41)',
-    tags: ['b1', 'san 7', 'sân 7', 'san7', 'san b', '7 nguoi', '7 người']
-  },
-  {
-    id: 6, maSan: 'B2', ten: 'Sân B2 — 7 người', loai: 'san7',
-    kichThuoc: '50 × 30m', gia: '650.000', rating: 4.8, soLuotDanhGia: 81,
-    hot: false,
-    gradient: 'linear-gradient(135deg, #2c9b41, #3fb454)',
-    tags: ['b2', 'san 7', 'sân 7', 'san7', 'san b', '7 nguoi', '7 người']
-  },
-  {
-    id: 7, maSan: 'B3', ten: 'Sân B3 — 7 người', loai: 'san7',
-    kichThuoc: '50 × 30m', gia: '600.000', rating: 4.7, soLuotDanhGia: 74,
-    hot: false,
-    gradient: 'linear-gradient(135deg, #1a8a36, #1f7a34)',
-    tags: ['b3', 'san 7', 'sân 7', 'san7', 'san b', '7 nguoi', '7 người']
-  },
-  {
-    id: 8, maSan: 'B4', ten: 'Sân B4 — 7 người', loai: 'san7',
-    kichThuoc: '50 × 30m', gia: '680.000', rating: 4.9, soLuotDanhGia: 117,
-    hot: true,
-    gradient: 'linear-gradient(135deg, #155c28, #1f7a34)',
-    tags: ['b4', 'san 7', 'sân 7', 'san7', 'san b', '7 nguoi', '7 người']
-  },
-]
+const danhSachSan = ref([])
+const API = 'http://localhost:8080/api'
+
+async function fetchSanBong() {
+  try {
+    const res = await fetch(`${API}/san-bong`)
+    if (res.ok) {
+      const data = await res.json()
+      danhSachSan.value = data.map(san => ({
+        id: san.id,
+        maSan: san.tenSan.split(' – ')[0] || san.tenSan,
+        ten: san.tenSan,
+        loai: san.loaiSan === 5 ? 'san5' : 'san7',
+        kichThuoc: san.loaiSan === 5 ? '25 × 16m' : '50 × 30m',
+        gia: san.danhSachGia && san.danhSachGia.length > 0 ? Number(san.danhSachGia[0].giaTien).toLocaleString('vi-VN') : '350.000',
+        rating: 4.8, 
+        soLuotDanhGia: 100,
+        hot: true,
+        gradient: san.loaiSan === 5 ? 'linear-gradient(135deg, #0a2540, #1a4a7a)' : 'linear-gradient(135deg, #1f7a34, #2c9b41)',
+        tags: [san.tenSan.toLowerCase(), san.loaiSan === 5 ? 'san5' : 'san7', san.loaiSan === 5 ? '5 người' : '7 người'],
+        hinhAnh: san.hinhAnh
+      }))
+    }
+  } catch (err) {
+    console.error('Lỗi tải danh sách sân:', err)
+  }
+}
 
 // ===== TABS =====
 const tabs = [
@@ -392,8 +361,8 @@ const tabs = [
 const activeTab = ref('tat-ca')
 
 function demSan(tab) {
-  if (tab === 'tat-ca') return danhSachSan.length
-  return danhSachSan.filter(s => s.loai === tab).length
+  if (tab === 'tat-ca') return danhSachSan.value.length
+  return danhSachSan.value.filter(s => s.loai === tab).length
 }
 
 function doiTab(val) {
@@ -412,7 +381,7 @@ const searchBoxRef = ref(null)
 function locSan(q) {
   const query = q.trim().toLowerCase()
   if (!query) return []
-  return danhSachSan.filter(san =>
+  return danhSachSan.value.filter(san =>
     san.maSan.toLowerCase().includes(query) ||
     san.ten.toLowerCase().includes(query) ||
     san.tags.some(t => t.includes(query))
@@ -450,7 +419,7 @@ function clearSearch() {
 
 // ===== DANH SÁCH HIỆN THỊ =====
 const sanHienThi = computed(() => {
-  let list = danhSachSan
+  let list = danhSachSan.value
   if (activeTab.value !== 'tat-ca') {
     list = list.filter(s => s.loai === activeTab.value)
   }
@@ -490,6 +459,7 @@ function onClickOutside(e) {
 onMounted(() => {
   document.addEventListener('click', onClickOutside)
   startAutoSlide()
+  fetchSanBong()
 })
 onUnmounted(() => {
   document.removeEventListener('click', onClickOutside)

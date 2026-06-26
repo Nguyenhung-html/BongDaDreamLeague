@@ -311,6 +311,7 @@ onMounted(() => {
   slideInterval = setInterval(() => {
     slideHienTai.value = (slideHienTai.value + 1) % slides.length
   }, 4000)
+  fetchSanNoiBat()
 })
 onUnmounted(() => clearInterval(slideInterval))
 
@@ -357,14 +358,29 @@ const loaiSanList = [
   }
 ]
 
-const sanNoiBat = [
-  { id: 1, ten: 'Sân 5 người', maSan: 'A1', loai: 'Sân 5', diaChi: 'Hẻm 104 Tân Sơn, Tân Sơn, HCM', rating: '4.9', gia: '350.000', mau: 'linear-gradient(135deg,#0a2540,#163e6b)' },
-  { id: 2, ten: 'Sân 5 người', maSan: 'A2', loai: 'Sân 5', diaChi: 'Hẻm 104 Tân Sơn, Tân Sơn, HCM', rating: '4.8', gia: '350.000', mau: 'linear-gradient(135deg,#163e6b,#20517f)' },
-  { id: 3, ten: 'Sân 5 người', maSan: 'A3', loai: 'Sân 5', diaChi: 'Hẻm 104 Tân Sơn, Tân Sơn, HCM', rating: '4.7', gia: '350.000', mau: 'linear-gradient(135deg,#0e3258,#0a2540)' },
-  { id: 4, ten: 'Sân 7 người', maSan: 'B1', loai: 'Sân 7', diaChi: 'Hẻm 104 Tân Sơn, Tân Sơn, HCM', rating: '4.9', gia: '650.000', mau: 'linear-gradient(135deg,#1f7a34,#2c9b41)' },
-  { id: 5, ten: 'Sân 7 người', maSan: 'B2', loai: 'Sân 7', diaChi: 'Hẻm 104 Tân Sơn, Tân Sơn, HCM', rating: '4.8', gia: '650.000', mau: 'linear-gradient(135deg,#2c9b41,#3fb454)' },
-  { id: 6, ten: 'Sân 7 người', maSan: 'B3', loai: 'Sân 7', diaChi: 'Hẻm 104 Tân Sơn, Tân Sơn, HCM', rating: '4.8', gia: '650.000', mau: 'linear-gradient(135deg,#1a8a36,#1f7a34)' }
-]
+const sanNoiBat = ref([])
+const API = 'http://localhost:8080/api'
+
+async function fetchSanNoiBat() {
+  try {
+    const res = await fetch(`${API}/san-bong`)
+    if (res.ok) {
+      const data = await res.json()
+      sanNoiBat.value = data.slice(0, 6).map(san => ({
+        id: san.id,
+        ten: san.loaiSan === 5 ? 'Sân 5 người' : 'Sân 7 người',
+        maSan: san.tenSan.split(' – ')[0] || san.tenSan,
+        loai: san.loaiSan === 5 ? 'Sân 5' : 'Sân 7',
+        diaChi: san.diaChi,
+        rating: '4.8',
+        gia: san.danhSachGia && san.danhSachGia.length > 0 ? Number(san.danhSachGia[0].giaTien).toLocaleString('vi-VN') : '350.000',
+        mau: san.loaiSan === 5 ? 'linear-gradient(135deg,#0a2540,#163e6b)' : 'linear-gradient(135deg,#1f7a34,#2c9b41)'
+      }))
+    }
+  } catch (err) {
+    console.error('Lỗi tải danh sách sân nổi bật:', err)
+  }
+}
 
 const cacBuoc = [
   {

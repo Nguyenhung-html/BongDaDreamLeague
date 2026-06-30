@@ -56,14 +56,16 @@
                     :class="{
                       'gia-sang': parseInt(g.gioBatDau) < 11,
                       'gia-toi': parseInt(g.gioBatDau) >= 17,
-                      'gia-da-dat': form.ngayDa && khungGioBiTrung(g),
+                      'gia-da-dat': form.ngayDa && khungGioBiKhoa(g),
                       'gia-dang-chon': form.khungGioId === g.id
                     }"
                     @click="chonKhungGio(g)"
                   >
                     <span class="gia-gio">{{ g.gioBatDau }}–{{ g.gioKetThuc }}</span>
                     <span class="gia-tien">{{ formatTien(g.giaTien) }}đ</span>
-                    <span v-if="form.ngayDa && khungGioBiTrung(g)" class="gia-tag-dat">Đã đặt</span>
+                    <span v-if="form.ngayDa && khungGioBiKhoa(g)" class="gia-tag-dat">
+                      {{ khungGioBiTrung(g) ? 'Đã đặt' : 'Đã qua giờ' }}
+                    </span>
                   </div>
                 </div>
                 <p v-if="!form.ngayDa" class="hint-ngay">Vui lòng chọn ngày đá ở form bên phải để xem khung giờ còn trống</p>
@@ -174,25 +176,25 @@
             </div>
 
             <!-- Bước 3: Thành công -->
-            <div v-else-if="buoc === 3" class="success-step">
-              <div class="success-icon">🎉</div>
-              <h3>Đặt sân thành công!</h3>
-              <p>{{ ketQua?.thongBao }}</p>
+<div v-else-if="buoc === 3" class="success-step">
+  <div class="success-icon">⏳</div>
+  <h3>Đã ghi nhận yêu cầu đặt sân!</h3>
+  <p>{{ ketQua?.thongBao }}</p>
+  <p class="luu-y-xac-nhan">
+    ⚠️ Đơn của bạn đang ở trạng thái <strong>Chờ xác nhận</strong>.
+    Nhân viên sẽ kiểm tra giao dịch chuyển khoản và xác nhận trong ít phút.
+    Bạn sẽ nhận thông báo khi đơn được xác nhận chính thức.
+  </p>
 
-              <div class="result-card" v-if="ketQua">
-                <div class="result-row"><span>Sân</span><strong>{{ ketQua.tenSan }}</strong></div>
-                <div class="result-row"><span>Ngày</span><strong>{{ ketQua.ngayDa }}</strong></div>
-                <div class="result-row"><span>Giờ</span><strong>{{ ketQua.gioBatDau }} – {{ ketQua.gioKetThuc }}</strong></div>
-                <div class="result-row"><span>Tổng tiền</span><strong>{{ formatTien(ketQua.tongTien) }} VNĐ</strong></div>
-                <div class="result-row"><span>Đã cọc</span><strong class="text-green">{{ formatTien(ketQua.tienCoc) }} VNĐ</strong></div>
-                <div class="result-row"><span>Trạng thái</span><span class="badge-trang-thai">Chờ xác nhận</span></div>
-              </div>
+  <div class="result-card" v-if="ketQua">
+    ... Chờ trong trong giây lát
+  </div>
 
-              <div class="success-actions">
-                <button class="btn-book" @click="$router.push('/lich-su-dat-san')">Xem lịch sử đặt sân</button>
-                <button class="btn-outline" @click="$router.push('/san')">Đặt sân khác</button>
-              </div>
-            </div>
+  <div class="success-actions">
+    <button class="btn-book" @click="$router.push('/lich-su-dat-san')">Theo dõi trạng thái đơn</button>
+    <button class="btn-outline" @click="$router.push('/san')">Đặt sân khác</button>
+  </div>
+</div>
           </div>
         </div>
       </template>
@@ -239,12 +241,13 @@ const tienCoc = computed(() => {
   return Math.round(Number(khungGioChon.value.giaTien) / 2)
 })
 
-// ── Helpers: kiểm tra trùng khung giờ ──
+// ── Helpers ──
 function gioToPhut(gio) {
   const [h, m] = gio.split(':').map(Number)
   return h * 60 + (m || 0)
 }
 
+// Đã có người khác đặt trùng giờ chưa
 function khungGioBiTrung(g) {
   const batMoi = gioToPhut(g.gioBatDau)
   const ketMoi = gioToPhut(g.gioKetThuc)
@@ -253,6 +256,23 @@ function khungGioBiTrung(g) {
     const ket = gioToPhut(d.gioKetThuc)
     return batMoi < ket && bat < ketMoi
   })
+}
+
+// Khung giờ đã trôi qua chưa (chỉ áp dụng khi ngày đá là hôm nay)
+function khungGioDaQua(g) {
+  const homNay = new Date().toISOString().split('T')[0]
+  if (form.value.ngayDa !== homNay) return false
+
+  const bayGio = new Date()
+  const phutHienTai = bayGio.getHours() * 60 + bayGio.getMinutes()
+  const phutBatDau = gioToPhut(g.gioBatDau)
+
+  return phutBatDau <= phutHienTai
+}
+
+// Gộp: đã đặt HOẶC đã qua giờ → không cho chọn
+function khungGioBiKhoa(g) {
+  return khungGioBiTrung(g) || khungGioDaQua(g)
 }
 
 async function taiKhungGioDaDat() {
@@ -279,13 +299,12 @@ watch(() => form.value.ngayDa, async () => {
 })
 
 // ── Methods ──
-// Chọn khung giờ bằng cách bấm trực tiếp vào ô trong bảng giá bên trái
 function chonKhungGio(g) {
   if (!form.value.ngayDa) {
     loiForm.value = 'Vui lòng chọn ngày đá trước!'
     return
   }
-  if (khungGioBiTrung(g)) return // ô đã xám, không cho chọn
+  if (khungGioBiKhoa(g)) return // đã đặt hoặc đã qua giờ → không cho chọn
 
   loiForm.value = ''
   form.value.khungGioId = g.id
@@ -326,8 +345,10 @@ function buocTiep() {
   if (!form.value.soDienThoai.trim()) { loiForm.value = 'Vui lòng nhập số điện thoại!'; return }
   if (!form.value.ngayDa) { loiForm.value = 'Vui lòng chọn ngày đá!'; return }
   if (!form.value.khungGioId) { loiForm.value = 'Vui lòng chọn khung giờ!'; return }
-  if (khungGioChon.value && khungGioBiTrung(khungGioChon.value)) {
-    loiForm.value = 'Khung giờ này đã có người đặt, vui lòng chọn khung giờ khác!'
+  if (khungGioChon.value && khungGioBiKhoa(khungGioChon.value)) {
+    loiForm.value = khungGioBiTrung(khungGioChon.value)
+      ? 'Khung giờ này đã có người đặt, vui lòng chọn khung giờ khác!'
+      : 'Khung giờ này đã qua giờ đá hôm nay, vui lòng chọn khung giờ khác!'
     return
   }
 
@@ -671,5 +692,16 @@ onMounted(taiThongTinSan)
   .booking-layout { grid-template-columns: 1fr; }
   .booking-card { position: static; }
   .btn-back { position: static; display: inline-flex; margin-bottom: 16px; }
+}
+
+.luu-y-xac-nhan {
+  background: #fffbeb;
+  border: 1px solid #fde68a;
+  color: #92400e;
+  font-size: 13px;
+  padding: 12px 16px;
+  border-radius: 10px;
+  text-align: left;
+  margin-bottom: 20px;
 }
 </style>

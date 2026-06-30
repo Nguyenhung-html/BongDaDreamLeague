@@ -3,12 +3,15 @@ package com.dream.sanbong.controller;
 import com.dream.sanbong.config.JwtUtils;
 import com.dream.sanbong.dto.DatSanPhanHoi;
 import com.dream.sanbong.dto.DatSanYeuCau;
+import com.dream.sanbong.dto.KhungGioDaDatPhanHoi;
 import com.dream.sanbong.dto.LichSuDatSanPhanHoi;
 import com.dream.sanbong.service.DatSanService;
 import jakarta.servlet.http.HttpServletRequest;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
+
+import java.time.LocalDate;
 import java.util.List;
 import java.util.Map;
 import java.util.UUID;
@@ -85,4 +88,21 @@ public class DatSanController {
         String token = authHeader.substring(7);
         return jwtUtils.getEmailFromToken(token);
     }
+
+    /**
+ * GET /api/dat-san/da-dat?sanBongId=...&ngay=2026-06-29
+ * Lấy danh sách khung giờ đã bị đặt của 1 sân trong 1 ngày (không cần JWT)
+ */
+@GetMapping("/da-dat")
+public ResponseEntity<?> layKhungGioDaDat(
+        @RequestParam UUID sanBongId,
+        @RequestParam String ngay) {
+    try {
+        LocalDate ngayDa = LocalDate.parse(ngay);
+        List<KhungGioDaDatPhanHoi> ketQua = datSanService.layKhungGioDaDat(sanBongId, ngayDa);
+        return ResponseEntity.ok(ketQua);
+    } catch (RuntimeException e) {
+        return ResponseEntity.badRequest().body(Map.of("message", e.getMessage()));
+    }
+}
 }

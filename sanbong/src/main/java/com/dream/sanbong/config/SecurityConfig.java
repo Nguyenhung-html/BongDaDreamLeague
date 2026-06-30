@@ -34,13 +34,13 @@ public class SecurityConfig {
             .authorizeHttpRequests(auth -> auth
                 .requestMatchers("/api/xac-thuc/**").permitAll()        // Mở cửa API xác thực
                 .requestMatchers(org.springframework.http.HttpMethod.GET, "/api/san-bong/**").permitAll() // Công khai: xem sân
+                .requestMatchers(org.springframework.http.HttpMethod.GET, "/api/dat-san/da-dat").permitAll() // Công khai: xem khung giờ đã đặt
                 .anyRequest().authenticated()
             )
             .addFilterBefore(jwtAuthenticationFilter, UsernamePasswordAuthenticationFilter.class);
-            
+
         return http.build();
     }
-
 
     // Khai báo cấu hình CORS cho phép Vue.js truy cập
     @Bean

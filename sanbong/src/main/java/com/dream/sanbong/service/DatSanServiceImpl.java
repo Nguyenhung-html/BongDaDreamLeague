@@ -51,6 +51,17 @@ public class DatSanServiceImpl implements DatSanService {
     // ══════════════════════════════════════════════════════════════
 
     @Override
+public List<KhungGioDaDatPhanHoi> layKhungGioDaDat(UUID sanBongId, LocalDate ngay) {
+    return datSanRepo
+            .findBySanBongIdAndNgayDaAndTrangThaiNotOrderByGioBatDauAsc(sanBongId, ngay, "DA_HUY")
+            .stream()
+            .map(d -> new KhungGioDaDatPhanHoi(
+                    d.getGioBatDau().toString(),
+                    d.getGioKetThuc().toString()
+            ))
+            .collect(Collectors.toList());
+}
+    @Override
     @Transactional
     public DatSanPhanHoi datSan(DatSanYeuCau yeuCau, String emailNguoiDung) {
 

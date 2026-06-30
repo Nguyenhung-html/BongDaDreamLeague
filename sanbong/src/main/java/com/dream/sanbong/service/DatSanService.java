@@ -1,6 +1,8 @@
 package com.dream.sanbong.service;
 
 import com.dream.sanbong.dto.*;
+
+import java.time.LocalDate;
 import java.util.List;
 import java.util.UUID;
 
@@ -9,6 +11,9 @@ public interface DatSanService {
     DatSanPhanHoi datSan(DatSanYeuCau yeuCau, String emailNguoiDung);
     List<LichSuDatSanPhanHoi> layLichSu(String emailNguoiDung);
     String huySan(UUID datSanId, String emailNguoiDung);
+
+    /** Lấy danh sách khung giờ đã bị đặt của 1 sân trong 1 ngày (để FE disable/làm mờ) */
+    List<KhungGioDaDatPhanHoi> layKhungGioDaDat(UUID sanBongId, LocalDate ngay);
 
     // ── Staff features ────────────────────────────────────────────
     /** Lấy tất cả đơn đặt sân, có thể lọc theo trạng thái và ngày (nullable = không lọc) */

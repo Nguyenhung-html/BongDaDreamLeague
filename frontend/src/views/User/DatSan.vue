@@ -46,19 +46,27 @@
               </div>
               <div class="field-detail mo-ta">{{ sanBong.moTa }}</div>
 
-              <!-- Bảng giá -->
+              <!-- Bảng giá kiêm chọn khung giờ -->
               <div class="gia-section" v-if="sanBong.danhSachGia?.length">
                 <h3>Bảng giá theo khung giờ</h3>
                 <div class="gia-grid">
                   <div
                     v-for="g in sanBong.danhSachGia" :key="g.id"
                     class="gia-item"
-                    :class="{ 'gia-sang': parseInt(g.gioBatDau) < 11, 'gia-toi': parseInt(g.gioBatDau) >= 17 }"
+                    :class="{
+                      'gia-sang': parseInt(g.gioBatDau) < 11,
+                      'gia-toi': parseInt(g.gioBatDau) >= 17,
+                      'gia-da-dat': form.ngayDa && khungGioBiTrung(g),
+                      'gia-dang-chon': form.khungGioId === g.id
+                    }"
+                    @click="chonKhungGio(g)"
                   >
                     <span class="gia-gio">{{ g.gioBatDau }}–{{ g.gioKetThuc }}</span>
                     <span class="gia-tien">{{ formatTien(g.giaTien) }}đ</span>
+                    <span v-if="form.ngayDa && khungGioBiTrung(g)" class="gia-tag-dat">Đã đặt</span>
                   </div>
                 </div>
+                <p v-if="!form.ngayDa" class="hint-ngay">Vui lòng chọn ngày đá ở form bên phải để xem khung giờ còn trống</p>
               </div>
 
               <!-- Chính sách -->
@@ -98,12 +106,11 @@
 
               <div class="form-group">
                 <label>Khung giờ <span class="req">*</span></label>
-                <select v-model="form.khungGioId" @change="onChonKhungGio">
-                  <option value="">-- Chọn khung giờ --</option>
-                  <option v-for="g in sanBong.danhSachGia" :key="g.id" :value="g.id">
-                    {{ g.gioBatDau }} – {{ g.gioKetThuc }} &nbsp;|&nbsp; {{ formatTien(g.giaTien) }}đ
-                  </option>
-                </select>
+                <div class="khung-gio-da-chon" :class="{ 'chua-chon': !khungGioChon }">
+                  {{ khungGioChon
+                    ? `${khungGioChon.gioBatDau} – ${khungGioChon.gioKetThuc} | ${formatTien(khungGioChon.giaTien)}đ`
+                    : 'Vui lòng chọn khung giờ ở bảng giá bên trái' }}
+                </div>
               </div>
 
               <!-- Tóm tắt giá -->
@@ -194,7 +201,7 @@
 </template>
 
 <script setup>
-import { ref, computed, onMounted } from 'vue'
+import { ref, computed, onMounted, watch } from 'vue'
 import { useRoute } from 'vue-router'
 
 const route = useRoute()
@@ -208,6 +215,7 @@ const buoc = ref(1)
 const dangGui = ref(false)
 const loiForm = ref('')
 const ketQua = ref(null)
+const danhSachDaDat = ref([])
 
 const form = ref({
   hoTenDat: '',
@@ -231,13 +239,58 @@ const tienCoc = computed(() => {
   return Math.round(Number(khungGioChon.value.giaTien) / 2)
 })
 
-// ── Methods ──
-function onChonKhungGio() {
-  const g = khungGioChon.value
-  if (g) {
-    form.value.gioBatDau = g.gioBatDau
-    form.value.gioKetThuc = g.gioKetThuc
+// ── Helpers: kiểm tra trùng khung giờ ──
+function gioToPhut(gio) {
+  const [h, m] = gio.split(':').map(Number)
+  return h * 60 + (m || 0)
+}
+
+function khungGioBiTrung(g) {
+  const batMoi = gioToPhut(g.gioBatDau)
+  const ketMoi = gioToPhut(g.gioKetThuc)
+  return danhSachDaDat.value.some(d => {
+    const bat = gioToPhut(d.gioBatDau)
+    const ket = gioToPhut(d.gioKetThuc)
+    return batMoi < ket && bat < ketMoi
+  })
+}
+
+async function taiKhungGioDaDat() {
+  if (!form.value.ngayDa || !sanBong.value) {
+    danhSachDaDat.value = []
+    return
   }
+  try {
+    const res = await fetch(
+      `${API}/dat-san/da-dat?sanBongId=${sanBong.value.id}&ngay=${form.value.ngayDa}`
+    )
+    danhSachDaDat.value = res.ok ? await res.json() : []
+  } catch {
+    danhSachDaDat.value = []
+  }
+}
+
+// Khi đổi ngày → reset khung giờ đã chọn + tải lại lịch đã đặt
+watch(() => form.value.ngayDa, async () => {
+  form.value.khungGioId = ''
+  form.value.gioBatDau = ''
+  form.value.gioKetThuc = ''
+  await taiKhungGioDaDat()
+})
+
+// ── Methods ──
+// Chọn khung giờ bằng cách bấm trực tiếp vào ô trong bảng giá bên trái
+function chonKhungGio(g) {
+  if (!form.value.ngayDa) {
+    loiForm.value = 'Vui lòng chọn ngày đá trước!'
+    return
+  }
+  if (khungGioBiTrung(g)) return // ô đã xám, không cho chọn
+
+  loiForm.value = ''
+  form.value.khungGioId = g.id
+  form.value.gioBatDau = g.gioBatDau
+  form.value.gioKetThuc = g.gioKetThuc
 }
 
 function formatTien(so) {
@@ -255,9 +308,11 @@ async function taiThongTinSan() {
     const res = await fetch(`${API}/san-bong/${sanId}`)
     if (!res.ok) throw new Error('Không tải được thông tin sân')
     sanBong.value = await res.json()
-    // Prefill họ tên & SĐT từ localStorage
+
     const tenLuu = localStorage.getItem('userName')
     if (tenLuu) form.value.hoTenDat = tenLuu
+
+    await taiKhungGioDaDat()
   } catch (e) {
     loiTai.value = e.message
   } finally {
@@ -271,6 +326,10 @@ function buocTiep() {
   if (!form.value.soDienThoai.trim()) { loiForm.value = 'Vui lòng nhập số điện thoại!'; return }
   if (!form.value.ngayDa) { loiForm.value = 'Vui lòng chọn ngày đá!'; return }
   if (!form.value.khungGioId) { loiForm.value = 'Vui lòng chọn khung giờ!'; return }
+  if (khungGioChon.value && khungGioBiTrung(khungGioChon.value)) {
+    loiForm.value = 'Khung giờ này đã có người đặt, vui lòng chọn khung giờ khác!'
+    return
+  }
 
   if (form.value.phuongThuc === 'QR') {
     buoc.value = 2
@@ -301,26 +360,25 @@ async function xacNhanDat() {
       })
     })
 
-    // Đọc response dạng text trước để tránh crash khi backend trả về plain text
     const rawText = await res.text()
 
     if (!res.ok) {
-      // Thử parse lỗi dạng JSON {"message": "..."} nếu có, còn không thì dùng text thẳng
+      let thongBaoLoi = 'Đặt sân thất bại!'
       try {
         const errJson = JSON.parse(rawText)
-        throw new Error(errJson.message || errJson.error || rawText)
+        thongBaoLoi = errJson.message || errJson.error || thongBaoLoi
       } catch {
-        // rawText không phải JSON → hiển thị trực tiếp (loại bỏ prefix "Lỗi: " nếu có)
-        throw new Error(rawText.replace(/^Lỗi:\s*/, '') || 'Đặt sân thất bại!')
+        thongBaoLoi = rawText.replace(/^Lỗi:\s*/, '') || thongBaoLoi
       }
+      throw new Error(thongBaoLoi)
     }
 
-    // Thành công → parse JSON kết quả
     ketQua.value = JSON.parse(rawText)
     buoc.value = 3
   } catch (e) {
     loiForm.value = e.message
     if (buoc.value === 2) buoc.value = 1
+    await taiKhungGioDaDat()
   } finally {
     dangGui.value = false
   }
@@ -410,12 +468,47 @@ onMounted(taiThongTinSan)
   display: flex; flex-direction: column; gap: 2px;
   padding: 8px 10px; border-radius: 10px;
   background: #f8fafc; border: 1px solid #e2e8f0;
+  cursor: pointer; transition: .15s; position: relative;
+}
+.gia-item:hover:not(.gia-da-dat) {
+  border-color: var(--green-600);
+  transform: translateY(-1px);
 }
 .gia-sang { border-color: #bfdbfe; background: #eff6ff; }
 .gia-toi { border-color: #bbf7d0; background: #f0fdf4; }
 
+.gia-item.gia-dang-chon {
+  border-color: var(--green-600);
+  background: #dcfce7;
+  box-shadow: 0 0 0 2px var(--green-600);
+}
+
+.gia-item.gia-da-dat {
+  opacity: 0.45;
+  filter: grayscale(60%);
+  cursor: not-allowed;
+  pointer-events: none;
+}
+
+.gia-tag-dat {
+  position: absolute;
+  top: 4px;
+  right: 4px;
+  font-size: 10px;
+  background: #999;
+  color: white;
+  padding: 1px 5px;
+  border-radius: 4px;
+}
+
 .gia-gio { font-size: 11px; font-weight: 600; color: #374151; }
 .gia-tien { font-size: 13px; font-weight: 700; color: var(--green-600); }
+
+.hint-ngay {
+  font-size: 12px;
+  color: #888;
+  margin-top: 8px;
+}
 
 .policy-box {
   margin-top: 20px; padding: 16px;
@@ -449,6 +542,22 @@ onMounted(taiThongTinSan)
 }
 .form-group input:focus,
 .form-group select:focus { border-color: var(--green-600); background: white; }
+
+.khung-gio-da-chon {
+  padding: 12px 14px;
+  border: 1.5px solid var(--green-600);
+  border-radius: 12px;
+  background: #f0fdf4;
+  font-size: 14px;
+  font-weight: 600;
+  color: #0d1f3c;
+}
+.khung-gio-da-chon.chua-chon {
+  border-color: #d1d5db;
+  background: #f9fafb;
+  font-weight: 400;
+  color: #9ca3af;
+}
 
 .summary {
   margin: 20px 0 0;

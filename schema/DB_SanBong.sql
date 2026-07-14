@@ -1,3 +1,136 @@
+CREATE DATABASE QuanLySanBong;
+GO
+
+USE QuanLySanBong;
+GO
+
+--Bảng User-- 
+CREATE TABLE USERS(
+    id UNIQUEIDENTIFIER PRIMARY KEY DEFAULT NEWID(),
+    ho_ten NVARCHAR(100) NOT NULL,
+    so_dien_thoai VARCHAR(15) NOT NULL UNIQUE,
+    email VARCHAR(100) NOT NULL UNIQUE,
+    mat_khau VARCHAR(255) NOT NULL,
+    dia_chi NVARCHAR(255),
+    vai_tro VARCHAR(20) NOT NULL, -- USER/STAFF/ADMIN
+    trang_thai BIT DEFAULT 1,
+    ngay_tao DATETIME DEFAULT GETDATE()
+);
+
+--Bảng Sân Bóng--
+
+CREATE TABLE SAN_BONG(
+    id UNIQUEIDENTIFIER PRIMARY KEY DEFAULT NEWID(),
+    ten_san NVARCHAR(100) NOT NULL,
+    loai_san INT NOT NULL, -- 5 hoặc 7
+    mo_ta NVARCHAR(MAX),
+    dia_chi NVARCHAR(255) NOT NULL,
+    vi_do DECIMAL(10,8),
+    kinh_do DECIMAL(11,8),
+    hinh_anh VARCHAR(500),
+    trang_thai VARCHAR(20) DEFAULT 'HOAT_DONG'
+);
+
+--Bảng Giá sân--
+CREATE TABLE GIA_SAN(
+    id UNIQUEIDENTIFIER PRIMARY KEY DEFAULT NEWID(),
+    san_bong_id UNIQUEIDENTIFIER NOT NULL,
+    gio_bat_dau TIME NOT NULL,
+    gio_ket_thuc TIME NOT NULL,
+    gia_tien DECIMAL(10,0) NOT NULL,
+    CONSTRAINT FK_GIA_SAN_SAN_BONG
+        FOREIGN KEY(san_bong_id)
+        REFERENCES SAN_BONG(id)
+);
+
+--Bảng Đặt sân--
+CREATE TABLE DAT_SAN(
+    id UNIQUEIDENTIFIER PRIMARY KEY DEFAULT NEWID(),
+    nguoi_dung_id UNIQUEIDENTIFIER NOT NULL,
+    san_bong_id UNIQUEIDENTIFIER NOT NULL,
+    ho_ten_dat NVARCHAR(100) NOT NULL,
+    so_dien_thoai VARCHAR(15) NOT NULL,
+    ngay_da DATE NOT NULL,
+    gio_bat_dau TIME NOT NULL,
+    gio_ket_thuc TIME NOT NULL,
+    tong_tien DECIMAL(10,0) NOT NULL,
+    tien_coc DECIMAL(10,0) DEFAULT 0,
+    trang_thai VARCHAR(30) DEFAULT 'CHO_XAC_NHAN',
+    ngay_dat DATETIME DEFAULT GETDATE(),
+    ngay_huy DATETIME NULL,
+    CONSTRAINT FK_DAT_SAN_USER
+        FOREIGN KEY(nguoi_dung_id)
+        REFERENCES USERS(id),
+    CONSTRAINT FK_DAT_SAN_SAN_BONG
+        FOREIGN KEY(san_bong_id)
+        REFERENCES SAN_BONG(id)
+);
+
+--Bảng Thanh toán--
+CREATE TABLE THANH_TOAN(
+    id UNIQUEIDENTIFIER PRIMARY KEY DEFAULT NEWID(),
+    dat_san_id UNIQUEIDENTIFIER NOT NULL,
+    so_tien DECIMAL(10,0) NOT NULL,
+    loai VARCHAR(20) NOT NULL,
+    -- COC
+    -- THANH_TOAN_CON_LAI
+    phuong_thuc VARCHAR(20) NOT NULL,
+    -- QR
+    -- TIEN_MAT
+    ma_giao_dich VARCHAR(100),
+    ngay_thanh_toan DATETIME DEFAULT GETDATE(),
+    trang_thai VARCHAR(30) DEFAULT 'THANH_CONG',
+    CONSTRAINT FK_THANH_TOAN_DAT_SAN
+        FOREIGN KEY(dat_san_id)
+        REFERENCES DAT_SAN(id)
+);
+
+--Bảng Bảo trì sân--
+CREATE TABLE BAO_TRI_SAN(
+    id UNIQUEIDENTIFIER PRIMARY KEY DEFAULT NEWID(),
+    san_bong_id UNIQUEIDENTIFIER NOT NULL,
+    ngay_bat_dau DATETIME NOT NULL,
+    ngay_ket_thuc DATETIME NOT NULL,
+    ly_do NVARCHAR(255),
+    trang_thai VARCHAR(20),
+    CONSTRAINT FK_BAO_TRI_SAN
+        FOREIGN KEY(san_bong_id)
+        REFERENCES SAN_BONG(id)
+);
+
+--Bảng Đánh giá--
+CREATE TABLE DANH_GIA(
+    id UNIQUEIDENTIFIER PRIMARY KEY DEFAULT NEWID(),
+    nguoi_dung_id UNIQUEIDENTIFIER NOT NULL,
+    san_bong_id UNIQUEIDENTIFIER NOT NULL,
+    so_sao INT NOT NULL
+        CHECK(so_sao BETWEEN 1 AND 5),
+    noi_dung NVARCHAR(MAX),
+    hien_thi BIT DEFAULT 1,
+    ngay_danh_gia DATETIME DEFAULT GETDATE(),
+    CONSTRAINT FK_DANH_GIA_USER
+        FOREIGN KEY(nguoi_dung_id)
+        REFERENCES USERS(id),
+    CONSTRAINT FK_DANH_GIA_SAN
+        FOREIGN KEY(san_bong_id)
+        REFERENCES SAN_BONG(id)
+);
+
+--Bảng thông báo--
+CREATE TABLE THONG_BAO(
+    id UNIQUEIDENTIFIER PRIMARY KEY DEFAULT NEWID(),
+    nguoi_dung_id UNIQUEIDENTIFIER NOT NULL,
+    tieu_de NVARCHAR(200) NOT NULL,
+    noi_dung NVARCHAR(MAX) NOT NULL,
+    loai VARCHAR(30),
+    da_doc BIT DEFAULT 0,
+    ngay_tao DATETIME DEFAULT GETDATE(),
+    CONSTRAINT FK_THONG_BAO_USER
+        FOREIGN KEY(nguoi_dung_id)
+        REFERENCES USERS(id)
+);
+
+
 -- Tất cả 3 tài khoản đều có chung mật khẩu đăng nhập là: 123456
 -- Chuỗi '$2a$10$xn3LI/AjqicFYZFruSwve.681477XaVNahGWqX2Q.ZGE1T9Z9sK.e' chính là 123456 đã được mã hóa BCrypt
 
@@ -258,155 +391,155 @@ VALUES
 
 -- === Sân A1 ===
 INSERT INTO GIA_SAN (san_bong_id, gio_bat_dau, gio_ket_thuc, gia_tien) VALUES
-(@idA1, '06:00', '07:00', 250000),
-(@idA1, '07:00', '08:00', 250000),
-(@idA1, '08:00', '09:00', 280000),
-(@idA1, '09:00', '10:00', 280000),
-(@idA1, '10:00', '11:00', 280000),
-(@idA1, '11:00', '12:00', 300000),
-(@idA1, '12:00', '13:00', 300000),
-(@idA1, '13:00', '14:00', 300000),
-(@idA1, '14:00', '15:00', 320000),
-(@idA1, '15:00', '16:00', 320000),
-(@idA1, '16:00', '17:00', 330000),
-(@idA1, '17:00', '18:00', 380000),
-(@idA1, '18:00', '19:00', 400000),
-(@idA1, '19:00', '20:00', 400000),
-(@idA1, '20:00', '21:00', 380000),
-(@idA1, '21:00', '22:00', 350000);
+(@idA1, '06:00', '07:00', 25000),
+(@idA1, '07:00', '08:00', 25000),
+(@idA1, '08:00', '09:00', 28000),
+(@idA1, '09:00', '10:00', 28000),
+(@idA1, '10:00', '11:00', 28000),
+(@idA1, '11:00', '12:00', 30000),
+(@idA1, '12:00', '13:00', 30000),
+(@idA1, '13:00', '14:00', 30000),
+(@idA1, '14:00', '15:00', 32000),
+(@idA1, '15:00', '16:00', 32000),
+(@idA1, '16:00', '17:00', 33000),
+(@idA1, '17:00', '18:00', 38000),
+(@idA1, '18:00', '19:00', 40000),
+(@idA1, '19:00', '20:00', 40000),
+(@idA1, '20:00', '21:00', 38000),
+(@idA1, '21:00', '22:00', 35000);
 
 -- === Sân A2 ===
 INSERT INTO GIA_SAN (san_bong_id, gio_bat_dau, gio_ket_thuc, gia_tien) VALUES
-(@idA2, '06:00', '07:00', 250000),
-(@idA2, '07:00', '08:00', 250000),
-(@idA2, '08:00', '09:00', 280000),
-(@idA2, '09:00', '10:00', 280000),
-(@idA2, '10:00', '11:00', 280000),
-(@idA2, '11:00', '12:00', 300000),
-(@idA2, '12:00', '13:00', 300000),
-(@idA2, '13:00', '14:00', 300000),
-(@idA2, '14:00', '15:00', 320000),
-(@idA2, '15:00', '16:00', 320000),
-(@idA2, '16:00', '17:00', 330000),
-(@idA2, '17:00', '18:00', 370000),
-(@idA2, '18:00', '19:00', 390000),
-(@idA2, '19:00', '20:00', 390000),
-(@idA2, '20:00', '21:00', 370000),
-(@idA2, '21:00', '22:00', 340000);
+(@idA2, '06:00', '07:00', 25000),
+(@idA2, '07:00', '08:00', 25000),
+(@idA2, '08:00', '09:00', 28000),
+(@idA2, '09:00', '10:00', 28000),
+(@idA2, '10:00', '11:00', 28000),
+(@idA2, '11:00', '12:00', 30000),
+(@idA2, '12:00', '13:00', 30000),
+(@idA2, '13:00', '14:00', 30000),
+(@idA2, '14:00', '15:00', 32000),
+(@idA2, '15:00', '16:00', 32000),
+(@idA2, '16:00', '17:00', 33000),
+(@idA2, '17:00', '18:00', 37000),
+(@idA2, '18:00', '19:00', 39000),
+(@idA2, '19:00', '20:00', 39000),
+(@idA2, '20:00', '21:00', 37000),
+(@idA2, '21:00', '22:00', 34000);
 
 -- === Sân A3 ===
 INSERT INTO GIA_SAN (san_bong_id, gio_bat_dau, gio_ket_thuc, gia_tien) VALUES
-(@idA3, '06:00', '07:00', 220000),
-(@idA3, '07:00', '08:00', 220000),
-(@idA3, '08:00', '09:00', 250000),
-(@idA3, '09:00', '10:00', 250000),
-(@idA3, '10:00', '11:00', 250000),
-(@idA3, '11:00', '12:00', 270000),
-(@idA3, '12:00', '13:00', 270000),
-(@idA3, '13:00', '14:00', 270000),
-(@idA3, '14:00', '15:00', 290000),
-(@idA3, '15:00', '16:00', 290000),
-(@idA3, '16:00', '17:00', 300000),
-(@idA3, '17:00', '18:00', 350000),
-(@idA3, '18:00', '19:00', 370000),
-(@idA3, '19:00', '20:00', 370000),
-(@idA3, '20:00', '21:00', 350000),
-(@idA3, '21:00', '22:00', 320000);
+(@idA3, '06:00', '07:00', 22000),
+(@idA3, '07:00', '08:00', 22000),
+(@idA3, '08:00', '09:00', 25000),
+(@idA3, '09:00', '10:00', 25000),
+(@idA3, '10:00', '11:00', 25000),
+(@idA3, '11:00', '12:00', 27000),
+(@idA3, '12:00', '13:00', 27000),
+(@idA3, '13:00', '14:00', 27000),
+(@idA3, '14:00', '15:00', 29000),
+(@idA3, '15:00', '16:00', 29000),
+(@idA3, '16:00', '17:00', 30000),
+(@idA3, '17:00', '18:00', 35000),
+(@idA3, '18:00', '19:00', 37000),
+(@idA3, '19:00', '20:00', 37000),
+(@idA3, '20:00', '21:00', 35000),
+(@idA3, '21:00', '22:00', 32000);
 
 -- === Sân A4 ===
 INSERT INTO GIA_SAN (san_bong_id, gio_bat_dau, gio_ket_thuc, gia_tien) VALUES
-(@idA4, '06:00', '07:00', 260000),
-(@idA4, '07:00', '08:00', 260000),
-(@idA4, '08:00', '09:00', 290000),
-(@idA4, '09:00', '10:00', 290000),
-(@idA4, '10:00', '11:00', 290000),
-(@idA4, '11:00', '12:00', 310000),
-(@idA4, '12:00', '13:00', 310000),
-(@idA4, '13:00', '14:00', 310000),
-(@idA4, '14:00', '15:00', 330000),
-(@idA4, '15:00', '16:00', 330000),
-(@idA4, '16:00', '17:00', 340000),
-(@idA4, '17:00', '18:00', 390000),
-(@idA4, '18:00', '19:00', 410000),
-(@idA4, '19:00', '20:00', 410000),
-(@idA4, '20:00', '21:00', 390000),
-(@idA4, '21:00', '22:00', 360000);
+(@idA4, '06:00', '07:00', 26000),
+(@idA4, '07:00', '08:00', 26000),
+(@idA4, '08:00', '09:00', 29000),
+(@idA4, '09:00', '10:00', 29000),
+(@idA4, '10:00', '11:00', 29000),
+(@idA4, '11:00', '12:00', 31000),
+(@idA4, '12:00', '13:00', 31000),
+(@idA4, '13:00', '14:00', 31000),
+(@idA4, '14:00', '15:00', 33000),
+(@idA4, '15:00', '16:00', 33000),
+(@idA4, '16:00', '17:00', 34000),
+(@idA4, '17:00', '18:00', 39000),
+(@idA4, '18:00', '19:00', 41000),
+(@idA4, '19:00', '20:00', 41000),
+(@idA4, '20:00', '21:00', 39000),
+(@idA4, '21:00', '22:00', 36000);
 
 -- === Sân B1 ===
 INSERT INTO GIA_SAN (san_bong_id, gio_bat_dau, gio_ket_thuc, gia_tien) VALUES
-(@idB1, '06:00', '07:00', 500000),
-(@idB1, '07:00', '08:00', 500000),
-(@idB1, '08:00', '09:00', 550000),
-(@idB1, '09:00', '10:00', 550000),
-(@idB1, '10:00', '11:00', 550000),
-(@idB1, '11:00', '12:00', 580000),
-(@idB1, '12:00', '13:00', 580000),
-(@idB1, '13:00', '14:00', 580000),
-(@idB1, '14:00', '15:00', 620000),
-(@idB1, '15:00', '16:00', 620000),
-(@idB1, '16:00', '17:00', 650000),
-(@idB1, '17:00', '18:00', 750000),
-(@idB1, '18:00', '19:00', 800000),
-(@idB1, '19:00', '20:00', 800000),
-(@idB1, '20:00', '21:00', 750000),
-(@idB1, '21:00', '22:00', 700000);
+(@idB1, '06:00', '07:00', 50000),
+(@idB1, '07:00', '08:00', 50000),
+(@idB1, '08:00', '09:00', 55000),
+(@idB1, '09:00', '10:00', 55000),
+(@idB1, '10:00', '11:00', 55000),
+(@idB1, '11:00', '12:00', 58000),
+(@idB1, '12:00', '13:00', 58000),
+(@idB1, '13:00', '14:00', 58000),
+(@idB1, '14:00', '15:00', 62000),
+(@idB1, '15:00', '16:00', 62000),
+(@idB1, '16:00', '17:00', 65000),
+(@idB1, '17:00', '18:00', 75000),
+(@idB1, '18:00', '19:00', 80000),
+(@idB1, '19:00', '20:00', 80000),
+(@idB1, '20:00', '21:00', 75000),
+(@idB1, '21:00', '22:00', 70000);
 
 -- === Sân B2 ===
 INSERT INTO GIA_SAN (san_bong_id, gio_bat_dau, gio_ket_thuc, gia_tien) VALUES
-(@idB2, '06:00', '07:00', 480000),
-(@idB2, '07:00', '08:00', 480000),
-(@idB2, '08:00', '09:00', 530000),
-(@idB2, '09:00', '10:00', 530000),
-(@idB2, '10:00', '11:00', 530000),
-(@idB2, '11:00', '12:00', 560000),
-(@idB2, '12:00', '13:00', 560000),
-(@idB2, '13:00', '14:00', 560000),
-(@idB2, '14:00', '15:00', 600000),
-(@idB2, '15:00', '16:00', 600000),
-(@idB2, '16:00', '17:00', 630000),
-(@idB2, '17:00', '18:00', 720000),
-(@idB2, '18:00', '19:00', 770000),
-(@idB2, '19:00', '20:00', 770000),
-(@idB2, '20:00', '21:00', 720000),
-(@idB2, '21:00', '22:00', 680000);
+(@idB2, '06:00', '07:00', 48000),
+(@idB2, '07:00', '08:00', 48000),
+(@idB2, '08:00', '09:00', 53000),
+(@idB2, '09:00', '10:00', 53000),
+(@idB2, '10:00', '11:00', 53000),
+(@idB2, '11:00', '12:00', 56000),
+(@idB2, '12:00', '13:00', 56000),
+(@idB2, '13:00', '14:00', 56000),
+(@idB2, '14:00', '15:00', 60000),
+(@idB2, '15:00', '16:00', 60000),
+(@idB2, '16:00', '17:00', 63000),
+(@idB2, '17:00', '18:00', 72000),
+(@idB2, '18:00', '19:00', 77000),
+(@idB2, '19:00', '20:00', 77000),
+(@idB2, '20:00', '21:00', 72000),
+(@idB2, '21:00', '22:00', 68000);
 
 -- === Sân B3 ===
 INSERT INTO GIA_SAN (san_bong_id, gio_bat_dau, gio_ket_thuc, gia_tien) VALUES
-(@idB3, '06:00', '07:00', 460000),
-(@idB3, '07:00', '08:00', 460000),
-(@idB3, '08:00', '09:00', 510000),
-(@idB3, '09:00', '10:00', 510000),
-(@idB3, '10:00', '11:00', 510000),
-(@idB3, '11:00', '12:00', 540000),
-(@idB3, '12:00', '13:00', 540000),
-(@idB3, '13:00', '14:00', 540000),
-(@idB3, '14:00', '15:00', 580000),
-(@idB3, '15:00', '16:00', 580000),
-(@idB3, '16:00', '17:00', 600000),
-(@idB3, '17:00', '18:00', 690000),
-(@idB3, '18:00', '19:00', 740000),
-(@idB3, '19:00', '20:00', 740000),
-(@idB3, '20:00', '21:00', 690000),
-(@idB3, '21:00', '22:00', 650000);
+(@idB3, '06:00', '07:00', 46000),
+(@idB3, '07:00', '08:00', 46000),
+(@idB3, '08:00', '09:00', 51000),
+(@idB3, '09:00', '10:00', 51000),
+(@idB3, '10:00', '11:00', 51000),
+(@idB3, '11:00', '12:00', 54000),
+(@idB3, '12:00', '13:00', 54000),
+(@idB3, '13:00', '14:00', 54000),
+(@idB3, '14:00', '15:00', 58000),
+(@idB3, '15:00', '16:00', 58000),
+(@idB3, '16:00', '17:00', 60000),
+(@idB3, '17:00', '18:00', 69000),
+(@idB3, '18:00', '19:00', 74000),
+(@idB3, '19:00', '20:00', 74000),
+(@idB3, '20:00', '21:00', 69000),
+(@idB3, '21:00', '22:00', 65000);
 
 -- === Sân B4 ===
 INSERT INTO GIA_SAN (san_bong_id, gio_bat_dau, gio_ket_thuc, gia_tien) VALUES
-(@idB4, '06:00', '07:00', 520000),
-(@idB4, '07:00', '08:00', 520000),
-(@idB4, '08:00', '09:00', 570000),
-(@idB4, '09:00', '10:00', 570000),
-(@idB4, '10:00', '11:00', 570000),
-(@idB4, '11:00', '12:00', 600000),
-(@idB4, '12:00', '13:00', 600000),
-(@idB4, '13:00', '14:00', 600000),
-(@idB4, '14:00', '15:00', 640000),
-(@idB4, '15:00', '16:00', 640000),
-(@idB4, '16:00', '17:00', 670000),
-(@idB4, '17:00', '18:00', 770000),
-(@idB4, '18:00', '19:00', 820000),
-(@idB4, '19:00', '20:00', 820000),
-(@idB4, '20:00', '21:00', 770000),
-(@idB4, '21:00', '22:00', 720000);
+(@idB4, '06:00', '07:00', 52000),
+(@idB4, '07:00', '08:00', 52000),
+(@idB4, '08:00', '09:00', 57000),
+(@idB4, '09:00', '10:00', 57000),
+(@idB4, '10:00', '11:00', 57000),
+(@idB4, '11:00', '12:00', 60000),
+(@idB4, '12:00', '13:00', 60000),
+(@idB4, '13:00', '14:00', 60000),
+(@idB4, '14:00', '15:00', 64000),
+(@idB4, '15:00', '16:00', 64000),
+(@idB4, '16:00', '17:00', 67000),
+(@idB4, '17:00', '18:00', 77000),
+(@idB4, '18:00', '19:00', 82000),
+(@idB4, '19:00', '20:00', 82000),
+(@idB4, '20:00', '21:00', 77000),
+(@idB4, '21:00', '22:00', 72000);
 
 ALTER TABLE THANH_TOAN
 ADD ngay_hoan_tien DATETIME NULL;

@@ -29,4 +29,5 @@ public interface ThanhToanRepository extends JpaRepository<ThanhToan, UUID> {
         @Param("tuNgay") LocalDateTime tuNgay,
         @Param("denNgay") LocalDateTime denNgay
     );
+    Optional<ThanhToan> findByMaGiaoDich(String maGiaoDich);
 }

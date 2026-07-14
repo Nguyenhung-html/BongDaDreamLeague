@@ -13,6 +13,7 @@ import LichSuDatSan from '../views/user/LichSuDatSan.vue'
 import ThongTinCaNhan from '../views/user/ThongTinCaNhan.vue'
 import ThongBao from '../views/user/ThongBao.vue'
 
+
 // Views - Staff
 import DashboardStaff from '../views/Staff/DashboardStaff.vue'
 import QuanLyDatSanStaff from '../views/staff/QuanLyDatSan.vue'
@@ -74,7 +75,10 @@ const routes = [
   { path: '/admin/thong-bao', name: 'QuanLyThongBao', component: QuanLyThongBao, meta: { layout: 'admin', requiresAuth: true, roles: ['Admin'] } },
   { path: '/admin/danh-gia', name: 'QuanLyDanhGia', component: QuanLyDanhGia, meta: { layout: 'admin', requiresAuth: true, roles: ['Admin'] } },
   { path: '/admin/binh-luan', name: 'QuanLyBinhLuan', component: QuanLyBinhLuan, meta: { layout: 'admin', requiresAuth: true, roles: ['Admin'] } },
-  { path: '/admin/ca-nhan', name: 'ThongTinCaNhanAdmin', component: ThongTinCaNhanAdmin, meta: { layout: 'admin', requiresAuth: true, roles: ['Admin'] } }
+  { path: '/admin/ca-nhan', name: 'ThongTinCaNhanAdmin', component: ThongTinCaNhanAdmin, meta: { layout: 'admin', requiresAuth: true, roles: ['Admin'] } },
+
+
+  
 ]
 
 const router = createRouter({

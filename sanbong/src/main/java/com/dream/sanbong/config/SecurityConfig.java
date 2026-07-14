@@ -35,6 +35,7 @@ public class SecurityConfig {
                 .requestMatchers("/api/xac-thuc/**").permitAll()        // Mở cửa API xác thực
                 .requestMatchers(org.springframework.http.HttpMethod.GET, "/api/san-bong/**").permitAll() // Công khai: xem sân
                 .requestMatchers(org.springframework.http.HttpMethod.GET, "/api/dat-san/da-dat").permitAll() // Công khai: xem khung giờ đã đặt
+                .requestMatchers("/api/sepay/webhook").permitAll()      // Mở cửa cho SePay gọi vào (không có JWT)
                 .anyRequest().authenticated()
             )
             .addFilterBefore(jwtAuthenticationFilter, UsernamePasswordAuthenticationFilter.class);

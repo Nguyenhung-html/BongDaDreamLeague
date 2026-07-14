@@ -303,6 +303,7 @@ async function onSubmit() {
     // 5. LƯU THÔNG TIN VÀO LOCAL STORAGE (Đúng key, đúng định dạng router cần)
     localStorage.setItem('token', data.token)
     localStorage.setItem('hoTen', data.hoTen)
+    localStorage.setItem('soDienThoai', data.soDienThoai)   // ← thêm dòng này
     localStorage.setItem('isLoggedIn', 'true')       // Thêm dòng này để router biết đã đăng nhập!
     localStorage.setItem('userRole', standardizedRole) // Lưu vai trò đã chuẩn hóa ('Admin', 'Staff', 'User')
 

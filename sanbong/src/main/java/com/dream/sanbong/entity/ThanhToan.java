@@ -41,7 +41,10 @@ public class ThanhToan {
     @Column(name = "ngay_thanh_toan")
     private LocalDateTime ngayThanhToan;
 
-    // THANH_CONG | DANG_CHO | THAT_BAI
+    // THANH_CONG | DANG_CHO | THAT_BAI | HOAN_
+    @Column(name = "ngay_hoan_tien")
+private LocalDateTime ngayHoanTien;
+
     @Column(name = "trang_thai", length = 30)
     private String trangThai;
 

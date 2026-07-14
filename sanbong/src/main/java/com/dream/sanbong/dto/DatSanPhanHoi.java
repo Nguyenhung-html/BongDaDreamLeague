@@ -9,6 +9,7 @@ import java.util.UUID;
 @AllArgsConstructor
 public class DatSanPhanHoi {
     private UUID datSanId;
+    private UUID thanhToanId;
     private String tenSan;
     private String ngayDa;
     private String gioBatDau;

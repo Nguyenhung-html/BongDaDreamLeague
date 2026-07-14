@@ -23,6 +23,7 @@ import java.time.format.DateTimeFormatter;
 import java.util.List;
 import java.util.UUID;
 import java.util.stream.Collectors;
+import com.dream.sanbong.service.SePayService;
 
 @Service
 public class DatSanServiceImpl implements DatSanService {
@@ -32,18 +33,21 @@ public class DatSanServiceImpl implements DatSanService {
     private final NguoiDungRepository nguoiDungRepo;
     private final ThanhToanRepository thanhToanRepo;
     private final GiaSanRepository giaSanRepo;
+    private final SePayService sePayService;
 
     public DatSanServiceImpl(
             DatSanRepository datSanRepo,
             SanBongRepository sanBongRepo,
             NguoiDungRepository nguoiDungRepo,
             ThanhToanRepository thanhToanRepo,
-            GiaSanRepository giaSanRepo) {
+            GiaSanRepository giaSanRepo,
+         SePayService sePayService) {
         this.datSanRepo = datSanRepo;
         this.sanBongRepo = sanBongRepo;
         this.nguoiDungRepo = nguoiDungRepo;
         this.thanhToanRepo = thanhToanRepo;
         this.giaSanRepo = giaSanRepo;
+        this.sePayService = sePayService;
     }
 
     // ══════════════════════════════════════════════════════════════
@@ -132,6 +136,7 @@ public List<KhungGioDaDatPhanHoi> layKhungGioDaDat(UUID sanBongId, LocalDate nga
 
         return new DatSanPhanHoi(
                 datSan.getId(),
+                thanhToan.getId(), 
                 sanBong.getTenSan(),
                 ngayDa.toString(),
                 gioBat.toString(),
@@ -214,22 +219,24 @@ public List<KhungGioDaDatPhanHoi> layKhungGioDaDat(UUID sanBongId, LocalDate nga
         LocalDateTime gioBatDauThucTe = LocalDateTime.of(datSan.getNgayDa(), datSan.getGioBatDau());
         boolean conHuyCo = LocalDateTime.now().plusMinutes(20).isBefore(gioBatDauThucTe);
 
-        String thongBao;
-        if (conHuyCo) {
-            thongBao = "Huỷ sân thành công! Tiền cọc sẽ được hoàn trả trong 1–3 ngày làm việc.";
-        } else {
-            thongBao = "Huỷ sân thành công! Lưu ý: vì huỷ muộn (< 20 phút trước giờ đá), "
-                    + "tiền cọc " + String.format("%,.0f", datSan.getTienCoc().doubleValue())
-                    + " VNĐ sẽ không được hoàn lại theo chính sách.";
+String thongBao;
+
+if (conHuyCo) {
+    thanhToanRepo.findByDatSanIdAndLoai(datSanId, "COC").ifPresent(tt -> {
+        if ("THANH_CONG".equals(tt.getTrangThai())) {
+            sePayService.hoanTien(tt.getId()); // gọi mock refund
         }
+    });
+    thongBao = "Huỷ sân thành công! Tiền cọc sẽ được hoàn trả trong 1–3 ngày làm việc.";
+} else {
+    thongBao = "Huỷ sân thành công! Do huỷ trong vòng 20 phút trước giờ đá nên tiền cọc sẽ không được hoàn trả.";
+}
 
-        datSan.setTrangThai("DA_HUY");
-        datSan.setNgayHuy(LocalDateTime.now());
-        datSanRepo.save(datSan);
-
-        return thongBao;
+datSan.setTrangThai("DA_HUY");
+datSan.setNgayHuy(LocalDateTime.now());
+datSanRepo.save(datSan);
+return thongBao;
     }
-
     // ══════════════════════════════════════════════════════════════
     // STAFF FEATURES
     // ══════════════════════════════════════════════════════════════

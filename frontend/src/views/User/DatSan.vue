@@ -139,41 +139,38 @@
                   <option value="TIEN_MAT">💵 Trả tiền mặt tại sân</option>
                 </select>
                 <button class="btn-book" @click="buocTiep" :disabled="dangGui">
-                  {{ form.phuongThuc === 'QR' ? 'Tiếp tục – Quét QR' : 'Xác nhận đặt sân' }}
-                </button>
+  {{ form.phuongThuc === 'QR' ? 'Tiếp tục – Quét mã QR thanh toán ' : 'Xác nhận đặt sân' }}
+</button>
               </div>
             </div>
 
-            <!-- Bước 2: QR thanh toán -->
-            <div v-else-if="buoc === 2" class="qr-step">
-              <div class="qr-header">
-                <svg width="40" height="40" viewBox="0 0 24 24" fill="none"><path d="M9 12l2 2 4-4" stroke="#22c55e" stroke-width="2.5" stroke-linecap="round"/><circle cx="12" cy="12" r="10" stroke="#22c55e" stroke-width="2"/></svg>
-                <h3>Quét mã QR để đặt cọc</h3>
-                <p>Chuyển khoản <strong>{{ formatTien(tienCoc) }} VNĐ</strong> để xác nhận booking</p>
-              </div>
+          <!-- Bước 2: QR thanh toán -->
+<div v-else-if="buoc === 2" class="qr-step">
+  <div class="qr-header">
+    <svg width="40" height="40" viewBox="0 0 24 24" fill="none"><path d="M9 12l2 2 4-4" stroke="#22c55e" stroke-width="2.5" stroke-linecap="round"/><circle cx="12" cy="12" r="10" stroke="#22c55e" stroke-width="2"/></svg>
+    <h3>Quét mã QR để đặt cọc</h3>
+    <p>Chuyển khoản <strong>{{ formatTien(tienCoc) }} VNĐ</strong> để xác nhận booking</p>
+  </div>
 
-              <div class="qr-box">
-                <img
-                  :src="`https://img.vietqr.io/image/970422-0973728967-compact2.png?amount=${tienCoc}&addInfo=DatSan+${sanBong.tenSan?.replace(/\s/g,'+')}+${form.ngayDa}&accountName=NguyenTienHung`"
-                  alt="QR thanh toán"
-                  class="qr-img"
-                />
-              </div>
+  <div class="qr-box">
+    <img :src="qrUrl" alt="QR thanh toán" class="qr-img" />
+  </div>
 
-              <div class="qr-info">
-                <div class="info-row"><span>Ngân hàng</span><strong>MB Bank (970422)</strong></div>
-                <div class="info-row"><span>Số TK</span><strong>0973728967</strong></div>
-                <div class="info-row"><span>Chủ TK</span><strong>NGUYEN TIEN HUNG</strong></div>
-                <div class="info-row"><span>Số tiền</span><strong class="text-green">{{ formatTien(tienCoc) }} VNĐ</strong></div>
-                <div class="info-row"><span>Nội dung</span><strong>DatSan {{ sanBong.tenSan }} {{ form.ngayDa }}</strong></div>
-              </div>
+  <div class="qr-info">
+    <div class="info-row"><span>Ngân hàng</span><strong>MB Bank (970422)</strong></div>
+    <div class="info-row"><span>Số TK</span><strong>0973728967</strong></div>
+    <div class="info-row"><span>Chủ TK</span><strong>NGUYEN TIEN HUNG</strong></div>
+    <div class="info-row"><span>Số tiền</span><strong class="text-green">{{ formatTien(tienCoc) }} VNĐ</strong></div>
+    <div class="info-row"><span>Nội dung</span><strong>DatSan {{ maGiaoDichHienTai }}</strong></div>
+  </div>
 
-              <button class="btn-book" @click="xacNhanDat" :disabled="dangGui">
-                <span v-if="dangGui">Đang xử lý...</span>
-                <span v-else>✅ Tôi đã chuyển khoản xong</span>
-              </button>
-              <button class="btn-back-step" @click="buoc = 1">← Quay lại</button>
-            </div>
+  <div class="dang-cho-thanh-toan">
+    <div class="spinner-nho"></div>
+    <p>Đang chờ xác nhận thanh toán tự động...</p>
+  </div>
+
+  <button class="btn-back-step" @click="huyChoThanhToan">← Quay lại</button>
+</div>
 
             <!-- Bước 3: Thành công -->
 <div v-else-if="buoc === 3" class="success-step">
@@ -205,6 +202,12 @@
 <script setup>
 import { ref, computed, onMounted, watch } from 'vue'
 import { useRoute } from 'vue-router'
+import { onUnmounted } from 'vue' // thêm vào dòng import ở đầu
+
+const qrUrl = ref('')
+const maGiaoDichHienTai = ref('')
+const thanhToanIdHienTai = ref('')
+let pollingInterval = null
 
 const route = useRoute()
 const API = 'http://localhost:8080/api'
@@ -328,14 +331,36 @@ async function taiThongTinSan() {
     if (!res.ok) throw new Error('Không tải được thông tin sân')
     sanBong.value = await res.json()
 
-    const tenLuu = localStorage.getItem('userName')
+    // Tự động điền họ tên + SĐT từ tài khoản đã đăng nhập
+    const tenLuu = localStorage.getItem('hoTen')          // đổi từ 'userName' → 'hoTen'
+    const sdtLuu = localStorage.getItem('soDienThoai')    // thêm dòng này
     if (tenLuu) form.value.hoTenDat = tenLuu
+    if (sdtLuu) form.value.soDienThoai = sdtLuu
 
     await taiKhungGioDaDat()
   } catch (e) {
     loiTai.value = e.message
   } finally {
     dangTai.value = false
+  }
+}
+
+// Tự động điền họ tên + SĐT từ tài khoản đã đăng nhập
+async function dienThongTinTaiKhoan() {
+  const token = localStorage.getItem('token')
+  if (!token) return // chưa đăng nhập thì thôi, để trống cho người dùng tự nhập
+
+  try {
+    const res = await fetch(`${API}/nguoi-dung/thong-tin`, {
+      headers: { 'Authorization': `Bearer ${token}` }
+    })
+    if (!res.ok) return
+
+    const taiKhoan = await res.json()
+    if (taiKhoan.hoTen) form.value.hoTenDat = taiKhoan.hoTen
+    if (taiKhoan.soDienThoai) form.value.soDienThoai = taiKhoan.soDienThoai
+  } catch {
+    // im lặng bỏ qua, người dùng vẫn tự nhập được nếu API lỗi
   }
 }
 
@@ -352,11 +377,8 @@ function buocTiep() {
     return
   }
 
-  if (form.value.phuongThuc === 'QR') {
-    buoc.value = 2
-  } else {
-    xacNhanDat()
-  }
+  // Dù QR hay TIEN_MAT đều gọi thẳng xacNhanDat() — không cần bước hiện QR riêng nữa
+  xacNhanDat()
 }
 
 async function xacNhanDat() {
@@ -395,15 +417,81 @@ async function xacNhanDat() {
     }
 
     ketQua.value = JSON.parse(rawText)
-    buoc.value = 3
+
+    if (form.value.phuongThuc === 'QR') {
+  await taoGiaoDichSePayVaHienQR(ketQua.value.thanhToanId)   // đổi tên hàm
+} else {
+  buoc.value = 3
+}
   } catch (e) {
     loiForm.value = e.message
-    if (buoc.value === 2) buoc.value = 1
     await taiKhungGioDaDat()
   } finally {
     dangGui.value = false
   }
 }
+
+async function taoGiaoDichSePayVaHienQR(thanhToanId) {
+  const token = localStorage.getItem('token')
+  const resSePay = await fetch(`${API}/sepay/tao-giao-dich`, {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+      'Authorization': `Bearer ${token}`
+    },
+    body: JSON.stringify({ thanhToanId })
+  })
+
+  if (!resSePay.ok) {
+    throw new Error('Không tạo được giao dịch thanh toán, vui lòng thử lại!')
+  }
+
+  const data = await resSePay.json()
+  qrUrl.value = data.qrUrl
+  maGiaoDichHienTai.value = data.maGiaoDich
+  thanhToanIdHienTai.value = thanhToanId
+
+  buoc.value = 2
+  batDauKiemTraThanhToan(thanhToanId)
+}
+
+function batDauKiemTraThanhToan(thanhToanId) {
+  dungKiemTraThanhToan() // đảm bảo không chạy trùng nhiều interval
+
+  pollingInterval = setInterval(async () => {
+    try {
+      const token = localStorage.getItem('token')
+      const res = await fetch(`${API}/sepay/trang-thai/${thanhToanId}`, {
+        headers: { 'Authorization': `Bearer ${token}` }
+      })
+      if (!res.ok) return
+
+      const data = await res.json()
+      if (data.trangThai === 'THANH_CONG') {
+        dungKiemTraThanhToan()
+        buoc.value = 3
+      }
+    } catch {
+      // im lặng bỏ qua lỗi tạm thời, sẽ thử lại ở lần polling tiếp theo
+    }
+  }, 3000) // hỏi lại mỗi 3 giây
+}
+
+function dungKiemTraThanhToan() {
+  if (pollingInterval) {
+    clearInterval(pollingInterval)
+    pollingInterval = null
+  }
+}
+
+function huyChoThanhToan() {
+  dungKiemTraThanhToan()
+  buoc.value = 1
+}
+
+onUnmounted(() => {
+  dungKiemTraThanhToan()
+})
 
 onMounted(taiThongTinSan)
 </script>
@@ -703,5 +791,15 @@ onMounted(taiThongTinSan)
   border-radius: 10px;
   text-align: left;
   margin-bottom: 20px;
+}
+.dang-cho-thanh-toan {
+  display: flex; align-items: center; justify-content: center; gap: 10px;
+  padding: 14px; background: #eff6ff; border: 1px solid #bfdbfe;
+  border-radius: 12px; margin-bottom: 14px; color: #1d4ed8; font-size: 13.5px;
+}
+.spinner-nho {
+  width: 18px; height: 18px; border: 3px solid #bfdbfe;
+  border-top-color: #1d4ed8; border-radius: 50%;
+  animation: spin .7s linear infinite;
 }
 </style>

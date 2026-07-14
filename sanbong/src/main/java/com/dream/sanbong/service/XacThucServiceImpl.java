@@ -71,7 +71,8 @@ public class XacThucServiceImpl implements XacThucService {
                 tokenThiet, 
                 nguoiDung.getId(),
                 nguoiDung.getHoTen(),
-                nguoiDung.getVaiTro().name()
+                nguoiDung.getVaiTro().name(),
+                nguoiDung.getSoDienThoai()
         );
     }
 }

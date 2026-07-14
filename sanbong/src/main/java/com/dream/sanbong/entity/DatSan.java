@@ -52,7 +52,7 @@ public class DatSan {
     @Column(name = "tien_coc", precision = 10, scale = 0)
     private BigDecimal tienCoc;
 
-    // CHO_XAC_NHAN | DA_XAC_NHAN | DA_HUY | HOAN_THANH
+    // CHO_XAC_NHAN | DA_XAC_NHAN | DA_HUY | HOAN_THANH | DA_HOAN_TIEN
     @Column(name = "trang_thai", length = 30)
     private String trangThai;
 

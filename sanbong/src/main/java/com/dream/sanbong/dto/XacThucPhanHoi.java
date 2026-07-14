@@ -12,4 +12,5 @@ public class XacThucPhanHoi {
     private UUID idNguoiDung;
     private String hoTen;
     private String vaiTro;
+    private String soDienThoai;
 }

@@ -2,6 +2,7 @@ package com.dream.sanbong.config;
 
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.http.HttpMethod;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.web.SecurityFilterChain;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
@@ -9,7 +10,6 @@ import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
 import org.springframework.web.cors.CorsConfiguration;
 import org.springframework.web.cors.UrlBasedCorsConfigurationSource;
-
 import java.util.Arrays;
 
 @Configuration
@@ -32,14 +32,20 @@ public class SecurityConfig {
             .cors(cors -> cors.configurationSource(corsConfigurationSource())) // BẬT CORS CHUẨN
             .csrf(csrf -> csrf.disable())
             .authorizeHttpRequests(auth -> auth
-                .requestMatchers("/api/xac-thuc/**").permitAll()        // Mở cửa API xác thực
-                .requestMatchers(org.springframework.http.HttpMethod.GET, "/api/san-bong/**").permitAll() // Công khai: xem sân
-                .requestMatchers(org.springframework.http.HttpMethod.GET, "/api/dat-san/da-dat").permitAll() // Công khai: xem khung giờ đã đặt
-                .requestMatchers("/api/sepay/webhook").permitAll()      // Mở cửa cho SePay gọi vào (không có JWT)
+                // ĐÃ THÊM: cho phép mọi request OPTIONS (preflight CORS) đi qua mà
+                // không cần xác thực. Nếu thiếu dòng này, mọi request POST/PUT/DELETE
+                // có kèm Authorization header từ frontend khác origin sẽ bị chặn 403
+                // ngay từ bước preflight, trước khi kịp kiểm tra token thật.
+                .requestMatchers(HttpMethod.OPTIONS, "/**").permitAll()
+
+                .requestMatchers("/api/xac-thuc/**").permitAll()    // Mở cửa API xác thực
+                .requestMatchers(HttpMethod.GET, "/api/san-bong/**").permitAll() // Công khai: xem sân
+                .requestMatchers(HttpMethod.GET, "/api/dat-san/da-dat").permitAll() // Công khai: xem khung giờ đã đặt
+                .requestMatchers("/api/sepay/webhook").permitAll() // SePay gọi vào đây, không có JWT của user
+
                 .anyRequest().authenticated()
             )
             .addFilterBefore(jwtAuthenticationFilter, UsernamePasswordAuthenticationFilter.class);
-
         return http.build();
     }
 
@@ -51,7 +57,6 @@ public class SecurityConfig {
         config.setAllowedMethods(Arrays.asList("GET", "POST", "PUT", "DELETE", "OPTIONS"));
         config.setAllowedHeaders(Arrays.asList("*"));
         config.setAllowCredentials(true);
-
         UrlBasedCorsConfigurationSource source = new UrlBasedCorsConfigurationSource();
         source.registerCorsConfiguration("/**", config);
         return source;

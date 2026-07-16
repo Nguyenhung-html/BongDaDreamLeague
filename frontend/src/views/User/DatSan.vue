@@ -173,25 +173,33 @@
 </div>
 
             <!-- Bước 3: Thành công -->
-<div v-else-if="buoc === 3" class="success-step">
-  <div class="success-icon">⏳</div>
-  <h3>Đã ghi nhận yêu cầu đặt sân!</h3>
-  <p>{{ ketQua?.thongBao }}</p>
-  <p class="luu-y-xac-nhan">
-    ⚠️ Đơn của bạn đang ở trạng thái <strong>Chờ xác nhận</strong>.
-    Nhân viên sẽ kiểm tra giao dịch chuyển khoản và xác nhận trong ít phút.
-    Bạn sẽ nhận thông báo khi đơn được xác nhận chính thức.
-  </p>
+            <div v-else-if="buoc === 3" class="success-step">
+              <template v-if="thanhToanQRThanhCong">
+                <div class="success-icon">✅</div>
+                <h3>Thanh toán thành công!</h3>
+                <p>Bạn đã đặt cọc thành công cho sân <strong>{{ sanBong?.tenSan }}</strong>.</p>
+                <p class="luu-y-xac-nhan">
+                  🎉 Booking của bạn đã được <strong>xác nhận tự động</strong> ngay khi hệ thống nhận được tiền cọc.
+                  Vui lòng đến đúng khung giờ đã đặt và thanh toán 50% còn lại tại sân.
+                </p>
+              </template>
 
-  <div class="result-card" v-if="ketQua">
-    ... Chờ trong trong giây lát
-  </div>
+              <template v-else>
+                <div class="success-icon">⏳</div>
+                <h3>Đã ghi nhận yêu cầu đặt sân!</h3>
+                <p>{{ ketQua?.thongBao }}</p>
+                <p class="luu-y-xac-nhan">
+                  ⚠️ Đơn của bạn đang ở trạng thái <strong>Chờ xác nhận</strong>.
+                  Nhân viên sẽ kiểm tra giao dịch chuyển khoản và xác nhận trong ít phút.
+                  Bạn sẽ nhận thông báo khi đơn được xác nhận chính thức.
+                </p>
+              </template>
 
-  <div class="success-actions">
-    <button class="btn-book" @click="$router.push('/lich-su-dat-san')">Theo dõi trạng thái đơn</button>
-    <button class="btn-outline" @click="$router.push('/san')">Đặt sân khác</button>
-  </div>
-</div>
+              <div class="success-actions">
+                <button class="btn-book" @click="$router.push('/lich-su-dat-san')">Theo dõi trạng thái đơn</button>
+                <button class="btn-outline" @click="$router.push('/san')">Đặt sân khác</button>
+              </div>
+            </div>
           </div>
         </div>
       </template>
@@ -207,6 +215,7 @@ import { onUnmounted } from 'vue' // thêm vào dòng import ở đầu
 const qrUrl = ref('')
 const maGiaoDichHienTai = ref('')
 const thanhToanIdHienTai = ref('')
+const thanhToanQRThanhCong = ref(false) // true = QR đã được webhook xác nhận tự động
 let pollingInterval = null
 
 const route = useRoute()
@@ -419,10 +428,11 @@ async function xacNhanDat() {
     ketQua.value = JSON.parse(rawText)
 
     if (form.value.phuongThuc === 'QR') {
-  await taoGiaoDichSePayVaHienQR(ketQua.value.thanhToanId)   // đổi tên hàm
-} else {
-  buoc.value = 3
-}
+      await taoGiaoDichSePayVaHienQR(ketQua.value.thanhToanId)   // đổi tên hàm
+    } else {
+      thanhToanQRThanhCong.value = false // trả tiền mặt → vẫn là luồng chờ xác nhận thủ công
+      buoc.value = 3
+    }
   } catch (e) {
     loiForm.value = e.message
     await taiKhungGioDaDat()
@@ -469,6 +479,7 @@ function batDauKiemTraThanhToan(thanhToanId) {
       const data = await res.json()
       if (data.trangThai === 'THANH_CONG') {
         dungKiemTraThanhToan()
+        thanhToanQRThanhCong.value = true // QR đã được webhook xác nhận tự động
         buoc.value = 3
       }
     } catch {
@@ -486,6 +497,7 @@ function dungKiemTraThanhToan() {
 
 function huyChoThanhToan() {
   dungKiemTraThanhToan()
+  thanhToanQRThanhCong.value = false
   buoc.value = 1
 }
 
@@ -496,6 +508,14 @@ onUnmounted(() => {
 onMounted(taiThongTinSan)
 </script>
 
+<!--
+  LƯU Ý: Bạn chưa gửi phần <style scoped> của file gốc cho mình, nên phần
+  <style> không có trong file này. Hãy giữ lại nguyên phần <style scoped>
+  bạn đang có sẵn trong file DatSan.vue cũ của bạn, chỉ cần thay phần
+  <template> và <script setup> ở trên vào là đủ. Nếu muốn mình rà lại
+  toàn bộ (kể cả CSS) thì gửi thêm phần <style scoped> gốc để mình ghép
+  chung thành 1 file đầy đủ.
+-->
 <style scoped>
 .booking-page {
   background: #f0f4f8;

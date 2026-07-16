@@ -29,7 +29,6 @@ public class SePayController {
         this.thanhToanRepo = thanhToanRepo;
     }
 
-    // Gọi trước khi hiện QR cho người dùng
     @PostMapping("/tao-giao-dich")
     public ResponseEntity<?> taoGiaoDich(@RequestBody SePayTaoGiaoDichYeuCau yeuCau) {
         try {
@@ -40,7 +39,6 @@ public class SePayController {
         }
     }
 
-    // Frontend polling để hỏi trạng thái
     @GetMapping("/trang-thai/{thanhToanId}")
     public ResponseEntity<?> kiemTraTrangThai(@PathVariable UUID thanhToanId) {
         return thanhToanRepo.findById(thanhToanId)
@@ -58,6 +56,15 @@ public class SePayController {
         System.out.println("Payload: " + payload);
 
         String apiKeyMongDoi = "Apikey " + sepayApiKey;
+
+        // ===== DÒNG DEBUG TẠM THỜI - XOÁ SAU KHI SỬA XONG LỖI 401 =====
+        System.out.println("---- DEBUG SO SÁNH API KEY ----");
+        System.out.println("Header thực nhận  : [" + authHeader + "]");
+        System.out.println("Giá trị mong đợi  : [" + apiKeyMongDoi + "]");
+        System.out.println("Có khớp nhau không: " + apiKeyMongDoi.equals(authHeader));
+        System.out.println("--------------------------------");
+        // ================================================================
+
         if (!apiKeyMongDoi.equals(authHeader)) {
             return ResponseEntity.status(401).body(Map.of("success", false, "message", "Unauthorized"));
         }

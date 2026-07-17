@@ -20,10 +20,13 @@ public class SePayServiceImpl implements SePayService {
 
     private final ThanhToanRepository thanhToanRepo;
     private final DatSanRepository datSanRepo;
+    private final ThongBaoService thongBaoService;
 
-    public SePayServiceImpl(ThanhToanRepository thanhToanRepo, DatSanRepository datSanRepo) {
+    public SePayServiceImpl(ThanhToanRepository thanhToanRepo, DatSanRepository datSanRepo,
+                             ThongBaoService thongBaoService) {
         this.thanhToanRepo = thanhToanRepo;
         this.datSanRepo = datSanRepo;
+        this.thongBaoService = thongBaoService;
     }
 
     @Override
@@ -65,6 +68,19 @@ public class SePayServiceImpl implements SePayService {
             datSan.setTrangThai("DA_COC");
             thanhToanRepo.save(thanhToan);
             datSanRepo.save(datSan);
+
+            // QUAN TRỌNG: bọc try-catch riêng, để nếu tạo thông báo bị lỗi
+            // (ví dụ bảng THONG_BAO chưa tồn tại, dữ liệu thiếu...) thì việc
+            // XÁC NHẬN THANH TOÁN ở trên vẫn được lưu bình thường, không bị
+            // rollback theo. Thông báo là phần "phụ", không được phép ảnh
+            // hưởng tới nghiệp vụ chính là xác nhận đặt cọc.
+            try {
+                thongBaoService.taoThongBaoThanhToanThanhCong(datSan);
+            } catch (Exception e) {
+                System.out.println("⚠️ Lỗi tạo thông báo (không ảnh hưởng thanh toán): " + e.getMessage());
+                e.printStackTrace();
+            }
+
             return new SePayReturnPhanHoi(true, "Thanh toán thành công! Đơn đã được xác nhận đặt cọc.", "DA_COC");
         }
 
@@ -78,7 +94,6 @@ public class SePayServiceImpl implements SePayService {
     public boolean hoanTien(UUID thanhToanId) {
         ThanhToan thanhToan = thanhToanRepo.findById(thanhToanId)
                 .orElseThrow(() -> new RuntimeException("Lỗi: Không tìm thấy giao dịch!"));
-
         thanhToan.setTrangThai("DA_HOAN_TIEN");
         thanhToan.setNgayHoanTien(LocalDateTime.now());
         thanhToanRepo.save(thanhToan);

@@ -1,4 +1,3 @@
-
 <template>
   <header class="header">
 
@@ -81,7 +80,7 @@
           <router-link to="/thong-bao" class="dropdown__item">
             <svg width="16" height="16" viewBox="0 0 24 24" fill="none"><path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9" stroke="currentColor" stroke-width="1.7"/><path d="M13.73 21a2 2 0 0 1-3.46 0" stroke="currentColor" stroke-width="1.7"/></svg>
             Thông báo
-            <span class="dropdown__badge">{{ soThongBao }}</span>
+            <span v-if="soThongBao > 0" class="dropdown__badge">{{ soThongBao }}</span>
           </router-link>
           <div class="dropdown__divider"></div>
           <button class="dropdown__item dropdown__item--danger" @click="dangXuat">
@@ -186,11 +185,15 @@ import logo from '../Image/logo DreamLeague.webp'
 const router = useRouter()
 const route = useRoute() 
 
+const API = 'http://localhost:8080/api'
+
 // ===== AUTH STATE =====
 const dangNhap = ref(false)
 const tenNguoiDung = ref('')
-const soThongBao = ref(3)
+const soThongBao = ref(0) // Số thông báo CHƯA ĐỌC - lấy thật từ API, không còn hardcode nữa
 const vaiTro = ref('') // Sẽ nhận các giá trị chuẩn hóa: 'Admin', 'Staff', hoặc 'User'
+
+let thongBaoInterval = null // interval polling số thông báo chưa đọc
 
 const tenVietTat = computed(() => {
   if (!tenNguoiDung.value) return '?'
@@ -218,12 +221,45 @@ function kiemTraDangNhap() {
     dangNhap.value = false
     tenNguoiDung.value = ''
     vaiTro.value = '' 
+    soThongBao.value = 0
+  }
+}
+
+// ===== THÔNG BÁO: lấy số lượng chưa đọc + tự động polling =====
+async function taiSoThongBaoChuaDoc() {
+  if (!dangNhap.value) {
+    soThongBao.value = 0
+    return
+  }
+  const token = localStorage.getItem('token')
+  try {
+    const res = await fetch(`${API}/thong-bao/chua-doc`, {
+      headers: { 'Authorization': `Bearer ${token}` }
+    })
+    if (!res.ok) return
+    const data = await res.json()
+    soThongBao.value = data.soLuong
+  } catch {
+    // im lặng bỏ qua lỗi tạm thời, sẽ thử lại ở lần polling tiếp theo
+  }
+}
+
+function batDauPollingThongBao() {
+  dungPollingThongBao()
+  thongBaoInterval = setInterval(taiSoThongBaoChuaDoc, 10000) // hỏi lại mỗi 10 giây
+}
+
+function dungPollingThongBao() {
+  if (thongBaoInterval) {
+    clearInterval(thongBaoInterval)
+    thongBaoInterval = null
   }
 }
 
 // Theo dõi sát sao mỗi khi chuyển trang để cập nhật giao diện ngay lập tức mà không cần F5
 watch(() => route.path, () => {
   kiemTraDangNhap()
+  taiSoThongBaoChuaDoc()
 })
 
 // ===== DỮ LIỆU SÂN NỘI BỘ =====
@@ -292,6 +328,7 @@ function dangXuat() {
   tenNguoiDung.value = ''
   vaiTro.value = ''
   showDropdown.value = false
+  dungPollingThongBao()
 
   alert('Đã đăng xuất tài khoản thành công!')
   router.push('/dang-nhap')
@@ -309,10 +346,13 @@ function onClickOutside(e) {
 onMounted(() => {
   document.addEventListener('click', onClickOutside)
   kiemTraDangNhap() // Gọi hàm kiểm tra ngay khi vừa mount trang chủ
+  taiSoThongBaoChuaDoc()
+  batDauPollingThongBao()
 })
 
 onUnmounted(() => {
   document.removeEventListener('click', onClickOutside)
+  dungPollingThongBao()
 })
 </script>
 

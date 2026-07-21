@@ -1,184 +1,105 @@
 <template>
-  <div class="dashboard">
-    <aside class="dashboard__sidebar" :class="{ open: sidebarOpen }">
-      <div class="dashboard__sidebar-top">
-        <router-link to="/" class="dashboard__sidebar-brand">
-          <svg width="28" height="28" viewBox="0 0 36 36" fill="none">
-            <circle cx="18" cy="18" r="17" stroke="var(--green-600)" stroke-width="2" />
-            <path d="M10 13L18 8L26 13L24 22L18 26L12 22L10 13Z" fill="var(--navy-900)" />
-            <circle cx="18" cy="17" r="4.2" fill="var(--white)" />
-          </svg>
-          <span><strong>Dream</strong>League</span>
-        </router-link>
-      </div>
-      <nav class="dashboard__sidebar-nav">
-        <div class="sidebar-section">
-          <p class="sidebar-section__label">QUẢN LÝ</p>
-          <router-link to="/admin" class="sidebar-nav-item" :class="{ active: isActive('/admin') }">
-            <span class="sidebar-nav-item__icon">
-              <svg width="18" height="18" viewBox="0 0 24 24" fill="none">
-                <rect x="3" y="3" width="8" height="8" rx="1" stroke="currentColor" stroke-width="1.6" />
-                <rect x="13" y="3" width="8" height="8" rx="1" stroke="currentColor" stroke-width="1.6" />
-                <rect x="3" y="13" width="8" height="8" rx="1" stroke="currentColor" stroke-width="1.6" />
-                <rect x="13" y="13" width="8" height="8" rx="1" stroke="currentColor" stroke-width="1.6" />
-              </svg>
-            </span>
-            <span class="sidebar-nav-item__label">Dashboard</span>
+  <div class="admin-layout">
+    <aside class="sidebar">
+      <router-link to="/admin" class="sidebar__brand">
+        <svg width="30" height="30" viewBox="0 0 36 36" fill="none">
+          <circle cx="18" cy="18" r="17" stroke="var(--green-600)" stroke-width="2" />
+          <path d="M10 13L18 8L26 13L24 22L18 26L12 22L10 13Z" fill="var(--navy-900)" />
+          <circle cx="18" cy="17" r="4.2" fill="var(--white)" />
+        </svg>
+        <span>DreamLeague</span>
+      </router-link>
+
+      <nav class="sidebar__nav">
+        <div class="sidebar__group">
+          <p class="sidebar__group-title">Quản lý</p>
+          <router-link to="/admin" class="sidebar__item" :class="{ active: isActive('/admin') }">
+            <svg viewBox="0 0 24 24" fill="none"><rect x="3" y="3" width="7" height="7" rx="1" stroke="currentColor" stroke-width="1.7"/><rect x="14" y="3" width="7" height="7" rx="1" stroke="currentColor" stroke-width="1.7"/><rect x="3" y="14" width="7" height="7" rx="1" stroke="currentColor" stroke-width="1.7"/><rect x="14" y="14" width="7" height="7" rx="1" stroke="currentColor" stroke-width="1.7"/></svg>
+            Dashboard
           </router-link>
-          <router-link to="/admin/khach-hang" class="sidebar-nav-item" :class="{ active: isActive('/admin/khach-hang') }">
-            <span class="sidebar-nav-item__icon">
-              <svg width="18" height="18" viewBox="0 0 24 24" fill="none">
-                <circle cx="8" cy="8" r="3.5" stroke="currentColor" stroke-width="1.6" />
-                <path d="M2 18c0-2.21 2.69-4 6-4s6 1.79 6 4" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" />
-                <path d="M16 8c0 2.21 1.34 4 3 4s3-1.79 3-4" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" />
-                <path d="M16 14c-1.8 0-3.48.4-4.66 1.12" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" />
-              </svg>
-            </span>
-            <span class="sidebar-nav-item__label">Quản lý khách hàng</span>
+          <router-link to="/admin/khach-hang" class="sidebar__item" :class="{ active: isActive('/admin/khach-hang') }">
+            <svg viewBox="0 0 24 24" fill="none"><circle cx="9" cy="8" r="3.2" stroke="currentColor" stroke-width="1.7"/><path d="M3 20c0-3.3 2.7-5.5 6-5.5s6 2.2 6 5.5" stroke="currentColor" stroke-width="1.7" stroke-linecap="round"/><path d="M16 8.5c1.4 0 2.5 1.1 2.5 2.5S17.4 13.5 16 13.5" stroke="currentColor" stroke-width="1.7" stroke-linecap="round"/><path d="M17 14.8c2 .4 3.5 1.9 3.5 4" stroke="currentColor" stroke-width="1.7" stroke-linecap="round"/></svg>
+            Quản lý khách hàng
           </router-link>
-          <router-link to="/admin/nhan-vien" class="sidebar-nav-item" :class="{ active: isActive('/admin/nhan-vien') }">
-            <span class="sidebar-nav-item__icon">
-              <svg width="18" height="18" viewBox="0 0 24 24" fill="none">
-                <circle cx="12" cy="7" r="3" stroke="currentColor" stroke-width="1.6" />
-                <path d="M3 18c0-2.21 3.13-4 9-4s9 1.79 9 4" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" />
-              </svg>
-            </span>
-            <span class="sidebar-nav-item__label">Quản lý nhân viên</span>
+          <router-link to="/admin/nhan-vien" class="sidebar__item" :class="{ active: isActive('/admin/nhan-vien') }">
+            <svg viewBox="0 0 24 24" fill="none"><circle cx="9" cy="8" r="3.2" stroke="currentColor" stroke-width="1.7"/><path d="M3 20c0-3.3 2.7-5.5 6-5.5s6 2.2 6 5.5" stroke="currentColor" stroke-width="1.7" stroke-linecap="round"/><path d="M15 9l1.6 1.6L20 7" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"/></svg>
+            Quản lý nhân viên
           </router-link>
-          <router-link to="/admin/san-bong" class="sidebar-nav-item" :class="{ active: isActive('/admin/san-bong') }">
-            <span class="sidebar-nav-item__icon">
-              <svg width="18" height="18" viewBox="0 0 24 24" fill="none">
-                <rect x="3" y="6" width="18" height="12" rx="1.5" stroke="currentColor" stroke-width="1.6" />
-                <line x1="12" y1="6" x2="12" y2="18" stroke="currentColor" stroke-width="1.6" />
-                <circle cx="7" cy="12" r="1.5" fill="currentColor" />
-                <circle cx="17" cy="12" r="1.5" fill="currentColor" />
-              </svg>
-            </span>
-            <span class="sidebar-nav-item__label">Quản lý sân bóng</span>
+          <router-link to="/admin/san-bong" class="sidebar__item" :class="{ active: isActive('/admin/san-bong') }">
+            <svg viewBox="0 0 24 24" fill="none"><rect x="2" y="3" width="20" height="18" rx="2" stroke="currentColor" stroke-width="1.7"/><line x1="12" y1="3" x2="12" y2="21" stroke="currentColor" stroke-width="1.7"/><circle cx="12" cy="12" r="3" stroke="currentColor" stroke-width="1.7"/></svg>
+            Quản lý sân bóng
           </router-link>
         </div>
-        <div class="sidebar-section">
-          <p class="sidebar-section__label">KINH DOANH</p>
-          <router-link to="/admin/dat-san" class="sidebar-nav-item" :class="{ active: isActive('/admin/dat-san') }">
-            <span class="sidebar-nav-item__icon">
-              <svg width="18" height="18" viewBox="0 0 24 24" fill="none">
-                <rect x="4" y="3" width="16" height="16" rx="1" stroke="currentColor" stroke-width="1.6" />
-                <path d="M4 8.5h16M9 14h2M15 14h2" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" />
-              </svg>
-            </span>
-            <span class="sidebar-nav-item__label">Quản lý đặt sân</span>
+
+        <div class="sidebar__group">
+          <p class="sidebar__group-title">Kinh doanh</p>
+          <router-link to="/admin/dat-san" class="sidebar__item" :class="{ active: isActive('/admin/dat-san') }">
+            <svg viewBox="0 0 24 24" fill="none"><rect x="3" y="5" width="18" height="16" rx="2" stroke="currentColor" stroke-width="1.7"/><path d="M3 10h18M8 3v4M16 3v4" stroke="currentColor" stroke-width="1.7" stroke-linecap="round"/></svg>
+            Quản lý đặt sân
           </router-link>
-          <router-link to="/admin/thanh-toan" class="sidebar-nav-item" :class="{ active: isActive('/admin/thanh-toan') }">
-            <span class="sidebar-nav-item__icon">
-              <svg width="18" height="18" viewBox="0 0 24 24" fill="none">
-                <rect x="2" y="5" width="20" height="14" rx="1.5" stroke="currentColor" stroke-width="1.6" />
-                <path d="M2 9.5h20" stroke="currentColor" stroke-width="1.6" />
-              </svg>
-            </span>
-            <span class="sidebar-nav-item__label">Quản lý thanh toán</span>
+          <router-link to="/admin/thanh-toan" class="sidebar__item" :class="{ active: isActive('/admin/thanh-toan') }">
+            <svg viewBox="0 0 24 24" fill="none"><rect x="2.5" y="5" width="19" height="14" rx="2" stroke="currentColor" stroke-width="1.7"/><path d="M2.5 9.5h19" stroke="currentColor" stroke-width="1.7"/></svg>
+            Quản lý thanh toán
           </router-link>
-          <router-link to="/admin/hoa-don" class="sidebar-nav-item" :class="{ active: isActive('/admin/hoa-don') }">
-            <span class="sidebar-nav-item__icon">
-              <svg width="18" height="18" viewBox="0 0 24 24" fill="none">
-                <path d="M4 4h14c1.1 0 2 .9 2 2v10c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2Z" stroke="currentColor" stroke-width="1.6" />
-                <path d="M8 10h8M8 14h5" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" />
-              </svg>
-            </span>
-            <span class="sidebar-nav-item__label">Quản lý hoá đơn</span>
+          <router-link to="/admin/hoa-don" class="sidebar__item" :class="{ active: isActive('/admin/hoa-don') }">
+            <svg viewBox="0 0 24 24" fill="none"><path d="M6 3h12v18l-3-2-3 2-3-2-3 2V3Z" stroke="currentColor" stroke-width="1.7" stroke-linejoin="round"/><path d="M8.5 8h7M8.5 12h7" stroke="currentColor" stroke-width="1.7" stroke-linecap="round"/></svg>
+            Quản lý hoá đơn
           </router-link>
-          <router-link to="/admin/doanh-thu" class="sidebar-nav-item" :class="{ active: isActive('/admin/doanh-thu') }">
-            <span class="sidebar-nav-item__icon">
-              <svg width="18" height="18" viewBox="0 0 24 24" fill="none">
-                <path d="M3 18h18M3 14h5M3 10h8M14 6h7" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" />
-              </svg>
-            </span>
-            <span class="sidebar-nav-item__label">Thống kê & doanh thu</span>
+          <router-link to="/admin/san-pham" class="sidebar__item" :class="{ active: isActive('/admin/san-pham') }">
+            <svg viewBox="0 0 24 24" fill="none"><path d="M5 8h14l-1.4 10.3a2 2 0 0 1-2 1.7H8.4a2 2 0 0 1-2-1.7L5 8Z" stroke="currentColor" stroke-width="1.7" stroke-linejoin="round"/><path d="M9 8V6a3 3 0 0 1 6 0v2" stroke="currentColor" stroke-width="1.7"/></svg>
+            Quản lý dịch vụ
+          </router-link>
+          <router-link to="/admin/doanh-thu" class="sidebar__item" :class="{ active: isActive('/admin/doanh-thu') }">
+            <svg viewBox="0 0 24 24" fill="none"><path d="M4 19V10M10 19V5M16 19v-7M22 19H2" stroke="currentColor" stroke-width="1.7" stroke-linecap="round"/></svg>
+            Thống kê & doanh thu
           </router-link>
         </div>
-        <div class="sidebar-section">
-          <p class="sidebar-section__label">NỘI DUNG</p>
-          <router-link to="/admin/thong-bao" class="sidebar-nav-item" :class="{ active: isActive('/admin/thong-bao') }">
-            <span class="sidebar-nav-item__icon">
-              <svg width="18" height="18" viewBox="0 0 24 24" fill="none">
-                <path d="M5.5 11c0-2.5 1.1-4.8 2.9-6.3M18.5 11c0 2.5-1.1 4.8-2.9 6.3M3 11a9 9 0 0 1 18 0c0 3.3-2.4 6-5.5 6.5" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" />
-              </svg>
-            </span>
-            <span class="sidebar-nav-item__label">Quản lý thông báo</span>
+
+        <div class="sidebar__group">
+          <p class="sidebar__group-title">Nội dung</p>
+          <router-link to="/admin/thong-bao" class="sidebar__item" :class="{ active: isActive('/admin/thong-bao') }">
+            <svg viewBox="0 0 24 24" fill="none"><path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9" stroke="currentColor" stroke-width="1.7"/><path d="M13.73 21a2 2 0 0 1-3.46 0" stroke="currentColor" stroke-width="1.7"/></svg>
+            Quản lý thông báo
           </router-link>
-          <router-link to="/admin/danh-gia" class="sidebar-nav-item" :class="{ active: isActive('/admin/danh-gia') }">
-            <span class="sidebar-nav-item__icon">
-              <svg width="18" height="18" viewBox="0 0 24 24" fill="none">
-                <path d="M12 2.5L15.6 9L23 9.9L17.3 15.1L18.6 23L12 19.3L5.4 23L6.7 15.1L1 9.9L8.4 9L12 2.5Z" stroke="currentColor" stroke-width="1.6" stroke-linejoin="round" />
-              </svg>
-            </span>
-            <span class="sidebar-nav-item__label">Quản lý đánh giá</span>
+          <router-link to="/admin/danh-gia" class="sidebar__item" :class="{ active: isActive('/admin/danh-gia') }">
+            <svg viewBox="0 0 24 24" fill="none"><path d="M12 2.5l3 6.4 6.7.7-5 4.6 1.4 6.8L12 17.7 5.9 21l1.4-6.8-5-4.6 6.7-.7 3-6.4Z" stroke="currentColor" stroke-width="1.5" stroke-linejoin="round"/></svg>
+            Quản lý đánh giá
           </router-link>
-          <router-link to="/admin/binh-luan" class="sidebar-nav-item" :class="{ active: isActive('/admin/binh-luan') }">
-            <span class="sidebar-nav-item__icon">
-              <svg width="18" height="18" viewBox="0 0 24 24" fill="none">
-                <path d="M3 10a7 7 0 1 1 14 0 7 7 0 0 1-14 0Zm3 7l-3 3c-.3.3 0 .7.3.7h3.7l4 4c.3.3.7 0 .7-.3v-4.4" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" />
-              </svg>
-            </span>
-            <span class="sidebar-nav-item__label">Quản lý bình luận</span>
+          <router-link to="/admin/binh-luan" class="sidebar__item" :class="{ active: isActive('/admin/binh-luan') }">
+            <svg viewBox="0 0 24 24" fill="none"><path d="M4 5h16v11H8l-4 4V5Z" stroke="currentColor" stroke-width="1.7" stroke-linejoin="round"/></svg>
+            Quản lý bình luận
           </router-link>
         </div>
-        <div class="sidebar-section">
-          <p class="sidebar-section__label">TÀI KHOẢN</p>
-          <router-link to="/admin/ca-nhan" class="sidebar-nav-item" :class="{ active: isActive('/admin/ca-nhan') }">
-            <span class="sidebar-nav-item__icon">
-              <svg width="18" height="18" viewBox="0 0 24 24" fill="none">
-                <circle cx="12" cy="8" r="4" stroke="currentColor" stroke-width="1.6" />
-                <path d="M4 20c0-3.3 3.6-6 8-6s8 2.7 8 6" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" />
-              </svg>
-            </span>
-            <span class="sidebar-nav-item__label">Thông tin cá nhân</span>
+
+        <div class="sidebar__group">
+          <p class="sidebar__group-title">Tài khoản</p>
+          <router-link to="/admin/ca-nhan" class="sidebar__item" :class="{ active: isActive('/admin/ca-nhan') }">
+            <svg viewBox="0 0 24 24" fill="none"><circle cx="12" cy="8" r="3.5" stroke="currentColor" stroke-width="1.7"/><path d="M4 20c0-4 3.6-7 8-7s8 3 8 7" stroke="currentColor" stroke-width="1.7" stroke-linecap="round"/></svg>
+            Thông tin cá nhân
           </router-link>
-          <router-link to="/" class="sidebar-nav-item">
-            <span class="sidebar-nav-item__icon">
-              <svg width="18" height="18" viewBox="0 0 24 24" fill="none">
-                <path d="M3 12h16M3 12L9 6M3 12l6 6" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" />
-              </svg>
-            </span>
-            <span class="sidebar-nav-item__label">Quay lại trang chủ</span>
+          <router-link to="/" class="sidebar__item">
+            <svg viewBox="0 0 24 24" fill="none"><path d="M19 12H5M5 12l7 7M5 12l7-7" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"/></svg>
+            Quay lại trang chủ
           </router-link>
         </div>
       </nav>
-      <div class="dashboard__sidebar-bottom">
-        <div class="sidebar-user">
-          <div class="sidebar-user__avatar">{{ userInitial }}</div>
-          <div class="sidebar-user__info">
-            <p class="sidebar-user__name">Quản trị viên</p>
-            <p class="sidebar-user__role">Admin</p>
-          </div>
+
+      <div class="sidebar__user">
+        <div class="sidebar__avatar">{{ tenVietTat }}</div>
+        <div>
+          <p class="sidebar__user-name">{{ tenNguoiDung }}</p>
+          <p class="sidebar__user-role">Admin</p>
         </div>
       </div>
     </aside>
-    <div class="dashboard__content">
-      <header class="dashboard__header">
-        <div class="dashboard__header-left">
-          <button class="dashboard__btn-logout" @click="sidebarOpen = !sidebarOpen" v-if="isMobile" style="border: none; background: none; padding: 0;">
-            <svg width="20" height="20" viewBox="0 0 24 24" fill="none">
-              <line x1="3" y1="6" x2="21" y2="6" stroke="currentColor" stroke-width="2" stroke-linecap="round" />
-              <line x1="3" y1="12" x2="21" y2="12" stroke="currentColor" stroke-width="2" stroke-linecap="round" />
-              <line x1="3" y1="18" x2="21" y2="18" stroke="currentColor" stroke-width="2" stroke-linecap="round" />
-            </svg>
-          </button>
-          <div class="dashboard__breadcrumb">
-            <a href="/">DreamLeague</a>
-            <span> / {{ breadcrumbLabel }}</span>
-          </div>
-        </div>
-        <div class="dashboard__header-right">
-          <button class="dashboard__btn-logout" @click="logout">
-            <svg width="16" height="16" viewBox="0 0 24 24" fill="none">
-              <path d="M17 12H7M17 12L13 8M17 12l-4 4" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" />
-              <path d="M15 18H5c-1.1 0-2-.9-2-2V8c0-1.1.9-2 2-2h10" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" />
-            </svg>
-            Đăng xuất
-          </button>
-        </div>
+
+    <div class="admin-main">
+      <header class="admin-topbar">
+        <p class="admin-breadcrumb">DreamLeague / <span>{{ tieuDeTrang }}</span></p>
+        <button class="btn-dang-xuat" @click="dangXuat">Đăng xuất</button>
       </header>
-      <main class="dashboard__main">
+
+      <main class="admin-content">
         <router-view />
       </main>
     </div>
@@ -186,76 +107,131 @@
 </template>
 
 <script setup>
-import { ref, computed, onMounted, onUnmounted } from 'vue'
+import { computed } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 
-const router = useRouter()
 const route = useRoute()
+const router = useRouter()
 
-const sidebarOpen = ref(false)
-const isMobile = ref(false)
-const userInitial = computed(() => 'Q')
+const tenNguoiDung = computed(() => localStorage.getItem('hoTen') || 'Quản trị viên')
 
-// ===== AUTH STATE =====
-const dangNhap = ref(false)
-const tenNguoiDung = ref('')
-const vaiTro = ref('')
-const showDropdown = ref(false)
-
-const breadcrumbLabel = computed(() => {
-  const labels = {
-    '/admin': 'Dashboard',
-    '/admin/khach-hang': 'Quản lý khách hàng',
-    '/admin/nhan-vien': 'Quản lý nhân viên',
-    '/admin/san-bong': 'Quản lý sân bóng',
-    '/admin/dat-san': 'Quản lý đặt sân',
-    '/admin/thanh-toan': 'Quản lý thanh toán',
-    '/admin/hoa-don': 'Quản lý hoá đơn',
-    '/admin/doanh-thu': 'Thống kê & doanh thu',
-    '/admin/thong-bao': 'Quản lý thông báo',
-    '/admin/danh-gia': 'Quản lý đánh giá',
-    '/admin/binh-luan': 'Quản lý bình luận',
-    '/admin/ca-nhan': 'Thông tin cá nhân'
-  }
-  return labels[route.path] || 'Quản trị'
+const tenVietTat = computed(() => {
+  const ten = tenNguoiDung.value.trim().split(' ')
+  return ten[ten.length - 1].charAt(0).toUpperCase()
 })
 
+const tieuDeTrang = computed(() => route.meta?.title || route.name || '')
+
 function isActive(path) {
-  // Nếu path kiểm tra là '/admin', chỉ active khi trùng khớp hoàn toàn (không ăn theo các trang con)
-  if (path === '/admin') {
-    return route.path === '/admin'
-  }
-  // Các trang con khác thì vẫn dùng startsWith bình thường
-  return route.path.startsWith(path)
+  return route.path === path
 }
 
-function logout() {
+function dangXuat() {
   localStorage.removeItem('token')
   localStorage.removeItem('hoTen')
   localStorage.removeItem('isLoggedIn')
   localStorage.removeItem('userRole')
-  localStorage.removeItem('vaiTro') // Xóa nốt cả key cũ phòng hờ
-
-  // Đưa các biến cục bộ về trạng thái ban đầu để giao diện biến đổi ngay lập tức
-  dangNhap.value = false
-  tenNguoiDung.value = ''
-  vaiTro.value = ''
-  showDropdown.value = false
-
-  alert('Đã đăng xuất tài khoản thành công!')
   router.push('/dang-nhap')
 }
+</script>
 
-function handleResize() {
-  isMobile.value = window.innerWidth < 768
+<style scoped>
+.admin-layout {
+  display: flex;
+  min-height: 100vh;
+  background: #f0f4f8;
+  font-family: var(--font-display, system-ui);
 }
 
-onMounted(() => {
-  handleResize()
-  window.addEventListener('resize', handleResize)
-})
+/* ===== SIDEBAR ===== */
+.sidebar {
+  width: 250px;
+  flex-shrink: 0;
+  background: white;
+  border-right: 1px solid #e2e8f0;
+  display: flex;
+  flex-direction: column;
+  padding: 20px 14px;
+  position: sticky;
+  top: 0;
+  height: 100vh;
+  overflow-y: auto;
+}
+.sidebar__brand {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 6px 10px 20px;
+  text-decoration: none;
+}
+.sidebar__brand span {
+  font-size: 17px;
+  font-weight: 800;
+  color: var(--navy-900, #0d1f3c);
+}
+.sidebar__nav { flex: 1; display: flex; flex-direction: column; gap: 20px; }
+.sidebar__group-title {
+  font-size: 11px;
+  font-weight: 700;
+  color: #94a3b8;
+  text-transform: uppercase;
+  letter-spacing: .5px;
+  padding: 0 10px 6px;
+}
+.sidebar__item {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 9px 10px;
+  border-radius: 8px;
+  font-size: 13.5px;
+  font-weight: 500;
+  color: #475569;
+  text-decoration: none;
+  transition: background .15s, color .15s;
+}
+.sidebar__item:hover { background: #f0fdf4; color: var(--green-700, #15803d); }
+.sidebar__item.active { background: var(--green-50, #f0fdf4); color: var(--green-700, #15803d); font-weight: 700; }
+.sidebar__item svg { width: 17px; height: 17px; flex-shrink: 0; }
 
-onUnmounted(() => {
-  window.removeEventListener('resize', handleResize)
-})
-</script>
+.sidebar__user {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 12px 10px;
+  border-top: 1px solid #f1f5f9;
+  margin-top: 10px;
+}
+.sidebar__avatar {
+  width: 34px; height: 34px; border-radius: 50%;
+  background: var(--green-600, #16a34a); color: white;
+  display: flex; align-items: center; justify-content: center;
+  font-size: 14px; font-weight: 700; flex-shrink: 0;
+}
+.sidebar__user-name { font-size: 13.5px; font-weight: 700; color: #0f172a; }
+.sidebar__user-role { font-size: 11.5px; color: #94a3b8; }
+
+/* ===== MAIN CONTENT ===== */
+.admin-main { flex: 1; display: flex; flex-direction: column; min-width: 0; }
+.admin-topbar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 16px 28px;
+  background: white;
+  border-bottom: 1px solid #e2e8f0;
+}
+.admin-breadcrumb { font-size: 13.5px; color: #94a3b8; }
+.admin-breadcrumb span { color: #0f172a; font-weight: 600; }
+.btn-dang-xuat {
+  padding: 8px 18px; border-radius: 8px; border: 1px solid #e2e8f0;
+  background: white; color: #475569; font-size: 13.5px; font-weight: 600;
+  cursor: pointer; transition: .15s;
+}
+.btn-dang-xuat:hover { background: #f8fafc; border-color: #cbd5e1; }
+.admin-content { flex: 1; padding: 28px; }
+
+@media (max-width: 960px) {
+  .sidebar { display: none; }
+}
+</style>

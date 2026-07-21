@@ -61,7 +61,7 @@
               </div>
               <div class="info-cell">
                 <span class="info-label">⏰ Khung giờ</span>
-                <span class="info-val">{{ item.gioBatDau }} – {{ item.gioKetThuc }}</span>
+                <span class="info-val">{{ item.gioBatDau }} - {{ item.gioKetThuc }}</span>
               </div>
               <div class="info-cell">
                 <span class="info-label">💰 Tổng tiền</span>
@@ -76,8 +76,12 @@
           </div>
 
           <div class="booking-item__footer" v-if="item.trangThai !== 'DA_HUY' && item.trangThai !== 'HOAN_THANH'">
+            <button class="btn-dich-vu" @click="moModalDichVu(item)">
+              🛒 Gọi đồ uống / dịch vụ
+            </button>
+
             <div v-if="item.coTheHuy" class="huy-group">
-              <p class="huy-note">✅ Có thể huỷ – tiền cọc sẽ được hoàn đầy đủ</p>
+              <p class="huy-note">✅ Có thể huỷ - tiền cọc sẽ được hoàn đầy đủ</p>
               <button class="btn-huy" @click="xacNhanHuy(item)">Huỷ đặt sân</button>
             </div>
             <div v-else class="huy-group">
@@ -110,6 +114,63 @@
         <p v-if="loiHuy" class="loi-huy">{{ loiHuy }}</p>
       </div>
     </div>
+
+    <!-- Modal gọi đồ uống / dịch vụ -->
+    <div v-if="itemDangGoiDichVu" class="modal-overlay" @click.self="dongModalDichVu">
+      <div class="modal modal--wide">
+        <h3>Gọi đồ uống / dịch vụ</h3>
+        <p class="modal-sub">{{ itemDangGoiDichVu.tenSan }} — {{ formatNgay(itemDangGoiDichVu.ngayDa) }}, {{ itemDangGoiDichVu.gioBatDau }}-{{ itemDangGoiDichVu.gioKetThuc }}</p>
+
+        <div v-if="dangTaiMenu" class="modal-loading">Đang tải menu...</div>
+
+        <template v-else>
+          <div class="menu-grid" v-if="danhSachSanPham.length > 0">
+            <div v-for="sp in danhSachSanPham" :key="sp.id" class="menu-item">
+              <img :src="sp.hinhAnh || anhMacDinh" class="menu-item__img" alt="" />
+              <div class="menu-item__info">
+                <p class="menu-item__ten">{{ sp.tenSanPham }}</p>
+                <p class="menu-item__gia">{{ formatTien(sp.gia) }}đ</p>
+              </div>
+              <button class="btn-them-mon" @click="themMon(sp)">+ Thêm</button>
+            </div>
+          </div>
+          <p v-else class="menu-trong">Hiện chưa có sản phẩm nào để gọi.</p>
+
+          <div class="gio-hang-box" v-if="gioHang">
+            <h4>Giỏ hàng của bạn</h4>
+            <div v-if="gioHang.danhSach.length === 0" class="gio-hang-trong">Chưa gọi món nào</div>
+            <div v-else class="gio-hang-list">
+              <div v-for="ct in gioHang.danhSach" :key="ct.id" class="gio-hang-row">
+                <span class="gio-hang-row__ten">{{ ct.tenSanPham }} × {{ ct.soLuong }}</span>
+                <span class="gio-hang-row__gia">{{ formatTien(ct.thanhTien) }}đ</span>
+                <button class="btn-xoa-mon" @click="xoaMon(ct.id)" title="Xoá món này">✕</button>
+              </div>
+            </div>
+
+            <div class="gio-hang-tong">
+              <div class="tong-row">
+                <span>Còn lại tiền sân (50%)</span>
+                <strong>{{ formatTien(gioHang.tienConLaiSan) }}đ</strong>
+              </div>
+              <div class="tong-row">
+                <span>Tiền đồ uống / dịch vụ</span>
+                <strong>{{ formatTien(gioHang.tongTienDichVu) }}đ</strong>
+              </div>
+              <div class="tong-row tong-row--final">
+                <span>Tổng cần thanh toán tại sân</span>
+                <strong>{{ formatTien(gioHang.tongCanThanhToan) }}đ</strong>
+              </div>
+            </div>
+          </div>
+        </template>
+
+        <p v-if="loiDichVu" class="loi-huy">{{ loiDichVu }}</p>
+
+        <div class="modal-actions">
+          <button class="btn-cancel" @click="dongModalDichVu">Đóng</button>
+        </div>
+      </div>
+    </div>
   </div>
 </template>
 
@@ -117,6 +178,7 @@
 import { ref, computed, onMounted } from 'vue'
 
 const API = 'http://localhost:8080/api'
+const anhMacDinh = 'https://images.unsplash.com/photo-1544145945-f90425340c7e?w=200'
 
 const dangTai = ref(true)
 const loiTai = ref('')
@@ -125,6 +187,13 @@ const tabHienTai = ref('TAT_CA')
 const itemDangHuy = ref(null)
 const dangHuy = ref(false)
 const loiHuy = ref('')
+
+// ===== State cho modal gọi đồ uống/dịch vụ =====
+const itemDangGoiDichVu = ref(null)
+const danhSachSanPham = ref([])
+const dangTaiMenu = ref(false)
+const gioHang = ref(null)
+const loiDichVu = ref('')
 
 const tabs = [
   { value: 'TAT_CA', label: 'Tất cả' },
@@ -195,7 +264,7 @@ async function thucHienHuy() {
     })
     const data = await res.text()
     if (!res.ok) throw new Error(data || 'Huỷ thất bại')
-    // Cập nhật state local
+
     const idx = danhSach.value.findIndex(i => i.id === itemDangHuy.value.id)
     if (idx !== -1) { danhSach.value[idx].trangThai = 'DA_HUY'; danhSach.value[idx].coTheHuy = false }
     itemDangHuy.value = null
@@ -203,6 +272,68 @@ async function thucHienHuy() {
     loiHuy.value = e.message
   } finally {
     dangHuy.value = false
+  }
+}
+
+// ===== Gọi đồ uống / dịch vụ =====
+
+async function moModalDichVu(item) {
+  itemDangGoiDichVu.value = item
+  loiDichVu.value = ''
+  gioHang.value = null
+  dangTaiMenu.value = true
+  const token = localStorage.getItem('token')
+  try {
+    const [resMenu, resGio] = await Promise.all([
+      fetch(`${API}/san-pham`, { headers: { 'Authorization': `Bearer ${token}` } }),
+      fetch(`${API}/dat-san/${item.id}/dich-vu`, { headers: { 'Authorization': `Bearer ${token}` } })
+    ])
+    danhSachSanPham.value = resMenu.ok ? await resMenu.json() : []
+    gioHang.value = resGio.ok ? await resGio.json() : null
+  } catch (e) {
+    loiDichVu.value = 'Không tải được menu, vui lòng thử lại!'
+  } finally {
+    dangTaiMenu.value = false
+  }
+}
+
+function dongModalDichVu() {
+  itemDangGoiDichVu.value = null
+  danhSachSanPham.value = []
+  gioHang.value = null
+  loiDichVu.value = ''
+}
+
+async function themMon(sp) {
+  loiDichVu.value = ''
+  const token = localStorage.getItem('token')
+  try {
+    const res = await fetch(`${API}/dat-san/${itemDangGoiDichVu.value.id}/dich-vu`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}` },
+      body: JSON.stringify({ sanPhamId: sp.id, soLuong: 1 })
+    })
+    const data = await res.json()
+    if (!res.ok) throw new Error(data.message || 'Không thêm được món này!')
+    gioHang.value = data
+  } catch (e) {
+    loiDichVu.value = e.message
+  }
+}
+
+async function xoaMon(chiTietId) {
+  loiDichVu.value = ''
+  const token = localStorage.getItem('token')
+  try {
+    const res = await fetch(`${API}/dich-vu/${chiTietId}`, {
+      method: 'DELETE',
+      headers: { 'Authorization': `Bearer ${token}` }
+    })
+    const data = await res.json()
+    if (!res.ok) throw new Error(data.message || 'Không xoá được món này!')
+    gioHang.value = data
+  } catch (e) {
+    loiDichVu.value = e.message
   }
 }
 
@@ -215,7 +346,6 @@ onMounted(taiLichSu)
   min-height: calc(100vh - 76px);
   padding: 40px 0 80px;
 }
-
 .page-header { text-align: center; margin-bottom: 30px; }
 .page-header h1 { font-size: 32px; font-weight: 800; color: #0d1f3c; }
 .page-header p { color: #6b7280; margin-top: 6px; }
@@ -231,7 +361,6 @@ onMounted(taiLichSu)
 }
 .status-tab:hover { border-color: var(--green-600); color: var(--green-600); }
 .status-tab--active { background: var(--green-600); border-color: var(--green-600); color: white; }
-
 .tab-count {
   background: rgba(0,0,0,.1); border-radius: 999px;
   padding: 1px 8px; font-size: 11px;
@@ -240,34 +369,27 @@ onMounted(taiLichSu)
 
 /* List */
 .booking-list { display: flex; flex-direction: column; gap: 16px; }
-
 .booking-item {
   background: white; border-radius: 16px;
   box-shadow: 0 2px 12px rgba(10,37,64,.07);
   overflow: hidden; transition: box-shadow .2s;
 }
 .booking-item:hover { box-shadow: 0 6px 24px rgba(10,37,64,.12); }
-
 .booking-item__header {
   display: flex; justify-content: space-between; align-items: center;
   padding: 16px 20px; border-bottom: 1px solid #f1f5f9;
 }
-
 .item-san { display: flex; align-items: center; gap: 10px; }
 .item-san strong { font-size: 16px; color: #0d1f3c; }
-
 .loai-badge { padding: 3px 10px; border-radius: 999px; font-size: 11px; font-weight: 700; }
 .badge-blue { background: #dbeafe; color: #1d4ed8; }
 .badge-green { background: #dcfce7; color: #15803d; }
-
 .trang-thai-badge { padding: 4px 12px; border-radius: 999px; font-size: 12px; font-weight: 700; }
 .tt-cho { background: #fef3c7; color: #92400e; }
 .tt-ok { background: #dcfce7; color: #15803d; }
 .tt-done { background: #e0e7ff; color: #3730a3; }
 .tt-huy { background: #fee2e2; color: #991b1b; }
-
 .booking-item__body { padding: 16px 20px; }
-
 .info-grid {
   display: grid; grid-template-columns: repeat(2, 1fr);
   gap: 12px; margin-bottom: 10px;
@@ -276,18 +398,25 @@ onMounted(taiLichSu)
 .info-label { font-size: 12px; color: #9ca3af; }
 .info-val { font-size: 14px; font-weight: 600; color: #0d1f3c; }
 .text-green { color: var(--green-600); }
-
 .ngay-dat { font-size: 12px; color: #9ca3af; margin-top: 4px; }
-
 .booking-item__footer {
   padding: 12px 20px 16px;
   background: #f8fafc; border-top: 1px solid #f1f5f9;
+  display: flex; flex-direction: column; gap: 10px;
 }
+
+/* Nút gọi dịch vụ */
+.btn-dich-vu {
+  align-self: flex-start;
+  padding: 8px 16px; border-radius: 10px; font-size: 13px; font-weight: 600;
+  border: 1.5px solid var(--green-600); background: white; color: var(--green-600);
+  cursor: pointer; transition: .2s;
+}
+.btn-dich-vu:hover { background: var(--green-50, #f0fdf4); }
 
 .huy-group { display: flex; align-items: center; justify-content: space-between; gap: 12px; flex-wrap: wrap; }
 .huy-note { font-size: 13px; color: #374151; }
 .huy-note.warn { color: #b45309; }
-
 .btn-huy {
   padding: 8px 18px; border-radius: 10px; font-size: 13px; font-weight: 600;
   border: 1.5px solid #ef4444; background: white; color: #ef4444;
@@ -329,7 +458,9 @@ onMounted(taiLichSu)
   background: white; border-radius: 20px; padding: 28px;
   max-width: 440px; width: 100%;
   box-shadow: 0 24px 64px rgba(0,0,0,.2);
+  max-height: 90vh; overflow-y: auto;
 }
+.modal--wide { max-width: 560px; }
 .modal h3 { font-size: 20px; font-weight: 800; color: #0d1f3c; margin-bottom: 14px; }
 .modal p { font-size: 14px; color: #374151; line-height: 1.6; margin-bottom: 20px; }
 .warn-text { color: #92400e; background: #fffbeb; padding: 12px; border-radius: 10px; border: 1px solid #fde68a; }
@@ -348,6 +479,46 @@ onMounted(taiLichSu)
 .btn-confirm-huy:hover:not(:disabled) { background: #dc2626; }
 .btn-confirm-huy:disabled { opacity: .6; cursor: not-allowed; }
 .loi-huy { color: #dc2626; font-size: 13px; margin-top: 12px; }
+
+/* Modal gọi dịch vụ */
+.modal-sub { font-size: 13px; color: #6b7280; margin-top: -10px; margin-bottom: 18px; }
+.modal-loading { text-align: center; padding: 30px 0; color: #9ca3af; font-size: 14px; }
+.menu-grid { display: flex; flex-direction: column; gap: 10px; margin-bottom: 20px; max-height: 260px; overflow-y: auto; }
+.menu-item {
+  display: flex; align-items: center; gap: 12px;
+  padding: 8px; border: 1px solid #f1f5f9; border-radius: 12px;
+}
+.menu-item__img { width: 44px; height: 44px; border-radius: 8px; object-fit: cover; flex-shrink: 0; }
+.menu-item__info { flex: 1; min-width: 0; }
+.menu-item__ten { font-size: 13.5px; font-weight: 600; color: #0d1f3c; }
+.menu-item__gia { font-size: 12.5px; color: var(--green-600); font-weight: 600; margin-top: 2px; }
+.btn-them-mon {
+  padding: 6px 12px; border-radius: 8px; font-size: 12.5px; font-weight: 600;
+  border: none; background: var(--green-600); color: white; cursor: pointer;
+  white-space: nowrap; transition: .15s;
+}
+.btn-them-mon:hover { background: var(--green-700, #15803d); }
+.menu-trong { font-size: 13.5px; color: #9ca3af; text-align: center; padding: 20px 0; }
+
+.gio-hang-box { border-top: 1.5px dashed #e2e8f0; padding-top: 16px; }
+.gio-hang-box h4 { font-size: 14px; font-weight: 700; color: #0d1f3c; margin-bottom: 10px; }
+.gio-hang-trong { font-size: 13px; color: #9ca3af; padding: 8px 0; }
+.gio-hang-list { display: flex; flex-direction: column; gap: 6px; margin-bottom: 12px; }
+.gio-hang-row {
+  display: flex; align-items: center; gap: 8px;
+  font-size: 13px; color: #374151;
+}
+.gio-hang-row__ten { flex: 1; }
+.gio-hang-row__gia { font-weight: 600; color: #0d1f3c; }
+.btn-xoa-mon {
+  width: 22px; height: 22px; border-radius: 50%; border: none;
+  background: #fee2e2; color: #dc2626; font-size: 12px; cursor: pointer;
+  display: flex; align-items: center; justify-content: center; flex-shrink: 0;
+}
+.btn-xoa-mon:hover { background: #fecaca; }
+.gio-hang-tong { border-top: 1px solid #f1f5f9; padding-top: 10px; display: flex; flex-direction: column; gap: 6px; }
+.tong-row { display: flex; justify-content: space-between; font-size: 13px; color: #6b7280; }
+.tong-row--final { font-size: 14.5px; color: #0d1f3c; font-weight: 700; padding-top: 6px; border-top: 1px dashed #e2e8f0; }
 
 @media (max-width: 640px) {
   .info-grid { grid-template-columns: 1fr; }

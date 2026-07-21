@@ -88,8 +88,9 @@
               <div class="actions">
                 <button v-if="don.trangThai === 'CHO_XAC_NHAN'" class="btn-act confirm" title="Xác nhận cọc" @click="xacNhan(don)">✓ Xác nhận</button>
                 <button v-if="don.trangThai === 'DA_COC'" class="btn-act complete" title="Hoàn thành" @click="hoanThanh(don)">✔ Hoàn thành</button>
+                <button v-if="don.trangThai !== 'DA_HUY'" class="btn-act dichvu" title="Xem dịch vụ đã gọi" @click="xemDichVu(don)">🛒 Dịch vụ</button>
                 <button v-if="don.trangThai !== 'DA_HUY' && don.trangThai !== 'HOAN_THANH'" class="btn-act cancel" title="Hủy đơn" @click="openHuyModal(don)">✕ Hủy</button>
-                <span v-if="don.trangThai === 'DA_HUY' || don.trangThai === 'HOAN_THANH'" class="no-action">—</span>
+                <span v-if="don.trangThai === 'DA_HUY'" class="no-action">—</span>
               </div>
             </td>
           </tr>
@@ -115,6 +116,56 @@
         <div class="modal-footer">
           <button class="btn btn-ghost" @click="huyModal.show = false">Đóng</button>
           <button class="btn btn-danger" @click="xacNhanHuy">Xác nhận hủy</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- MODAL XEM DỊCH VỤ ĐÃ GỌI -->
+    <div class="overlay" v-if="dichVuModal.show">
+      <div class="modal-box">
+        <div class="modal-header">
+          <h2>🛒 Dịch vụ đã gọi</h2>
+          <button class="close-btn" @click="dichVuModal.show = false">&times;</button>
+        </div>
+        <div class="modal-body">
+          <p class="modal-sub">
+            #{{ dichVuModal.don?.maGanDo }} — {{ dichVuModal.don?.hoTenDat }} —
+            {{ dichVuModal.don?.tenSan }} ({{ dichVuModal.don?.gioBatDau }}-{{ dichVuModal.don?.gioKetThuc }})
+          </p>
+
+          <div v-if="dichVuModal.dangTai" class="state-box" style="padding:20px 0">⏳ Đang tải...</div>
+
+          <template v-else-if="dichVuModal.gioHang">
+            <div v-if="dichVuModal.gioHang.danhSach.length === 0" class="dich-vu-trong">
+              Khách chưa gọi dịch vụ nào cho đơn này.
+            </div>
+            <div v-else class="dich-vu-list">
+              <div v-for="ct in dichVuModal.gioHang.danhSach" :key="ct.id" class="dich-vu-row">
+                <span>{{ ct.tenSanPham }} × {{ ct.soLuong }}</span>
+                <strong>{{ formatMoney(ct.thanhTien) }}</strong>
+              </div>
+            </div>
+
+            <div class="tong-tien-block">
+              <div class="info-row">
+                <span class="info-label">Còn lại tiền sân:</span>
+                <span>{{ formatMoney(dichVuModal.gioHang.tienConLaiSan) }}</span>
+              </div>
+              <div class="info-row">
+                <span class="info-label">Tiền dịch vụ:</span>
+                <span>{{ formatMoney(dichVuModal.gioHang.tongTienDichVu) }}</span>
+              </div>
+              <div class="info-row highlight">
+                <span class="info-label">Tổng cần thu tại sân:</span>
+                <span class="price-big">{{ formatMoney(dichVuModal.gioHang.tongCanThanhToan) }}</span>
+              </div>
+            </div>
+          </template>
+
+          <div v-else class="dich-vu-trong">Không tải được dữ liệu dịch vụ, vui lòng thử lại.</div>
+        </div>
+        <div class="modal-footer">
+          <button class="btn btn-ghost" @click="dichVuModal.show = false">Đóng</button>
         </div>
       </div>
     </div>
@@ -189,6 +240,8 @@ import { ref, computed, onMounted } from 'vue'
 import staffService from '@/services/staffService'
 import sanService from '@/services/sanService'
 
+const API = 'http://localhost:8080/api'
+
 const danhSach = ref([])
 const danhSachSan = ref([])
 const loading = ref(false)
@@ -200,6 +253,9 @@ const filters = ref({ search: '', loaiSan: '', ngay: '', trangThai: '' })
 const huyModal = ref({ show: false, don: null, lyDo: '' })
 const walkInModal = ref({ show: false, loading: false })
 const walkIn = ref({ hoTenDat: '', soDienThoai: '', sanBongId: '', ngayDa: '', gioBatDau: '06:00', gioKetThuc: '07:00', phuongThuc: 'TIEN_MAT' })
+
+// ===== MỚI THÊM: modal xem dịch vụ đã gọi =====
+const dichVuModal = ref({ show: false, don: null, dangTai: false, gioHang: null })
 
 const gioOptions = ['06:00','07:00','08:00','09:00','10:00','11:00','12:00','13:00','14:00','15:00','16:00','17:00','18:00','19:00','20:00','21:00','22:00']
 
@@ -264,6 +320,24 @@ async function xacNhanHuy() {
     huyModal.value.show = false
     showToast('Đã hủy đơn thành công!')
   } catch (e) { showToast(e.message, 'error') }
+}
+
+// ===== MỚI THÊM: xem dịch vụ đã gọi của 1 đơn =====
+async function xemDichVu(don) {
+  dichVuModal.value = { show: true, don, dangTai: true, gioHang: null }
+  try {
+    const token = localStorage.getItem('token')
+    const res = await fetch(`${API}/dat-san/${don.id}/dich-vu`, {
+      headers: { 'Authorization': `Bearer ${token}` }
+    })
+    if (res.ok) {
+      dichVuModal.value.gioHang = await res.json()
+    }
+  } catch (e) {
+    // giữ nguyên gioHang = null, template sẽ tự hiện thông báo lỗi tải
+  } finally {
+    dichVuModal.value.dangTai = false
+  }
 }
 
 function openWalkInModal() {
@@ -349,6 +423,8 @@ function badgeClass(t) {
 .btn-act.complete:hover { background: #bbf7d0; }
 .btn-act.cancel { background: #fee2e2; color: #b91c1c; }
 .btn-act.cancel:hover { background: #fecaca; }
+.btn-act.dichvu { background: #ede9fe; color: #6d28d9; }
+.btn-act.dichvu:hover { background: #ddd6fe; }
 .no-action { color: #cbd5e1; font-size: 16px; }
 
 /* BUTTONS */
@@ -363,7 +439,7 @@ function badgeClass(t) {
 
 /* MODAL */
 .overlay { position: fixed; inset: 0; background: rgba(15,23,42,.45); display: flex; align-items: center; justify-content: center; z-index: 200; }
-.modal-box { background: #fff; border-radius: 16px; width: 100%; max-width: 520px; box-shadow: 0 20px 40px rgba(0,0,0,.15); overflow: hidden; }
+.modal-box { background: #fff; border-radius: 16px; width: 100%; max-width: 520px; box-shadow: 0 20px 40px rgba(0,0,0,.15); overflow: hidden; max-height: 88vh; overflow-y: auto; }
 .modal-box.wide { max-width: 680px; }
 .modal-header { padding: 20px 24px; border-bottom: 1px solid #e2e8f0; display: flex; justify-content: space-between; align-items: center; }
 .modal-header h2 { font-size: 17px; font-weight: 700; color: #1e293b; margin: 0; }
@@ -379,4 +455,15 @@ textarea.form-control { resize: vertical; }
 .state-box { text-align: center; padding: 40px; color: #64748b; font-size: 15px; }
 .state-box.error { color: #b91c1c; }
 .no-data { text-align: center; padding: 32px; color: #94a3b8; }
+
+/* ===== MỚI THÊM: modal xem dịch vụ ===== */
+.modal-sub { font-size: 13px; color: #64748b; margin: -6px 0 16px; }
+.dich-vu-trong { font-size: 13.5px; color: #94a3b8; padding: 16px 0; text-align: center; }
+.dich-vu-list { display: flex; flex-direction: column; gap: 6px; margin-bottom: 14px; }
+.dich-vu-row { display: flex; justify-content: space-between; font-size: 13.5px; color: #475569; padding: 4px 0; border-bottom: 1px dashed #e2e8f0; }
+.tong-tien-block { border-top: 1px solid #e2e8f0; padding-top: 10px; display: flex; flex-direction: column; gap: 6px; }
+.info-row { display: flex; justify-content: space-between; align-items: center; font-size: 13.5px; color: #475569; padding: 3px 0; }
+.info-row.highlight { background: #fef9c3; border-radius: 6px; padding: 8px; margin-top: 4px; }
+.info-label { font-weight: 600; color: #64748b; }
+.price-big { font-size: 18px; font-weight: 800; color: #1E3932; }
 </style>

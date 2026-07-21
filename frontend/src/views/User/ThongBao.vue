@@ -43,7 +43,17 @@
         @click="markAsRead(noti)"
       >
         <div class="noti-item__icon-wrapper" :class="noti.type">
-          <component :is="getIcon(noti.type)" />
+          <svg v-if="noti.type === 'booking'" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <rect x="3" y="4" width="18" height="18" rx="2" ry="2"></rect>
+            <line x1="16" y1="2" x2="16" y2="6"></line>
+            <line x1="8" y1="2" x2="8" y2="6"></line>
+            <line x1="3" y1="10" x2="21" y2="10"></line>
+          </svg>
+          <svg v-else width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <circle cx="12" cy="12" r="10"></circle>
+            <line x1="12" y1="16" x2="12" y2="12"></line>
+            <line x1="12" y1="8" x2="12.01" y2="8"></line>
+          </svg>
         </div>
 
         <div class="noti-item__content">
@@ -161,28 +171,9 @@ async function markAllAsRead() {
   }
 }
 
-// Hàm render SVG components inline cho các icon (Booking, System)
-const getIcon = (type) => {
-  if (type === 'booking') {
-    return {
-      template: `
-        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-          <rect x="3" y="4" width="18" height="18" rx="2" ry="2"></rect>
-          <line x1="16" y1="2" x2="16" y2="6"></line>
-          <line x1="8" y1="2" x2="8" y2="6"></line>
-          <line x1="3" y1="10" x2="21" y2="10"></line>
-        </svg>`
-    }
-  }
-  return {
-    template: `
-      <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-        <circle cx="12" cy="12" r="10"></circle>
-        <line x1="12" y1="16" x2="12" y2="12"></line>
-        <line x1="12" y1="8" x2="12.01" y2="8"></line>
-      </svg>`
-  }
-}
+// Đã bỏ hàm getIcon() cũ (dùng { template: '...' } động) vì gây lỗi
+// "runtime compilation is not supported" trên bản Vue của Vite.
+// Icon giờ được chọn trực tiếp bằng v-if/v-else ngay trong template.
 
 // Hàm tính toán khoảng thời gian tương đối (Vừa xong, vài giờ trước...)
 function timeAgo(dateStr) {

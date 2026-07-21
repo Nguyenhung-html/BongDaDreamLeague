@@ -25,6 +25,7 @@ import ThongTinCaNhanStaff from '../views/staff/ThongTinCaNhan.vue'
 
 // Views - Admin
 import DashboardAdmin from '../views/Admin/DashboardAdmin.vue'
+import QuanLySanPham from '../views/admin/QuanLySanPham.vue'
 import QuanLyNhanVien from '../views/admin/QuanLyNhanVien.vue'
 import QuanLySanBong from '../views/admin/QuanLySanBong.vue'
 import QuanLyKhachHang from '../views/admin/QuanLyKhachHang.vue'
@@ -75,6 +76,7 @@ const routes = [
   { path: '/admin/thong-bao', name: 'QuanLyThongBao', component: QuanLyThongBao, meta: { layout: 'admin', requiresAuth: true, roles: ['Admin'] } },
   { path: '/admin/danh-gia', name: 'QuanLyDanhGia', component: QuanLyDanhGia, meta: { layout: 'admin', requiresAuth: true, roles: ['Admin'] } },
   { path: '/admin/binh-luan', name: 'QuanLyBinhLuan', component: QuanLyBinhLuan, meta: { layout: 'admin', requiresAuth: true, roles: ['Admin'] } },
+  { path: '/admin/san-pham', name: 'QuanLySanPham', component: QuanLySanPham, meta: { layout: 'admin', requiresAuth: true, roles: ['Admin'] } },
   { path: '/admin/ca-nhan', name: 'ThongTinCaNhanAdmin', component: ThongTinCaNhanAdmin, meta: { layout: 'admin', requiresAuth: true, roles: ['Admin'] } },
 
 

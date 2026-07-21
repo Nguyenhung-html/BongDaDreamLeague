@@ -5,6 +5,7 @@ import com.dream.sanbong.dto.*;
 import com.dream.sanbong.service.DatSanService;
 import com.dream.sanbong.service.StaffSanBongService;
 import com.dream.sanbong.service.StaffThanhToanService;
+import com.dream.sanbong.service.ThongKeService;
 import jakarta.servlet.http.HttpServletRequest;
 import org.springframework.format.annotation.DateTimeFormat;
 import org.springframework.http.ResponseEntity;
@@ -26,15 +27,18 @@ public class StaffController {
     private final DatSanService datSanService;
     private final StaffSanBongService staffSanBongService;
     private final StaffThanhToanService staffThanhToanService;
+    private final ThongKeService thongKeService;
     private final JwtUtils jwtUtils;
 
     public StaffController(DatSanService datSanService,
                            StaffSanBongService staffSanBongService,
                            StaffThanhToanService staffThanhToanService,
+                           ThongKeService thongKeService,
                            JwtUtils jwtUtils) {
         this.datSanService = datSanService;
         this.staffSanBongService = staffSanBongService;
         this.staffThanhToanService = staffThanhToanService;
+        this.thongKeService = thongKeService;
         this.jwtUtils = jwtUtils;
     }
 
@@ -228,6 +232,47 @@ public class StaffController {
             kiemTraQuyenStaff(request);
             StaffThanhToanPhanHoi ketQua = staffThanhToanService.thanhToanConLai(yeuCau, email);
             return ResponseEntity.ok(ketQua);
+        } catch (RuntimeException e) {
+            return ResponseEntity.badRequest().body(Map.of("message", e.getMessage()));
+        }
+    }
+
+    // ══════════════════════════════════════════════════════════════
+    // THỐNG KÊ
+    // ══════════════════════════════════════════════════════════════
+
+    /**
+     * GET /api/staff/thong-ke/dashboard?nam=2026
+     * Data tổng quan cho Dashboard: cards + 2 line charts
+     */
+    @GetMapping("/thong-ke/dashboard")
+    public ResponseEntity<?> layDashboard(
+            @RequestParam(required = false) Integer nam,
+            HttpServletRequest request) {
+        try {
+            kiemTraQuyenStaff(request);
+            if (nam == null) nam = java.time.LocalDate.now().getYear();
+            DashboardTongQuanDTO data = thongKeService.layTongQuanDashboard(nam);
+            return ResponseEntity.ok(data);
+        } catch (RuntimeException e) {
+            return ResponseEntity.badRequest().body(Map.of("message", e.getMessage()));
+        }
+    }
+
+    /**
+     * GET /api/staff/thong-ke/doanh-thu?nam=2026&thang=7
+     * Data chi tiết doanh thu: cards + line chart ngày + bảng sân
+     */
+    @GetMapping("/thong-ke/doanh-thu")
+    public ResponseEntity<?> layDoanhThuChiTiet(
+            @RequestParam(required = false) Integer nam,
+            @RequestParam(required = false) Integer thang,
+            HttpServletRequest request) {
+        try {
+            kiemTraQuyenStaff(request);
+            if (nam == null) nam = java.time.LocalDate.now().getYear();
+            DoanhThuChiTietDTO data = thongKeService.layDoanhThuChiTiet(nam, thang);
+            return ResponseEntity.ok(data);
         } catch (RuntimeException e) {
             return ResponseEntity.badRequest().body(Map.of("message", e.getMessage()));
         }

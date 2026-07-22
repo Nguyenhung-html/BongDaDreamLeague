@@ -24,6 +24,16 @@
                 <option v-for="y in yearOptions" :key="y" :value="y">{{ y }}</option>
             </select>
         </div>
+
+        <button
+            class="btn-export"
+            @click="xuatExcel"
+            :disabled="loading || !data.chiTietTheoSan"
+            title="Xuất báo cáo doanh thu ra file Excel"
+        >
+            <span class="btn-export__icon">📥</span>
+            Xuất Excel
+        </button>
     </div>
 
     <!-- Loading -->
@@ -138,6 +148,7 @@ import {
   Legend,
   Filler
 } from 'chart.js'
+import ExcelJS from 'exceljs'
 import thongKeService from '../../services/thongKeService'
 
 // Đăng ký Chart.js components
@@ -271,6 +282,328 @@ function formatPrice(value) {
         .format(value)
         .replace('₫', 'đ')
 }
+
+// ── Xuất Excel (ExcelJS — định dạng chuyên nghiệp) ──
+async function xuatExcel() {
+  const d = data.value
+  const wb = new ExcelJS.Workbook()
+  wb.creator = 'DreamLeague Admin'
+  wb.created = new Date()
+
+  const tieuDeThoiGian = selectedMonth.value
+    ? `Tháng ${selectedMonth.value}/${selectedYear.value}`
+    : `Năm ${selectedYear.value}`
+
+ // ── Các style dùng chung (Đã thêm FF vào trước mã màu) ──
+  const PRIMARY = 'FF16A34A'       
+  const PRIMARY_DARK = 'FF15803D'
+  const HEADER_BG = 'FF0F172A'     
+  const LIGHT_GREEN = 'FFF0FDF4'   
+  const LIGHT_GRAY = 'FFF8FAFC'    
+  const WHITE = 'FFFFFFFF'
+  const BORDER_COLOR = 'FFD1D5DB'
+
+  const thinBorder = {
+    top: { style: 'thin', color: { argb: BORDER_COLOR } },
+    left: { style: 'thin', color: { argb: BORDER_COLOR } },
+    bottom: { style: 'thin', color: { argb: BORDER_COLOR } },
+    right: { style: 'thin', color: { argb: BORDER_COLOR } }
+  }
+
+  const fontTitle = { name: 'Arial', size: 14, bold: true, color: { argb: WHITE } }
+  const fontSubTitle = { name: 'Arial', size: 10, italic: true, color: { argb: 'FF64748B' } }
+  const fontHeader = { name: 'Arial', size: 11, bold: true, color: { argb: WHITE } }
+  const fontNormal = { name: 'Arial', size: 11, color: { argb: 'FF1E293B' } }
+  const fontBold = { name: 'Arial', size: 11, bold: true, color: { argb: 'FF1E293B' } }
+  const fontTotal = { name: 'Arial', size: 11, bold: true, color: { argb: WHITE } }
+
+  const currencyFormat = '#,##0 "VNĐ"'
+  const percentFormat = '0.0"%"'
+
+  // ===================================================================
+  // SHEET 1: Tổng quan
+  // ===================================================================
+  const ws1 = wb.addWorksheet('Tổng quan', {
+    properties: { tabColor: { argb: PRIMARY } }
+  })
+
+  // Cột
+  ws1.columns = [
+    { width: 36 },
+    { width: 26 }
+  ]
+
+  // Dòng 1 — Tiêu đề chính (merge A1:B1)
+  ws1.mergeCells('A1:B1')
+  const titleRow1 = ws1.getRow(1)
+  titleRow1.height = 40
+  const titleCell1 = ws1.getCell('A1')
+  titleCell1.value = `📊  BÁO CÁO DOANH THU — ${tieuDeThoiGian}`
+  titleCell1.font = fontTitle
+  titleCell1.fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: HEADER_BG } }
+  titleCell1.alignment = { horizontal: 'center', vertical: 'middle' }
+
+  // Dòng 2 — Phụ đề
+  ws1.mergeCells('A2:B2')
+  const subRow1 = ws1.getRow(2)
+  subRow1.height = 22
+  const subCell1 = ws1.getCell('A2')
+  subCell1.value = `Xuất lúc: ${new Date().toLocaleString('vi-VN')} — Hệ thống DreamLeague`
+  subCell1.font = fontSubTitle
+  subCell1.alignment = { horizontal: 'center', vertical: 'middle' }
+  subCell1.fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: LIGHT_GREEN } }
+
+  // Dòng 3 — trống
+  ws1.getRow(3).height = 8
+
+  // Dòng 4 — Header bảng
+  const hdr1 = ws1.getRow(4)
+  hdr1.values = ['Chỉ số', 'Giá trị']
+  hdr1.height = 30
+  hdr1.eachCell(cell => {
+    cell.font = fontHeader
+    cell.fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: PRIMARY } }
+    cell.alignment = { horizontal: 'center', vertical: 'middle' }
+    cell.border = thinBorder
+  })
+
+  // Dòng 5–9 — Dữ liệu
+  const tongQuanRows = [
+    ['💰 Tổng doanh thu', Number(d.tongDoanhThu) || 0, currencyFormat],
+    ['✅ Đơn hoàn thành', d.donHoanThanh || 0, '#,##0'],
+    ['❌ Đơn bị hủy', d.donDaHuy || 0, '#,##0'],
+    ['📉 Tỷ lệ hủy', d.tyLeHuy || 0, percentFormat],
+    ['📋 Tổng đơn (Hoàn thành + Hủy)', (d.donHoanThanh || 0) + (d.donDaHuy || 0), '#,##0']
+  ]
+  tongQuanRows.forEach((item, idx) => {
+    const row = ws1.getRow(5 + idx)
+    row.values = [item[0], item[1]]
+    row.height = 28
+    const bgColor = idx % 2 === 0 ? LIGHT_GREEN : WHITE
+    row.eachCell((cell, colNumber) => {
+      cell.font = colNumber === 2 ? fontBold : fontNormal
+      cell.fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: bgColor } }
+      cell.border = thinBorder
+      cell.alignment = { vertical: 'middle', horizontal: colNumber === 2 ? 'right' : 'left', indent: 1 }
+      if (colNumber === 2) cell.numFmt = item[2]
+    })
+  })
+
+  // Freeze header
+  ws1.views = [{ state: 'frozen', ySplit: 4 }]
+
+  // ===================================================================
+  // SHEET 2: Doanh thu theo thời gian
+  // ===================================================================
+  const nhanThoiGian = selectedMonth.value ? 'Ngày' : 'Tháng'
+  const ws2 = wb.addWorksheet('Doanh thu theo thời gian', {
+    properties: { tabColor: { argb: 'FF2563EB' } }
+  })
+
+  ws2.columns = [
+    { width: 20 },
+    { width: 28 }
+  ]
+
+  // Tiêu đề
+  ws2.mergeCells('A1:B1')
+  const titleRow2 = ws2.getRow(1)
+  titleRow2.height = 40
+  const titleCell2 = ws2.getCell('A1')
+  titleCell2.value = `📈  DOANH THU THEO ${nhanThoiGian.toUpperCase()} — ${tieuDeThoiGian}`
+  titleCell2.font = fontTitle
+  titleCell2.fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: HEADER_BG } }
+  titleCell2.alignment = { horizontal: 'center', vertical: 'middle' }
+
+  // Phụ đề
+  ws2.mergeCells('A2:B2')
+  const subCell2 = ws2.getCell('A2')
+  subCell2.value = `Dữ liệu từ các đơn đã hoàn thành`
+  subCell2.font = fontSubTitle
+  subCell2.alignment = { horizontal: 'center', vertical: 'middle' }
+  subCell2.fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: LIGHT_GREEN } }
+  ws2.getRow(2).height = 22
+
+  ws2.getRow(3).height = 8
+
+  // Header bảng
+  const hdr2 = ws2.getRow(4)
+  hdr2.values = [nhanThoiGian, 'Doanh thu (VNĐ)']
+  hdr2.height = 30
+  hdr2.eachCell(cell => {
+    cell.font = fontHeader
+    cell.fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: 'FF2563EB' } }
+    cell.alignment = { horizontal: 'center', vertical: 'middle' }
+    cell.border = thinBorder
+  })
+
+  // Data rows
+  const doanhThuItems = d.doanhThuTheoNgay || []
+  let tongDoanhThuSheet2 = 0
+  doanhThuItems.forEach((item, idx) => {
+    const row = ws2.getRow(5 + idx)
+    const val = Number(item.giaTri) || 0
+    tongDoanhThuSheet2 += val
+    row.values = [item.nhan, val]
+    row.height = 26
+    const bgColor = idx % 2 === 0 ? WHITE : LIGHT_GRAY
+    row.eachCell((cell, colNumber) => {
+      cell.font = fontNormal
+      cell.fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: bgColor } }
+      cell.border = thinBorder
+      cell.alignment = { vertical: 'middle', horizontal: colNumber === 2 ? 'right' : 'center' }
+      if (colNumber === 2) cell.numFmt = currencyFormat
+    })
+  })
+
+  // Dòng tổng cộng
+  if (doanhThuItems.length > 0) {
+    const totalRow2 = ws2.getRow(5 + doanhThuItems.length)
+    totalRow2.values = ['TỔNG CỘNG', tongDoanhThuSheet2]
+    totalRow2.height = 32
+    totalRow2.eachCell(cell => {
+      cell.font = fontTotal
+      cell.fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: PRIMARY_DARK } }
+      cell.alignment = { horizontal: 'center', vertical: 'middle' }
+      cell.border = thinBorder
+    })
+    totalRow2.getCell(2).numFmt = currencyFormat
+    totalRow2.getCell(2).alignment = { horizontal: 'right', vertical: 'middle' }
+  }
+
+  ws2.views = [{ state: 'frozen', ySplit: 4 }]
+
+  // ===================================================================
+  // SHEET 3: Chi tiết theo sân
+  // ===================================================================
+  const ws3 = wb.addWorksheet('Chi tiết theo sân', {
+    properties: { tabColor: { argb: 'FFF59E0B' } }
+  })
+
+  ws3.columns = [
+    { width: 26 },
+    { width: 16 },
+    { width: 16 },
+    { width: 26 },
+    { width: 22 }
+  ]
+
+  // Tiêu đề
+  ws3.mergeCells('A1:E1')
+  const titleRow3 = ws3.getRow(1)
+  titleRow3.height = 40
+  const titleCell3 = ws3.getCell('A1')
+  titleCell3.value = `⚽  CHI TIẾT DOANH THU THEO SÂN — ${tieuDeThoiGian}`
+  titleCell3.font = fontTitle
+  titleCell3.fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: HEADER_BG } }
+  titleCell3.alignment = { horizontal: 'center', vertical: 'middle' }
+
+  // Phụ đề
+  ws3.mergeCells('A2:E2')
+  const subCell3 = ws3.getCell('A2')
+  subCell3.value = `Thống kê số lượt đặt, số giờ và doanh thu từng sân`
+  subCell3.font = fontSubTitle
+  subCell3.alignment = { horizontal: 'center', vertical: 'middle' }
+  subCell3.fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: LIGHT_GREEN } }
+  ws3.getRow(2).height = 22
+
+  ws3.getRow(3).height = 8
+
+  // Header bảng
+  const hdr3 = ws3.getRow(4)
+  hdr3.values = ['Tên sân', 'Số lượt đặt', 'Số giờ đá', 'Doanh thu (VNĐ)', 'Tỷ lệ đóng góp']
+  hdr3.height = 30
+  hdr3.eachCell(cell => {
+    cell.font = fontHeader
+    cell.fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: 'FFF59E0B' } }
+    cell.alignment = { horizontal: 'center', vertical: 'middle' }
+    cell.border = thinBorder
+  })
+  // Đổi màu chữ header sang tối vì nền vàng
+  hdr3.eachCell(cell => {
+    cell.font = { name: 'Arial', size: 11, bold: true, color: { argb: 'FF1E293B' } }
+  })
+
+  // Data rows
+  const sanItems = d.chiTietTheoSan || []
+  sanItems.forEach((san, idx) => {
+    const row = ws3.getRow(5 + idx)
+    row.values = [
+      san.tenSan,
+      san.soLuotDat || 0,
+      san.soGio ? Number(san.soGio.toFixed(1)) : 0,
+      Number(san.doanhThu) || 0,
+      Number(getContributionRate(san.doanhThu)) / 100 || 0
+    ]
+    row.height = 28
+    const bgColor = idx % 2 === 0 ? WHITE : LIGHT_GRAY
+    row.eachCell((cell, colNumber) => {
+      cell.font = colNumber === 1 ? fontBold : fontNormal
+      cell.fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: bgColor } }
+      cell.border = thinBorder
+      cell.alignment = { vertical: 'middle' }
+      if (colNumber === 1) cell.alignment = { vertical: 'middle', indent: 1 }
+      if (colNumber === 2 || colNumber === 3) {
+        cell.alignment = { horizontal: 'center', vertical: 'middle' }
+        cell.numFmt = colNumber === 3 ? '0.0' : '#,##0'
+      }
+      if (colNumber === 4) {
+        cell.numFmt = currencyFormat
+        cell.alignment = { horizontal: 'right', vertical: 'middle' }
+        cell.font = { name: 'Arial', size: 11, bold: true, color: { argb: 'FF16A34A' } }
+      }
+      if (colNumber === 5) {
+        cell.numFmt = '0.0%'
+        cell.alignment = { horizontal: 'center', vertical: 'middle' }
+      }
+    })
+  })
+
+  // Dòng tổng cộng
+  if (sanItems.length > 0) {
+    const totalRow3 = ws3.getRow(5 + sanItems.length)
+    totalRow3.values = [
+      'TỔNG CỘNG',
+      sanItems.reduce((s, r) => s + (r.soLuotDat || 0), 0),
+      Number(sanItems.reduce((s, r) => s + (r.soGio || 0), 0).toFixed(1)),
+      Number(d.tongDoanhThu) || 0,
+      1
+    ]
+    totalRow3.height = 32
+    totalRow3.eachCell((cell, colNumber) => {
+      cell.font = fontTotal
+      cell.fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: PRIMARY_DARK } }
+      cell.alignment = { horizontal: 'center', vertical: 'middle' }
+      cell.border = thinBorder
+      if (colNumber === 3) cell.numFmt = '0.0'
+      if (colNumber === 4) {
+        cell.numFmt = currencyFormat
+        cell.alignment = { horizontal: 'right', vertical: 'middle' }
+      }
+      if (colNumber === 5) cell.numFmt = '0.0%'
+    })
+  }
+
+  ws3.views = [{ state: 'frozen', ySplit: 4 }]
+
+  // ===================================================================
+  // TẢI FILE
+  // ===================================================================
+  const tenFile = selectedMonth.value
+    ? `DoanhThu_Thang${selectedMonth.value}_${selectedYear.value}.xlsx`
+    : `DoanhThu_Nam${selectedYear.value}.xlsx`
+
+  const buffer = await wb.xlsx.writeBuffer()
+  const blob = new Blob([buffer], {
+    type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'
+  })
+  const url = URL.createObjectURL(blob)
+  const a = document.createElement('a')
+  a.href = url
+  a.download = tenFile
+  a.click()
+  URL.revokeObjectURL(url)
+}
 </script>
 
 <style scoped>
@@ -299,6 +632,43 @@ function formatPrice(value) {
     background: #f8fafc;
     padding: 15px;
     border-radius: 10px;
+    align-items: center;
+}
+
+.btn-export {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    padding: 9px 20px;
+    background: linear-gradient(135deg, #16a34a, #15803d);
+    color: #fff;
+    border: none;
+    border-radius: 8px;
+    font-size: 14px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.25s ease;
+    box-shadow: 0 2px 6px rgba(22, 163, 74, 0.25);
+    margin-left: auto;
+}
+
+.btn-export:hover:not(:disabled) {
+    background: linear-gradient(135deg, #15803d, #166534);
+    transform: translateY(-1px);
+    box-shadow: 0 4px 12px rgba(22, 163, 74, 0.35);
+}
+
+.btn-export:active:not(:disabled) {
+    transform: translateY(0);
+}
+
+.btn-export:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+}
+
+.btn-export__icon {
+    font-size: 16px;
 }
 
 .filter-group {
@@ -515,6 +885,11 @@ th {
     .filter-group {
         width: 100%;
         justify-content: space-between;
+    }
+    .btn-export {
+        width: 100%;
+        justify-content: center;
+        margin-left: 0;
     }
     .table-wrapper {
         overflow: auto;

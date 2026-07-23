@@ -87,4 +87,27 @@ public class ThongBaoServiceImpl implements ThongBaoService {
             thongBaoRepo.save(tbNhanVien);
         }
     }
+
+    @Override
+    @Transactional
+    public void taoThongBaoYeuCauGiaHan(DatSan datSan) {
+        NguoiDung khachHang = datSan.getNguoiDung();
+        String tenSan = datSan.getSanBong().getTenSan();
+        String khungGio = datSan.getGioBatDau() + " - " + datSan.getGioKetThuc();
+
+        // Chỉ thông báo cho Staff/Admin - khách đã biết mình vừa gửi yêu cầu rồi,
+        // không cần thông báo lại cho chính họ.
+        List<NguoiDung> nhanVien = nguoiDungRepo.findByVaiTroIn(List.of(VaiTro.STAFF, VaiTro.ADMIN));
+        for (NguoiDung nv : nhanVien) {
+            ThongBao tb = ThongBao.builder()
+                    .nguoiDung(nv)
+                    .tieuDe("Khách yêu cầu gia hạn thêm giờ ⏱️")
+                    .noiDung(khachHang.getHoTen() + " muốn gia hạn thêm 30 phút cho " + tenSan
+                            + " (hiện đang " + khungGio + ") ngày " + datSan.getNgayDa()
+                            + ". Vui lòng vào Quản lý đặt sân để xác nhận gia hạn nếu đồng ý.")
+                    .loai("booking")
+                    .build();
+            thongBaoRepo.save(tb);
+        }
+    }
 }

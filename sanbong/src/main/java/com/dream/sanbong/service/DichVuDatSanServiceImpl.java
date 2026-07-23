@@ -36,7 +36,9 @@ public class DichVuDatSanServiceImpl implements DichVuDatSanService {
     }
 
     // Kiểm tra người đang gọi API có quyền thao tác trên đơn đặt sân này không:
-    // là chủ đơn, hoặc là Staff/Admin (hỗ trợ tại quầy)
+    // là chủ đơn, hoặc là Staff/Admin (hỗ trợ tại quầy).
+    // LƯU Ý: hàm này CHỈ kiểm tra quyền xem/truy cập, không kiểm tra trạng thái đơn -
+    // để Staff vẫn xem lại được dịch vụ của đơn đã Hoàn thành/Đã huỷ.
     private DatSan xacThucQuyenTruyCap(UUID datSanId, String email) {
         DatSan datSan = datSanRepo.findById(datSanId)
                 .orElseThrow(() -> new RuntimeException("Lỗi: Không tìm thấy đơn đặt sân!"));
@@ -51,10 +53,14 @@ public class DichVuDatSanServiceImpl implements DichVuDatSanService {
         if (!laChuDon && !laNhanVien) {
             throw new RuntimeException("Lỗi: Bạn không có quyền thao tác trên đơn đặt sân này!");
         }
+        return datSan;
+    }
+
+    // Chỉ dùng khi THÊM/XOÁ dịch vụ - chặn thao tác nếu đơn đã kết thúc
+    private void kiemTraDonConHieuLuc(DatSan datSan) {
         if ("DA_HUY".equals(datSan.getTrangThai()) || "HOAN_THANH".equals(datSan.getTrangThai())) {
             throw new RuntimeException("Lỗi: Đơn đặt sân này đã kết thúc, không thể gọi thêm dịch vụ!");
         }
-        return datSan;
     }
 
     private GioHangPhanHoi taoPhanHoiGioHang(DatSan datSan) {
@@ -81,6 +87,7 @@ public class DichVuDatSanServiceImpl implements DichVuDatSanService {
     @Transactional
     public GioHangPhanHoi themVaoGioHang(UUID datSanId, String email, ThemDichVuYeuCau yeuCau) {
         DatSan datSan = xacThucQuyenTruyCap(datSanId, email);
+        kiemTraDonConHieuLuc(datSan); // chỉ chặn ở bước THÊM, không chặn ở bước xem
 
         if (yeuCau.getSoLuong() == null || yeuCau.getSoLuong() <= 0) {
             throw new RuntimeException("Lỗi: Số lượng không hợp lệ!");
@@ -124,6 +131,7 @@ public class DichVuDatSanServiceImpl implements DichVuDatSanService {
                 .orElseThrow(() -> new RuntimeException("Lỗi: Không tìm thấy mục cần xoá!"));
 
         DatSan datSan = xacThucQuyenTruyCap(dv.getDatSan().getId(), email);
+        kiemTraDonConHieuLuc(datSan); // chỉ chặn ở bước XOÁ, không chặn ở bước xem
         dichVuRepo.deleteById(chiTietId);
 
         return taoPhanHoiGioHang(datSan);

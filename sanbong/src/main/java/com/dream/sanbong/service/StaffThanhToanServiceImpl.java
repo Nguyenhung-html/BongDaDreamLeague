@@ -3,15 +3,16 @@ package com.dream.sanbong.service;
 import com.dream.sanbong.dto.StaffThanhToanPhanHoi;
 import com.dream.sanbong.dto.ThanhToanConLaiYeuCau;
 import com.dream.sanbong.entity.DatSan;
+import com.dream.sanbong.entity.DichVuDatSan;
 import com.dream.sanbong.entity.ThanhToan;
 import com.dream.sanbong.repository.DatSanRepository;
+import com.dream.sanbong.repository.DichVuDatSanRepository;
 import com.dream.sanbong.repository.ThanhToanRepository;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.math.BigDecimal;
 import java.time.LocalDate;
-import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 import java.util.List;
 import java.util.UUID;
@@ -22,10 +23,13 @@ public class StaffThanhToanServiceImpl implements StaffThanhToanService {
 
     private final ThanhToanRepository thanhToanRepo;
     private final DatSanRepository datSanRepo;
+    private final DichVuDatSanRepository dichVuRepo; // MỚI THÊM
 
-    public StaffThanhToanServiceImpl(ThanhToanRepository thanhToanRepo, DatSanRepository datSanRepo) {
+    public StaffThanhToanServiceImpl(ThanhToanRepository thanhToanRepo, DatSanRepository datSanRepo,
+                                      DichVuDatSanRepository dichVuRepo) {
         this.thanhToanRepo = thanhToanRepo;
         this.datSanRepo = datSanRepo;
+        this.dichVuRepo = dichVuRepo;
     }
 
     @Override
@@ -90,10 +94,17 @@ public class StaffThanhToanServiceImpl implements StaffThanhToanService {
             throw new RuntimeException("Đơn này đã được thanh toán đầy đủ rồi!");
         }
 
-        // Tính số tiền còn lại = tổng tiền - tiền cọc
-        BigDecimal tienConLai = datSan.getTongTien().subtract(datSan.getTienCoc());
+        // Tiền sân còn lại = tổng tiền sân (đã gồm cả gia hạn giờ, vì gia hạn cộng thẳng vào
+        // datSan.tongTien) - tiền cọc đã đóng
+        BigDecimal tienConLaiSan = datSan.getTongTien().subtract(datSan.getTienCoc());
 
-        // Tạo bản ghi thanh toán phần còn lại
+        // MỚI THÊM: cộng thêm tiền dịch vụ/đồ uống khách đã gọi (nằm ở bảng DICH_VU_DAT_SAN riêng,
+        // không nằm trong tongTien nên phải cộng thủ công ở đây)
+        BigDecimal tongTienDichVu = tinhTongTienDichVu(datSan.getId());
+
+        BigDecimal tienConLai = tienConLaiSan.add(tongTienDichVu);
+
+        // Tạo bản ghi thanh toán phần còn lại (đã gồm: tiền sân còn lại + gia hạn giờ + dịch vụ)
         ThanhToan thanhToanConLai = ThanhToan.builder()
                 .datSan(datSan)
                 .soTien(tienConLai)
@@ -108,6 +119,14 @@ public class StaffThanhToanServiceImpl implements StaffThanhToanService {
         datSanRepo.save(datSan);
 
         return mapToDto(thanhToanConLai);
+    }
+
+    // MỚI THÊM: cộng tổng tiền tất cả dịch vụ/đồ uống đã gọi cho 1 đơn đặt sân
+    private BigDecimal tinhTongTienDichVu(UUID datSanId) {
+        List<DichVuDatSan> items = dichVuRepo.findByDatSanIdOrderByNgayDatAsc(datSanId);
+        return items.stream()
+                .map(dv -> dv.getGia().multiply(BigDecimal.valueOf(dv.getSoLuong())))
+                .reduce(BigDecimal.ZERO, BigDecimal::add);
     }
 
     // ── Helper: chuyển entity sang DTO ────────────────────────────

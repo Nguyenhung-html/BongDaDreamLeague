@@ -19,4 +19,8 @@ public interface ThongBaoService {
     // Gọi khi 1 giao dịch đặt cọc được xác nhận thành công (qua webhook SePay)
     // Tạo 1 thông báo cho khách hàng + 1 thông báo cho từng Staff/Admin
     void taoThongBaoThanhToanThanhCong(DatSan datSan);
+
+    // MỚI THÊM: khách bấm "yêu cầu gia hạn" -> chỉ tạo thông báo cho Staff/Admin,
+    // không đổi giờ/tiền của đơn (Staff xác nhận thật ở "Quản lý đặt sân")
+    void taoThongBaoYeuCauGiaHan(DatSan datSan);
 }

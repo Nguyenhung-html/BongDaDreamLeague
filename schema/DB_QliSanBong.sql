@@ -129,6 +129,18 @@ CREATE TABLE THONG_BAO(
         REFERENCES USERS(id)
 );
 
+
+-- Lưu lịch sử mỗi lần gia hạn thêm giờ của 1 đơn đặt sân
+CREATE TABLE GIA_HAN_GIO (
+    id UNIQUEIDENTIFIER PRIMARY KEY DEFAULT NEWID(),
+    dat_san_id UNIQUEIDENTIFIER NOT NULL,
+    gio_ket_thuc_cu TIME NOT NULL,
+    gio_ket_thuc_moi TIME NOT NULL,
+    so_tien_them DECIMAL(10,0) NOT NULL,
+    ngay_gia_han DATETIME DEFAULT GETDATE(),
+    CONSTRAINT FK_GIAHAN_DAT_SAN
+        FOREIGN KEY (dat_san_id) REFERENCES DAT_SAN(id)
+);
 -- Các lệnh ALTER TABLE (Chỉnh sửa bảng)
 ALTER TABLE DAT_SAN ALTER COLUMN nguoi_dung_id UNIQUEIDENTIFIER NULL;
 ALTER TABLE DAT_SAN ADD kenh_dat VARCHAR(20) DEFAULT 'ONLINE';

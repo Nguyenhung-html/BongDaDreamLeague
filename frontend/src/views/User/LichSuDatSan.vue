@@ -76,9 +76,14 @@
           </div>
 
           <div class="booking-item__footer" v-if="item.trangThai !== 'DA_HUY' && item.trangThai !== 'HOAN_THANH'">
-            <button class="btn-dich-vu" @click="moModalDichVu(item)">
-              🛒 Gọi đồ uống / dịch vụ
-            </button>
+            <div class="footer-actions-row">
+              <button class="btn-dich-vu" @click="moModalDichVu(item)">
+                🛒 Gọi đồ uống / dịch vụ
+              </button>
+              <button class="btn-gia-han" @click="giaHanGio(item)" :disabled="dangGiaHan === item.id">
+                {{ dangGiaHan === item.id ? 'Đang gửi...' : '⏱️ Yêu cầu gia hạn +30p' }}
+              </button>
+            </div>
 
             <div v-if="item.coTheHuy" class="huy-group">
               <p class="huy-note">✅ Có thể huỷ - tiền cọc sẽ được hoàn đầy đủ</p>
@@ -187,6 +192,7 @@ const tabHienTai = ref('TAT_CA')
 const itemDangHuy = ref(null)
 const dangHuy = ref(false)
 const loiHuy = ref('')
+const dangGiaHan = ref(null) // lưu id của đơn đang gọi API gia hạn, để hiện "Đang gia hạn..."
 
 // ===== State cho modal gọi đồ uống/dịch vụ =====
 const itemDangGoiDichVu = ref(null)
@@ -272,6 +278,30 @@ async function thucHienHuy() {
     loiHuy.value = e.message
   } finally {
     dangHuy.value = false
+  }
+}
+
+// ===== Yêu cầu gia hạn thêm 30 phút (CHỈ gửi thông báo cho Staff, không tự cộng tiền/đổi giờ) =====
+async function giaHanGio(item) {
+  if (!confirm(`Gửi yêu cầu gia hạn thêm 30 phút cho ${item.tenSan}? Nhân viên sẽ xác nhận và cộng tiền khi bạn tới sân.`)) return
+
+  dangGiaHan.value = item.id
+  const token = localStorage.getItem('token')
+  try {
+    const res = await fetch(`${API}/dat-san/${item.id}/yeu-cau-gia-han`, {
+      method: 'POST',
+      headers: { 'Authorization': `Bearer ${token}` }
+    })
+    const data = await res.json()
+    if (!res.ok) throw new Error(data.message || 'Gửi yêu cầu thất bại!')
+
+    // KHÔNG cập nhật item.gioKetThuc/item.tongTien ở đây nữa - chỉ Staff xác nhận
+    // thật ở "Quản lý đặt sân" mới thực sự cộng tiền/đổi giờ, tránh cộng trùng 2 lần.
+    alert(data.message)
+  } catch (e) {
+    alert(e.message)
+  } finally {
+    dangGiaHan.value = null
   }
 }
 
@@ -405,14 +435,25 @@ onMounted(taiLichSu)
   display: flex; flex-direction: column; gap: 10px;
 }
 
+/* Hàng chứa 2 nút: gọi dịch vụ + gia hạn giờ */
+.footer-actions-row { display: flex; gap: 10px; flex-wrap: wrap; }
+
 /* Nút gọi dịch vụ */
 .btn-dich-vu {
-  align-self: flex-start;
   padding: 8px 16px; border-radius: 10px; font-size: 13px; font-weight: 600;
   border: 1.5px solid var(--green-600); background: white; color: var(--green-600);
   cursor: pointer; transition: .2s;
 }
 .btn-dich-vu:hover { background: var(--green-50, #f0fdf4); }
+
+/* Nút gia hạn thêm giờ */
+.btn-gia-han {
+  padding: 8px 16px; border-radius: 10px; font-size: 13px; font-weight: 600;
+  border: 1.5px solid #d97706; background: white; color: #d97706;
+  cursor: pointer; transition: .2s;
+}
+.btn-gia-han:hover:not(:disabled) { background: #fffbeb; }
+.btn-gia-han:disabled { opacity: .6; cursor: not-allowed; }
 
 .huy-group { display: flex; align-items: center; justify-content: space-between; gap: 12px; flex-wrap: wrap; }
 .huy-note { font-size: 13px; color: #374151; }

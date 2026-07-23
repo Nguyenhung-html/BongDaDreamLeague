@@ -87,8 +87,23 @@
             <td>
               <div class="actions">
                 <button v-if="don.trangThai === 'CHO_XAC_NHAN'" class="btn-act confirm" title="Xác nhận cọc" @click="xacNhan(don)">✓ Xác nhận</button>
-                <button v-if="don.trangThai === 'DA_COC'" class="btn-act complete" title="Hoàn thành" @click="hoanThanh(don)">✔ Hoàn thành</button>
-                <button v-if="don.trangThai !== 'DA_HUY'" class="btn-act dichvu" title="Xem dịch vụ đã gọi" @click="xemDichVu(don)">🛒 Dịch vụ</button>
+                <button
+                  v-if="don.trangThai !== 'DA_HUY'"
+                  :class="['btn-act', 'dichvu', { 'dichvu--noi-bat': coDichVu(don.id) }]"
+                  :title="coDichVu(don.id) ? 'Khách có gọi dịch vụ!' : 'Xem dịch vụ đã gọi'"
+                  @click="xemDichVu(don)"
+                >
+                  🛒 Dịch vụ<span v-if="coDichVu(don.id)" class="dichvu-dot"></span>
+                </button>
+                <button
+                  v-if="don.trangThai !== 'DA_HUY' && don.trangThai !== 'HOAN_THANH'"
+                  class="btn-act giahan"
+                  title="Gia hạn thêm 30 phút"
+                  @click="giaHanGio(don)"
+                  :disabled="dangGiaHan === don.id"
+                >
+                  {{ dangGiaHan === don.id ? '⏳...' : '⏱️ +30p' }}
+                </button>
                 <button v-if="don.trangThai !== 'DA_HUY' && don.trangThai !== 'HOAN_THANH'" class="btn-act cancel" title="Hủy đơn" @click="openHuyModal(don)">✕ Hủy</button>
                 <span v-if="don.trangThai === 'DA_HUY'" class="no-action">—</span>
               </div>
@@ -257,6 +272,12 @@ const walkIn = ref({ hoTenDat: '', soDienThoai: '', sanBongId: '', ngayDa: '', g
 // ===== MỚI THÊM: modal xem dịch vụ đã gọi =====
 const dichVuModal = ref({ show: false, don: null, dangTai: false, gioHang: null })
 
+// ===== MỚI THÊM: tập hợp id các đơn đang CÓ dịch vụ đã gọi, để tô nổi bật nút =====
+const dsCoDichVu = ref(new Set())
+
+// ===== MỚI THÊM: id đơn đang gọi API gia hạn (hiện "Đang xử lý...") =====
+const dangGiaHan = ref(null)
+
 const gioOptions = ['06:00','07:00','08:00','09:00','10:00','11:00','12:00','13:00','14:00','15:00','16:00','17:00','18:00','19:00','20:00','21:00','22:00']
 
 onMounted(async () => {
@@ -274,11 +295,39 @@ async function fetchDanhSach() {
     if (filters.value.ngay) params.ngay = filters.value.ngay
     if (filters.value.trangThai) params.trangThai = filters.value.trangThai
     danhSach.value = await staffService.layDanhSachDatSan(params)
+    kiemTraDichVuChoDanhSach() // không cần await, chạy ngầm, không chặn hiện bảng
   } catch (e) {
     error.value = e.message
   } finally {
     loading.value = false
   }
+}
+
+// ===== MỚI THÊM: kiểm tra ngầm từng đơn xem có dịch vụ đã gọi không, để tô nổi bật nút =====
+async function kiemTraDichVuChoDanhSach() {
+  const token = localStorage.getItem('token')
+  const dsCanKiemTra = danhSach.value.filter(d => d.trangThai !== 'DA_HUY')
+
+  const ketQua = await Promise.all(
+    dsCanKiemTra.map(async (don) => {
+      try {
+        const res = await fetch(`${API}/dat-san/${don.id}/dich-vu`, {
+          headers: { 'Authorization': `Bearer ${token}` }
+        })
+        if (!res.ok) return null
+        const data = await res.json()
+        return data.danhSach && data.danhSach.length > 0 ? don.id : null
+      } catch {
+        return null
+      }
+    })
+  )
+
+  dsCoDichVu.value = new Set(ketQua.filter(id => id !== null))
+}
+
+function coDichVu(donId) {
+  return dsCoDichVu.value.has(donId)
 }
 
 const filteredList = computed(() => {
@@ -296,15 +345,6 @@ async function xacNhan(don) {
     await staffService.xacNhanDon(don.id)
     don.trangThai = 'DA_COC'
     showToast('Xác nhận thành công! Đơn đã chuyển sang Đã cọc.')
-  } catch (e) { showToast(e.message, 'error') }
-}
-
-async function hoanThanh(don) {
-  if (!confirm(`Đánh dấu hoàn thành đơn #${don.maGanDo}?`)) return
-  try {
-    await staffService.hoanThanhDon(don.id)
-    don.trangThai = 'HOAN_THANH'
-    showToast('Đã đánh dấu hoàn thành!')
   } catch (e) { showToast(e.message, 'error') }
 }
 
@@ -337,6 +377,31 @@ async function xemDichVu(don) {
     // giữ nguyên gioHang = null, template sẽ tự hiện thông báo lỗi tải
   } finally {
     dichVuModal.value.dangTai = false
+  }
+}
+
+// ===== MỚI THÊM: gia hạn thêm 30 phút cho 1 đơn (Staff làm giúp tại quầy) =====
+async function giaHanGio(don) {
+  if (!confirm(`Gia hạn thêm 30 phút cho đơn #${don.maGanDo} (${don.hoTenDat})? Số tiền phát sinh sẽ cộng vào phần thanh toán tại sân.`)) return
+
+  dangGiaHan.value = don.id
+  try {
+    const token = localStorage.getItem('token')
+    const res = await fetch(`${API}/dat-san/${don.id}/gia-han`, {
+      method: 'POST',
+      headers: { 'Authorization': `Bearer ${token}` }
+    })
+    const data = await res.json()
+    if (!res.ok) throw new Error(data.message || 'Gia hạn thất bại!')
+
+    // Cập nhật ngay trên bảng, không cần tải lại toàn bộ danh sách
+    don.gioKetThuc = data.gioKetThucMoi
+    don.tongTien = data.tongTienMoi
+    showToast(data.thongBao)
+  } catch (e) {
+    showToast(e.message, 'error')
+  } finally {
+    dangGiaHan.value = null
   }
 }
 
@@ -419,12 +484,36 @@ function badgeClass(t) {
 .btn-act { padding: 5px 10px; border-radius: 6px; border: none; font-size: 12px; font-weight: 600; cursor: pointer; transition: .2s; }
 .btn-act.confirm { background: #dbeafe; color: #1d4ed8; }
 .btn-act.confirm:hover { background: #bfdbfe; }
-.btn-act.complete { background: #dcfce7; color: #15803d; }
-.btn-act.complete:hover { background: #bbf7d0; }
 .btn-act.cancel { background: #fee2e2; color: #b91c1c; }
 .btn-act.cancel:hover { background: #fecaca; }
-.btn-act.dichvu { background: #ede9fe; color: #6d28d9; }
+.btn-act.dichvu { background: #ede9fe; color: #6d28d9; position: relative; }
 .btn-act.dichvu:hover { background: #ddd6fe; }
+
+/* Nổi bật khi đơn CÓ dịch vụ đã gọi - đổi màu cam + nhấp nháy nhẹ để Staff dễ nhận ra ngay */
+.btn-act.dichvu--noi-bat {
+  background: #fed7aa;
+  color: #c2410c;
+  font-weight: 700;
+  animation: dichvu-pulse 1.4s ease-in-out infinite;
+}
+.btn-act.dichvu--noi-bat:hover { background: #fdba74; }
+.dichvu-dot {
+  display: inline-block;
+  width: 7px; height: 7px;
+  border-radius: 50%;
+  background: #ea580c;
+  margin-left: 5px;
+  vertical-align: middle;
+}
+@keyframes dichvu-pulse {
+  0%, 100% { transform: scale(1); box-shadow: 0 0 0 0 rgba(234, 88, 12, .45); }
+  50% { transform: scale(1.06); box-shadow: 0 0 0 5px rgba(234, 88, 12, 0); }
+}
+
+/* Nút gia hạn thêm giờ */
+.btn-act.giahan { background: #fef3c7; color: #b45309; }
+.btn-act.giahan:hover:not(:disabled) { background: #fde68a; }
+.btn-act.giahan:disabled { opacity: .6; cursor: not-allowed; }
 .no-action { color: #cbd5e1; font-size: 16px; }
 
 /* BUTTONS */

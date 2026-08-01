@@ -1,0 +1,825 @@
+<template>
+  <div class="booking-page">
+    <div class="container">
+
+      <!-- Loading -->
+      <div v-if="dangTai" class="loading-state">
+        <div class="spinner"></div>
+        <p>Đang tải thông tin sân...</p>
+      </div>
+
+      <!-- Lỗi tải -->
+      <div v-else-if="loiTai" class="error-state">
+        <p>{{ loiTai }}</p>
+        <button @click="$router.push('/san')">Quay lại danh sách sân</button>
+      </div>
+
+      <template v-else-if="sanBong">
+        <div class="page-header">
+          <button class="btn-back" @click="$router.back()">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none"><path d="M19 12H5M5 12l7 7M5 12l7-7" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg>
+            Quay lại
+          </button>
+          <h1>Đặt sân bóng</h1>
+          <p>Chọn thời gian và hoàn tất đặt sân nhanh chóng</p>
+        </div>
+
+        <div class="booking-layout">
+          <!-- Thông tin sân -->
+          <div class="field-info">
+            <div class="field-img-wrap">
+              <img :src="sanBong.hinhAnh || 'https://images.unsplash.com/photo-1574629810360-7efbbe195018'" alt="Sân bóng" />
+              <span class="badge-loai" :class="sanBong.loaiSan === 5 ? 'badge-blue' : 'badge-green'">
+                Sân {{ sanBong.loaiSan }} người
+              </span>
+            </div>
+
+            <div class="field-content">
+              <h2>{{ sanBong.tenSan }}</h2>
+              <div class="field-detail">
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none"><path d="M12 22s7-7.58 7-12.5A7 7 0 1 0 5 9.5C5 14.42 12 22 12 22Z" stroke="var(--green-600)" stroke-width="2"/></svg>
+                {{ sanBong.diaChi }}
+              </div>
+              <div class="field-detail">
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none"><circle cx="12" cy="12" r="9" stroke="var(--green-600)" stroke-width="2"/><path d="M12 7v5l3 2" stroke="var(--green-600)" stroke-width="2" stroke-linecap="round"/></svg>
+                Hoạt động 06:00 – 22:00 hàng ngày
+              </div>
+              <div class="field-detail mo-ta">{{ sanBong.moTa }}</div>
+
+              <!-- Bảng giá kiêm chọn khung giờ -->
+              <div class="gia-section" v-if="sanBong.danhSachGia?.length">
+                <h3>Bảng giá theo khung giờ</h3>
+                <div class="gia-grid">
+                  <div
+                    v-for="g in sanBong.danhSachGia" :key="g.id"
+                    class="gia-item"
+                    :class="{
+                      'gia-sang': parseInt(g.gioBatDau) < 11,
+                      'gia-toi': parseInt(g.gioBatDau) >= 17,
+                      'gia-da-dat': form.ngayDa && khungGioBiKhoa(g),
+                      'gia-dang-chon': form.khungGioId === g.id
+                    }"
+                    @click="chonKhungGio(g)"
+                  >
+                    <span class="gia-gio">{{ g.gioBatDau }}–{{ g.gioKetThuc }}</span>
+                    <span class="gia-tien">{{ formatTien(g.giaTien) }}đ</span>
+                    <span v-if="form.ngayDa && khungGioBiKhoa(g)" class="gia-tag-dat">
+                      {{ khungGioBiTrung(g) ? 'Đã đặt' : 'Đã qua giờ' }}
+                    </span>
+                  </div>
+                </div>
+                <p v-if="!form.ngayDa" class="hint-ngay">Vui lòng chọn ngày đá ở form bên phải để xem khung giờ còn trống</p>
+              </div>
+
+              <!-- Chính sách -->
+              <div class="policy-box">
+                <h4>📋 Chính sách đặt sân</h4>
+                <ul>
+                  <li>💳 Đặt cọc <strong>50%</strong> tổng tiền để xác nhận booking</li>
+                  <li>🏟️ Thanh toán 50% còn lại trực tiếp tại sân trước giờ đá</li>
+                  <li>⏰ Huỷ trước <strong>20 phút</strong> được hoàn cọc đầy đủ</li>
+                  <li>❌ Huỷ muộn hơn sẽ mất tiền cọc</li>
+                  <li>📌 Tối đa <strong>2 sân / người / ngày</strong></li>
+                </ul>
+              </div>
+            </div>
+          </div>
+
+          <!-- Form đặt sân -->
+          <div class="booking-card">
+            <!-- Bước 1: Thông tin -->
+            <div v-if="buoc === 1">
+              <h3>Thông tin đặt sân</h3>
+
+              <div class="form-group">
+                <label>Họ và tên <span class="req">*</span></label>
+                <input v-model="form.hoTenDat" type="text" placeholder="Nhập họ và tên người đặt" />
+              </div>
+
+              <div class="form-group">
+                <label>Số điện thoại <span class="req">*</span></label>
+                <input v-model="form.soDienThoai" type="tel" placeholder="Nhập số điện thoại" />
+              </div>
+
+              <div class="form-group">
+                <label>Ngày đá <span class="req">*</span></label>
+                <input v-model="form.ngayDa" type="date" :min="ngayToiThieu" />
+              </div>
+
+              <div class="form-group">
+                <label>Khung giờ <span class="req">*</span></label>
+                <div class="khung-gio-da-chon" :class="{ 'chua-chon': !khungGioChon }">
+                  {{ khungGioChon
+                    ? `${khungGioChon.gioBatDau} – ${khungGioChon.gioKetThuc} | ${formatTien(khungGioChon.giaTien)}đ`
+                    : 'Vui lòng chọn khung giờ ở bảng giá bên trái' }}
+                </div>
+              </div>
+
+              <!-- Tóm tắt giá -->
+              <div class="summary" v-if="khungGioChon">
+                <div class="summary-row">
+                  <span>Giá thuê</span>
+                  <strong>{{ formatTien(khungGioChon.giaTien) }} VNĐ</strong>
+                </div>
+                <div class="summary-row">
+                  <span>Tiền cọc (50%)</span>
+                  <strong class="text-green">{{ formatTien(tienCoc) }} VNĐ</strong>
+                </div>
+                <div class="summary-row total">
+                  <span>Thanh toán ngay</span>
+                  <strong>{{ formatTien(tienCoc) }} VNĐ</strong>
+                </div>
+              </div>
+
+              <p v-if="loiForm" class="loi-form">{{ loiForm }}</p>
+
+              <div class="btn-group">
+                <select v-model="form.phuongThuc" class="select-tt">
+                  <option value="QR">💳 Thanh toán QR (Online)</option>
+                  <option value="TIEN_MAT">💵 Trả tiền mặt tại sân</option>
+                </select>
+                <button class="btn-book" @click="buocTiep" :disabled="dangGui">
+  {{ form.phuongThuc === 'QR' ? 'Tiếp tục – Quét mã QR thanh toán ' : 'Xác nhận đặt sân' }}
+</button>
+              </div>
+            </div>
+
+          <!-- Bước 2: QR thanh toán -->
+<div v-else-if="buoc === 2" class="qr-step">
+  <div class="qr-header">
+    <svg width="40" height="40" viewBox="0 0 24 24" fill="none"><path d="M9 12l2 2 4-4" stroke="#22c55e" stroke-width="2.5" stroke-linecap="round"/><circle cx="12" cy="12" r="10" stroke="#22c55e" stroke-width="2"/></svg>
+    <h3>Quét mã QR để đặt cọc</h3>
+    <p>Chuyển khoản <strong>{{ formatTien(tienCoc) }} VNĐ</strong> để xác nhận booking</p>
+  </div>
+
+  <div class="qr-box">
+    <img :src="qrUrl" alt="QR thanh toán" class="qr-img" />
+  </div>
+
+  <div class="qr-info">
+    <div class="info-row"><span>Ngân hàng</span><strong>MB Bank (970422)</strong></div>
+    <div class="info-row"><span>Số TK</span><strong>0973728967</strong></div>
+    <div class="info-row"><span>Chủ TK</span><strong>NGUYEN TIEN HUNG</strong></div>
+    <div class="info-row"><span>Số tiền</span><strong class="text-green">{{ formatTien(tienCoc) }} VNĐ</strong></div>
+    <div class="info-row"><span>Nội dung</span><strong>DatSan {{ maGiaoDichHienTai }}</strong></div>
+  </div>
+
+  <div class="dang-cho-thanh-toan">
+    <div class="spinner-nho"></div>
+    <p>Đang chờ xác nhận thanh toán tự động...</p>
+  </div>
+
+  <button class="btn-back-step" @click="huyChoThanhToan">← Quay lại</button>
+</div>
+
+            <!-- Bước 3: Thành công -->
+            <div v-else-if="buoc === 3" class="success-step">
+              <template v-if="thanhToanQRThanhCong">
+                <div class="success-icon">✅</div>
+                <h3>Thanh toán thành công!</h3>
+                <p>Bạn đã đặt cọc thành công cho sân <strong>{{ sanBong?.tenSan }}</strong>.</p>
+                <p class="luu-y-xac-nhan">
+                  🎉 Booking của bạn đã được <strong>xác nhận tự động</strong> ngay khi hệ thống nhận được tiền cọc.
+                  Vui lòng đến đúng khung giờ đã đặt và thanh toán 50% còn lại tại sân.
+                </p>
+              </template>
+
+              <template v-else>
+                <div class="success-icon">⏳</div>
+                <h3>Đã ghi nhận yêu cầu đặt sân!</h3>
+                <p>{{ ketQua?.thongBao }}</p>
+                <p class="luu-y-xac-nhan">
+                  ⚠️ Đơn của bạn đang ở trạng thái <strong>Chờ xác nhận</strong>.
+                  Nhân viên sẽ kiểm tra giao dịch chuyển khoản và xác nhận trong ít phút.
+                  Bạn sẽ nhận thông báo khi đơn được xác nhận chính thức.
+                </p>
+              </template>
+
+              <div class="success-actions">
+                <button class="btn-book" @click="$router.push('/lich-su-dat-san')">Theo dõi trạng thái đơn</button>
+                <button class="btn-outline" @click="$router.push('/san')">Đặt sân khác</button>
+              </div>
+            </div>
+          </div>
+        </div>
+      </template>
+    </div>
+  </div>
+</template>
+
+<script setup>
+import { ref, computed, onMounted, watch } from 'vue'
+import { useRoute } from 'vue-router'
+import { onUnmounted } from 'vue' // thêm vào dòng import ở đầu
+
+const qrUrl = ref('')
+const maGiaoDichHienTai = ref('')
+const thanhToanIdHienTai = ref('')
+const thanhToanQRThanhCong = ref(false) // true = QR đã được webhook xác nhận tự động
+let pollingInterval = null
+
+const route = useRoute()
+const API = 'http://localhost:8080/api'
+
+// ── State ──
+const dangTai = ref(true)
+const loiTai = ref('')
+const sanBong = ref(null)
+const buoc = ref(1)
+const dangGui = ref(false)
+const loiForm = ref('')
+const ketQua = ref(null)
+const danhSachDaDat = ref([])
+
+const form = ref({
+  hoTenDat: '',
+  soDienThoai: '',
+  ngayDa: '',
+  khungGioId: '',
+  gioBatDau: '',
+  gioKetThuc: '',
+  phuongThuc: 'QR'
+})
+
+// ── Computed ──
+const ngayToiThieu = computed(() => new Date().toISOString().split('T')[0])
+
+const khungGioChon = computed(() =>
+  sanBong.value?.danhSachGia?.find(g => g.id === form.value.khungGioId) || null
+)
+
+const tienCoc = computed(() => {
+  if (!khungGioChon.value) return 0
+  return Math.round(Number(khungGioChon.value.giaTien) / 2)
+})
+
+// ── Helpers ──
+function gioToPhut(gio) {
+  const [h, m] = gio.split(':').map(Number)
+  return h * 60 + (m || 0)
+}
+
+// Đã có người khác đặt trùng giờ chưa
+function khungGioBiTrung(g) {
+  const batMoi = gioToPhut(g.gioBatDau)
+  const ketMoi = gioToPhut(g.gioKetThuc)
+  return danhSachDaDat.value.some(d => {
+    const bat = gioToPhut(d.gioBatDau)
+    const ket = gioToPhut(d.gioKetThuc)
+    return batMoi < ket && bat < ketMoi
+  })
+}
+
+// Khung giờ đã trôi qua chưa (chỉ áp dụng khi ngày đá là hôm nay)
+function khungGioDaQua(g) {
+  const homNay = new Date().toISOString().split('T')[0]
+  if (form.value.ngayDa !== homNay) return false
+
+  const bayGio = new Date()
+  const phutHienTai = bayGio.getHours() * 60 + bayGio.getMinutes()
+  const phutBatDau = gioToPhut(g.gioBatDau)
+
+  return phutBatDau <= phutHienTai
+}
+
+// Gộp: đã đặt HOẶC đã qua giờ → không cho chọn
+function khungGioBiKhoa(g) {
+  return khungGioBiTrung(g) || khungGioDaQua(g)
+}
+
+async function taiKhungGioDaDat() {
+  if (!form.value.ngayDa || !sanBong.value) {
+    danhSachDaDat.value = []
+    return
+  }
+  try {
+    const res = await fetch(
+      `${API}/dat-san/da-dat?sanBongId=${sanBong.value.id}&ngay=${form.value.ngayDa}`
+    )
+    danhSachDaDat.value = res.ok ? await res.json() : []
+  } catch {
+    danhSachDaDat.value = []
+  }
+}
+
+// Khi đổi ngày → reset khung giờ đã chọn + tải lại lịch đã đặt
+watch(() => form.value.ngayDa, async () => {
+  form.value.khungGioId = ''
+  form.value.gioBatDau = ''
+  form.value.gioKetThuc = ''
+  await taiKhungGioDaDat()
+})
+
+// ── Methods ──
+function chonKhungGio(g) {
+  if (!form.value.ngayDa) {
+    loiForm.value = 'Vui lòng chọn ngày đá trước!'
+    return
+  }
+  if (khungGioBiKhoa(g)) return // đã đặt hoặc đã qua giờ → không cho chọn
+
+  loiForm.value = ''
+  form.value.khungGioId = g.id
+  form.value.gioBatDau = g.gioBatDau
+  form.value.gioKetThuc = g.gioKetThuc
+}
+
+function formatTien(so) {
+  return Number(so).toLocaleString('vi-VN')
+}
+
+async function taiThongTinSan() {
+  const sanId = route.params.id
+  if (!sanId) {
+    loiTai.value = 'Không xác định được sân. Vui lòng chọn lại từ danh sách.'
+    dangTai.value = false
+    return
+  }
+  try {
+    const res = await fetch(`${API}/san-bong/${sanId}`)
+    if (!res.ok) throw new Error('Không tải được thông tin sân')
+    sanBong.value = await res.json()
+
+    // Tự động điền họ tên + SĐT từ tài khoản đã đăng nhập
+    const tenLuu = localStorage.getItem('hoTen')          // đổi từ 'userName' → 'hoTen'
+    const sdtLuu = localStorage.getItem('soDienThoai')    // thêm dòng này
+    if (tenLuu) form.value.hoTenDat = tenLuu
+    if (sdtLuu) form.value.soDienThoai = sdtLuu
+
+    await taiKhungGioDaDat()
+  } catch (e) {
+    loiTai.value = e.message
+  } finally {
+    dangTai.value = false
+  }
+}
+
+// Tự động điền họ tên + SĐT từ tài khoản đã đăng nhập
+async function dienThongTinTaiKhoan() {
+  const token = localStorage.getItem('token')
+  if (!token) return // chưa đăng nhập thì thôi, để trống cho người dùng tự nhập
+
+  try {
+    const res = await fetch(`${API}/nguoi-dung/thong-tin`, {
+      headers: { 'Authorization': `Bearer ${token}` }
+    })
+    if (!res.ok) return
+
+    const taiKhoan = await res.json()
+    if (taiKhoan.hoTen) form.value.hoTenDat = taiKhoan.hoTen
+    if (taiKhoan.soDienThoai) form.value.soDienThoai = taiKhoan.soDienThoai
+  } catch {
+    // im lặng bỏ qua, người dùng vẫn tự nhập được nếu API lỗi
+  }
+}
+
+function buocTiep() {
+  loiForm.value = ''
+  if (!form.value.hoTenDat.trim()) { loiForm.value = 'Vui lòng nhập họ và tên!'; return }
+  if (!form.value.soDienThoai.trim()) { loiForm.value = 'Vui lòng nhập số điện thoại!'; return }
+  if (!form.value.ngayDa) { loiForm.value = 'Vui lòng chọn ngày đá!'; return }
+  if (!form.value.khungGioId) { loiForm.value = 'Vui lòng chọn khung giờ!'; return }
+  if (khungGioChon.value && khungGioBiKhoa(khungGioChon.value)) {
+    loiForm.value = khungGioBiTrung(khungGioChon.value)
+      ? 'Khung giờ này đã có người đặt, vui lòng chọn khung giờ khác!'
+      : 'Khung giờ này đã qua giờ đá hôm nay, vui lòng chọn khung giờ khác!'
+    return
+  }
+
+  // Dù QR hay TIEN_MAT đều gọi thẳng xacNhanDat() — không cần bước hiện QR riêng nữa
+  xacNhanDat()
+}
+
+async function xacNhanDat() {
+  dangGui.value = true
+  loiForm.value = ''
+  try {
+    const token = localStorage.getItem('token')
+    const res = await fetch(`${API}/dat-san`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': `Bearer ${token}`
+      },
+      body: JSON.stringify({
+        sanBongId: route.params.id,
+        hoTenDat: form.value.hoTenDat,
+        soDienThoai: form.value.soDienThoai,
+        ngayDa: form.value.ngayDa,
+        gioBatDau: form.value.gioBatDau,
+        gioKetThuc: form.value.gioKetThuc,
+        phuongThuc: form.value.phuongThuc
+      })
+    })
+
+    const rawText = await res.text()
+
+    if (!res.ok) {
+      let thongBaoLoi = 'Đặt sân thất bại!'
+      try {
+        const errJson = JSON.parse(rawText)
+        thongBaoLoi = errJson.message || errJson.error || thongBaoLoi
+      } catch {
+        thongBaoLoi = rawText.replace(/^Lỗi:\s*/, '') || thongBaoLoi
+      }
+      throw new Error(thongBaoLoi)
+    }
+
+    ketQua.value = JSON.parse(rawText)
+
+    if (form.value.phuongThuc === 'QR') {
+      await taoGiaoDichSePayVaHienQR(ketQua.value.thanhToanId)   // đổi tên hàm
+    } else {
+      thanhToanQRThanhCong.value = false // trả tiền mặt → vẫn là luồng chờ xác nhận thủ công
+      buoc.value = 3
+    }
+  } catch (e) {
+    loiForm.value = e.message
+    await taiKhungGioDaDat()
+  } finally {
+    dangGui.value = false
+  }
+}
+
+async function taoGiaoDichSePayVaHienQR(thanhToanId) {
+  const token = localStorage.getItem('token')
+  const resSePay = await fetch(`${API}/sepay/tao-giao-dich`, {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+      'Authorization': `Bearer ${token}`
+    },
+    body: JSON.stringify({ thanhToanId })
+  })
+
+  if (!resSePay.ok) {
+    throw new Error('Không tạo được giao dịch thanh toán, vui lòng thử lại!')
+  }
+
+  const data = await resSePay.json()
+  qrUrl.value = data.qrUrl
+  maGiaoDichHienTai.value = data.maGiaoDich
+  thanhToanIdHienTai.value = thanhToanId
+
+  buoc.value = 2
+  batDauKiemTraThanhToan(thanhToanId)
+}
+
+function batDauKiemTraThanhToan(thanhToanId) {
+  dungKiemTraThanhToan() // đảm bảo không chạy trùng nhiều interval
+
+  pollingInterval = setInterval(async () => {
+    try {
+      const token = localStorage.getItem('token')
+      const res = await fetch(`${API}/sepay/trang-thai/${thanhToanId}`, {
+        headers: { 'Authorization': `Bearer ${token}` }
+      })
+      if (!res.ok) return
+
+      const data = await res.json()
+      if (data.trangThai === 'THANH_CONG') {
+        dungKiemTraThanhToan()
+        thanhToanQRThanhCong.value = true // QR đã được webhook xác nhận tự động
+        buoc.value = 3
+      }
+    } catch {
+      // im lặng bỏ qua lỗi tạm thời, sẽ thử lại ở lần polling tiếp theo
+    }
+  }, 3000) // hỏi lại mỗi 3 giây
+}
+
+function dungKiemTraThanhToan() {
+  if (pollingInterval) {
+    clearInterval(pollingInterval)
+    pollingInterval = null
+  }
+}
+
+function huyChoThanhToan() {
+  dungKiemTraThanhToan()
+  thanhToanQRThanhCong.value = false
+  buoc.value = 1
+}
+
+onUnmounted(() => {
+  dungKiemTraThanhToan()
+})
+
+onMounted(taiThongTinSan)
+</script>
+
+<!--
+  LƯU Ý: Bạn chưa gửi phần <style scoped> của file gốc cho mình, nên phần
+  <style> không có trong file này. Hãy giữ lại nguyên phần <style scoped>
+  bạn đang có sẵn trong file DatSan.vue cũ của bạn, chỉ cần thay phần
+  <template> và <script setup> ở trên vào là đủ. Nếu muốn mình rà lại
+  toàn bộ (kể cả CSS) thì gửi thêm phần <style scoped> gốc để mình ghép
+  chung thành 1 file đầy đủ.
+-->
+<style scoped>
+.booking-page {
+  background: #f0f4f8;
+  min-height: calc(100vh - 76px);
+  padding: 40px 0 80px;
+}
+
+.page-header {
+  text-align: center;
+  margin-bottom: 36px;
+  position: relative;
+}
+
+.btn-back {
+  position: absolute;
+  left: 0;
+  top: 0;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  background: white;
+  border: 1.5px solid #e2e8f0;
+  color: #374151;
+  padding: 8px 16px;
+  border-radius: 999px;
+  font-size: 13.5px;
+  cursor: pointer;
+  transition: .2s;
+}
+.btn-back:hover { border-color: var(--green-600); color: var(--green-600); }
+
+.page-header h1 { font-size: 34px; font-weight: 800; color: #0d1f3c; }
+.page-header p { margin-top: 6px; color: #6b7280; }
+
+.booking-layout {
+  display: grid;
+  grid-template-columns: 1.1fr 0.9fr;
+  gap: 28px;
+  align-items: start;
+}
+
+/* ── Field Info ── */
+.field-info {
+  background: white;
+  border-radius: 20px;
+  overflow: hidden;
+  box-shadow: 0 4px 24px rgba(10,37,64,.08);
+}
+
+.field-img-wrap { position: relative; }
+.field-img-wrap img { width: 100%; height: 280px; object-fit: cover; display: block; }
+
+.badge-loai {
+  position: absolute; top: 14px; left: 14px;
+  padding: 4px 14px; border-radius: 999px; font-size: 12px; font-weight: 700;
+}
+.badge-blue { background: rgba(219,234,254,.95); color: #1d4ed8; }
+.badge-green { background: rgba(220,252,231,.95); color: #15803d; }
+
+.field-content { padding: 24px; }
+.field-content h2 { font-size: 22px; font-weight: 800; color: #0d1f3c; margin-bottom: 12px; }
+
+.field-detail {
+  display: flex; align-items: flex-start; gap: 8px;
+  margin-bottom: 8px; color: #4b5563; font-size: 14px;
+}
+.mo-ta { color: #6b7280; line-height: 1.6; margin-top: 4px; }
+
+.gia-section { margin-top: 20px; }
+.gia-section h3 { font-size: 14px; font-weight: 700; color: #0d1f3c; margin-bottom: 10px; }
+
+.gia-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(130px, 1fr));
+  gap: 8px;
+}
+
+.gia-item {
+  display: flex; flex-direction: column; gap: 2px;
+  padding: 8px 10px; border-radius: 10px;
+  background: #f8fafc; border: 1px solid #e2e8f0;
+  cursor: pointer; transition: .15s; position: relative;
+}
+.gia-item:hover:not(.gia-da-dat) {
+  border-color: var(--green-600);
+  transform: translateY(-1px);
+}
+.gia-sang { border-color: #bfdbfe; background: #eff6ff; }
+.gia-toi { border-color: #bbf7d0; background: #f0fdf4; }
+
+.gia-item.gia-dang-chon {
+  border-color: var(--green-600);
+  background: #dcfce7;
+  box-shadow: 0 0 0 2px var(--green-600);
+}
+
+.gia-item.gia-da-dat {
+  opacity: 0.45;
+  filter: grayscale(60%);
+  cursor: not-allowed;
+  pointer-events: none;
+}
+
+.gia-tag-dat {
+  position: absolute;
+  top: 4px;
+  right: 4px;
+  font-size: 10px;
+  background: #999;
+  color: white;
+  padding: 1px 5px;
+  border-radius: 4px;
+}
+
+.gia-gio { font-size: 11px; font-weight: 600; color: #374151; }
+.gia-tien { font-size: 13px; font-weight: 700; color: var(--green-600); }
+
+.hint-ngay {
+  font-size: 12px;
+  color: #888;
+  margin-top: 8px;
+}
+
+.policy-box {
+  margin-top: 20px; padding: 16px;
+  background: #fffbeb; border: 1px solid #fde68a;
+  border-radius: 12px;
+}
+.policy-box h4 { font-size: 13px; font-weight: 700; color: #92400e; margin-bottom: 8px; }
+.policy-box ul { padding-left: 4px; list-style: none; }
+.policy-box li { font-size: 13px; color: #78350f; margin-bottom: 4px; }
+
+/* ── Booking Card ── */
+.booking-card {
+  background: white; border-radius: 20px; padding: 28px;
+  box-shadow: 0 4px 24px rgba(10,37,64,.08);
+  position: sticky; top: 90px;
+}
+
+.booking-card h3 { font-size: 20px; font-weight: 800; color: #0d1f3c; margin-bottom: 22px; }
+
+.form-group { margin-bottom: 16px; }
+.form-group label { display: block; margin-bottom: 6px; font-size: 13.5px; font-weight: 600; color: #0d1f3c; }
+.req { color: #ef4444; }
+
+.form-group input,
+.form-group select {
+  width: 100%; padding: 12px 14px;
+  border: 1.5px solid #d1d5db; border-radius: 12px;
+  outline: none; font-size: 14px; font-family: inherit;
+  background: #f9fafb; transition: border-color .15s;
+  box-sizing: border-box;
+}
+.form-group input:focus,
+.form-group select:focus { border-color: var(--green-600); background: white; }
+
+.khung-gio-da-chon {
+  padding: 12px 14px;
+  border: 1.5px solid var(--green-600);
+  border-radius: 12px;
+  background: #f0fdf4;
+  font-size: 14px;
+  font-weight: 600;
+  color: #0d1f3c;
+}
+.khung-gio-da-chon.chua-chon {
+  border-color: #d1d5db;
+  background: #f9fafb;
+  font-weight: 400;
+  color: #9ca3af;
+}
+
+.summary {
+  margin: 20px 0 0;
+  padding: 16px; background: #f0fdf4;
+  border: 1.5px solid #bbf7d0; border-radius: 14px;
+}
+.summary-row {
+  display: flex; justify-content: space-between;
+  font-size: 14px; color: #374151; margin-bottom: 8px;
+}
+.summary-row.total {
+  font-size: 17px; font-weight: 700; color: #0d1f3c;
+  border-top: 1px solid #bbf7d0; padding-top: 10px; margin-top: 4px; margin-bottom: 0;
+}
+.text-green { color: var(--green-600); }
+
+.loi-form {
+  color: #dc2626; font-size: 13px; background: #fef2f2;
+  border: 1px solid #fecaca; padding: 10px 14px;
+  border-radius: 10px; margin-top: 14px;
+}
+
+.btn-group { margin-top: 20px; display: flex; flex-direction: column; gap: 10px; }
+
+.select-tt {
+  width: 100%; padding: 11px 14px; border: 1.5px solid #d1d5db;
+  border-radius: 12px; font-size: 14px; font-family: inherit;
+  background: #f9fafb; outline: none; cursor: pointer;
+}
+
+.btn-book {
+  width: 100%; padding: 15px; border: none;
+  border-radius: 14px;
+  background: linear-gradient(135deg, var(--green-500), var(--green-600));
+  color: white; font-size: 16px; font-weight: 700;
+  cursor: pointer; transition: .3s;
+}
+.btn-book:hover:not(:disabled) { transform: translateY(-2px); box-shadow: 0 8px 24px rgba(34,197,94,.35); }
+.btn-book:disabled { opacity: .6; cursor: not-allowed; }
+
+/* ── QR Step ── */
+.qr-step { text-align: center; }
+.qr-header { margin-bottom: 20px; }
+.qr-header h3 { font-size: 20px; font-weight: 800; color: #0d1f3c; margin: 10px 0 6px; }
+.qr-header p { color: #6b7280; font-size: 14px; }
+
+.qr-box { display: flex; justify-content: center; margin: 16px 0; }
+.qr-img { width: 220px; height: 220px; border-radius: 16px; border: 2px solid #e2e8f0; }
+
+.qr-info { text-align: left; background: #f8fafc; border-radius: 12px; padding: 14px; margin-bottom: 20px; }
+.info-row { display: flex; justify-content: space-between; font-size: 13.5px; color: #374151; padding: 5px 0; border-bottom: 1px solid #e2e8f0; }
+.info-row:last-child { border-bottom: none; }
+
+.btn-back-step {
+  width: 100%; margin-top: 10px; padding: 12px;
+  border: 1.5px solid #e2e8f0; background: white;
+  border-radius: 12px; font-size: 14px; color: #6b7280;
+  cursor: pointer; transition: .2s;
+}
+.btn-back-step:hover { border-color: var(--green-600); color: var(--green-600); }
+
+/* ── Success Step ── */
+.success-step { text-align: center; }
+.success-icon { font-size: 56px; margin-bottom: 12px; }
+.success-step h3 { font-size: 22px; font-weight: 800; color: #0d1f3c; margin-bottom: 8px; }
+.success-step > p { color: #374151; font-size: 14px; line-height: 1.6; margin-bottom: 20px; }
+
+.result-card {
+  text-align: left; background: #f0fdf4;
+  border: 1.5px solid #bbf7d0; border-radius: 14px;
+  padding: 16px; margin-bottom: 20px;
+}
+.result-row {
+  display: flex; justify-content: space-between; align-items: center;
+  font-size: 13.5px; color: #374151; padding: 6px 0;
+  border-bottom: 1px solid #dcfce7;
+}
+.result-row:last-child { border-bottom: none; }
+
+.badge-trang-thai {
+  background: #fef3c7; color: #92400e;
+  padding: 2px 10px; border-radius: 999px; font-size: 12px; font-weight: 700;
+}
+
+.success-actions { display: flex; flex-direction: column; gap: 10px; }
+.btn-outline {
+  width: 100%; padding: 13px; border: 1.5px solid var(--green-600);
+  background: white; border-radius: 14px; color: var(--green-600);
+  font-size: 14px; font-weight: 600; cursor: pointer; transition: .2s;
+}
+.btn-outline:hover { background: var(--green-50); }
+
+/* ── Loading / Error ── */
+.loading-state, .error-state {
+  text-align: center; padding: 80px 0; color: #6b7280;
+}
+.spinner {
+  width: 44px; height: 44px; border: 4px solid #e2e8f0;
+  border-top-color: var(--green-600); border-radius: 50%;
+  animation: spin .7s linear infinite; margin: 0 auto 16px;
+}
+@keyframes spin { to { transform: rotate(360deg); } }
+
+.error-state button {
+  margin-top: 16px; padding: 10px 24px; background: var(--green-600);
+  color: white; border: none; border-radius: 12px; cursor: pointer;
+}
+
+/* ── Responsive ── */
+@media (max-width: 900px) {
+  .booking-layout { grid-template-columns: 1fr; }
+  .booking-card { position: static; }
+  .btn-back { position: static; display: inline-flex; margin-bottom: 16px; }
+}
+
+.luu-y-xac-nhan {
+  background: #fffbeb;
+  border: 1px solid #fde68a;
+  color: #92400e;
+  font-size: 13px;
+  padding: 12px 16px;
+  border-radius: 10px;
+  text-align: left;
+  margin-bottom: 20px;
+}
+.dang-cho-thanh-toan {
+  display: flex; align-items: center; justify-content: center; gap: 10px;
+  padding: 14px; background: #eff6ff; border: 1px solid #bfdbfe;
+  border-radius: 12px; margin-bottom: 14px; color: #1d4ed8; font-size: 13.5px;
+}
+.spinner-nho {
+  width: 18px; height: 18px; border: 3px solid #bfdbfe;
+  border-top-color: #1d4ed8; border-radius: 50%;
+  animation: spin .7s linear infinite;
+}
+</style>

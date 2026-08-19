@@ -34,6 +34,10 @@ public class SecurityConfig {
             .authorizeHttpRequests(auth -> auth
             // 1. Cho phép preflight request (OPTIONS)
             .requestMatchers(HttpMethod.OPTIONS, "/**").permitAll()
+            
+            .requestMatchers(HttpMethod.GET, "/api/danh-gia-he-thong/**").permitAll()
+            .requestMatchers(HttpMethod.POST, "/api/danh-gia-he-thong/**").authenticated()
+            .requestMatchers(HttpMethod.PUT, "/api/danh-gia-he-thong/**").hasAnyRole("STAFF", "ADMIN")
 
             // 2. MỞ KHÓA API TĂNG VIEW (Bất kể có Token hay không, Role gì cũng cho qua)
             .requestMatchers(HttpMethod.PUT, "/api/posts/{id}/view").permitAll()
@@ -53,7 +57,7 @@ public class SecurityConfig {
             .requestMatchers(HttpMethod.POST, "/api/posts/**").hasAnyRole("STAFF", "ADMIN")
             .requestMatchers(HttpMethod.PUT, "/api/posts/**").hasAnyRole("STAFF", "ADMIN")
             .requestMatchers(HttpMethod.DELETE, "/api/posts/**").hasAnyRole("STAFF", "ADMIN")
-
+            
             // 5. Các request còn lại
             .anyRequest().authenticated()
             )

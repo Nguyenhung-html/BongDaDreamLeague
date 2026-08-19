@@ -311,31 +311,135 @@
       </div>
     </section>
 
-    <!-- ===== ĐÁNH GIÁ ===== -->
-    <section class="danh-gia">
-      <div class="container">
-        <div class="section-head section-head--center">
-          <span class="eyebrow">Đánh giá</span>
-          <h2 class="section-title">Người chơi nói gì?</h2>
-        </div>
+      <!-- ===== ĐÁNH GIÁ ===== -->
+    <!-- SECTION PHẦN HIỂN THỊ DANH SÁCH ĐÁNH GIÁ -->
+  <section class="review-section">
+    <div class="section-title-container">
+      <h2>Đánh giá từ khách hàng</h2>
+      <p>Những phản hồi chân thực từ cộng đồng trải nghiệm dịch vụ sân bóng</p>
+    </div>
 
-        <div class="review-grid">
-          <div class="review-card" v-for="r in danhGia" :key="r.name">
-            <div class="review-card__stars">
-              <svg v-for="n in 5" :key="n" width="14" height="14" viewBox="0 0 24 24" fill="#f6c90e"><path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/></svg>
-            </div>
-            <p class="review-card__quote">"{{ r.quote }}"</p>
-            <div class="review-card__author">
-              <div class="review-card__avatar">{{ r.initials }}</div>
-              <div>
-                <p class="review-card__name">{{ r.name }}</p>
-                <p class="review-card__role">{{ r.role }}</p>
+    <!-- BỘ LỌC ĐÁNH GIÁ (FILTER BAR) -->
+    <div class="review-filter-bar">
+      <button 
+        class="filter-btn" 
+        :class="{ active: selectedFilter === 'ALL' }"
+        @click="selectedFilter = 'ALL'"
+      >
+        Tất cả ({{ getCountByStar('ALL') }})
+      </button>
+      <button 
+        v-for="star in [5, 4, 3, 2, 1]" 
+        :key="star"
+        class="filter-btn"
+        :class="{ active: selectedFilter === star }"
+        @click="selectedFilter = star"
+      >
+        {{ star }} ★ ({{ getCountByStar(star) }})
+      </button>
+    </div>
+
+    <!-- KHỐI DANH SÁCH LƯỚT NGANG -->
+    <div class="review-list-container">
+      <div v-if="filteredDanhGiaList && filteredDanhGiaList.length > 0" class="review-scroll-wrapper">
+        <div 
+          v-for="item in filteredDanhGiaList" 
+          :key="item.id" 
+          class="review-card"
+        >
+          <!-- 1. Header Khách hàng -->
+          <div class="card-header">
+            <div class="user-meta">
+              <h4 class="user-name">{{ item.name || 'Khách hàng' }}</h4>
+              <div class="sub-info">
+                <span class="user-role">{{ item.role || 'Khách hàng' }}</span>
+                <span class="dot">•</span>
+                <span class="review-date">{{ formatDate(item.ngayDanhGia) }}</span>
               </div>
             </div>
+            <!-- Số sao đánh giá -->
+            <div class="star-rating">
+              <span v-for="s in 5" :key="s" :class="['star', { filled: s <= item.rating }]">★</span>
+            </div>
+          </div>
+
+          <!-- 2. Nội dung nhận xét -->
+          <p class="review-quote">"{{ item.quote }}"</p>
+
+          <!-- 3. Khung Phản hồi từ Ban Quản lý (Chỉ hiện khi có phanHoi) -->
+          <div v-if="item.phanHoi" class="reply-box">
+            <!-- Dòng 1: Icon + Tên + Badge -->
+            <div class="reply-user-info">
+              <span class="reply-icon">💬</span>
+              <span class="replier-name" :title="item.tenNguoiPhanHoi">{{ item.tenNguoiPhanHoi || 'Đông Quân' }}</span>
+              <span class="role-badge" :class="item.vaiTroNguoiPhanHoi?.toLowerCase() || 'staff'">
+                {{ item.vaiTroNguoiPhanHoi || 'STAFF' }}
+              </span>
+            </div>
+
+            <!-- Dòng 2: Ngày phản hồi -->
+            <div class="reply-time">
+              {{ formatDate(item.ngayPhanHoi || item.ngayDanhGia) }}
+            </div>
+
+            <!-- Dòng 3: Nội dung phản hồi -->
+            <p class="reply-content">
+              {{ item.phanHoi }}
+            </p>
           </div>
         </div>
       </div>
-    </section>
+
+      <!-- Empty State khi không tìm thấy đánh giá ở mức sao tương ứng -->
+      <div v-else class="empty-review-state">
+        <div class="empty-icon">💬</div>
+        <h3>Không có đánh giá nào</h3>
+        <p>Chưa có đánh giá nào phù hợp với bộ lọc này.</p>
+      </div>
+    </div>
+
+    <!-- FORM VIẾT ĐÁNH GIÁ -->
+    <div class="add-review-wrapper">
+      <div class="add-review-form">
+        <h3>Viết đánh giá của bạn</h3>
+        <p class="sub-title">Chia sẻ trải nghiệm thực tế của bạn sau khi trải nghiệm sân đấu</p>
+
+        <form @submit.prevent="guiDanhGia">
+          <div class="star-rating-input">
+            <div class="stars">
+              <span 
+                v-for="star in 5" 
+                :key="star" 
+                class="star-icon"
+                :class="{ active: star <= soSaoDanhGia }"
+                @click="soSaoDanhGia = star"
+              >★</span>
+            </div>
+            <span class="rating-text">({{ soSaoDanhGia }} / 5 sao)</span>
+          </div>
+
+          <div class="textarea-wrapper">
+            <textarea 
+              v-model="noiDungBinhLuan" 
+              placeholder="Sân đấu có tốt không? Đèn chiếu sáng và chất lượng cỏ thế nào?..."
+              rows="4"
+              maxlength="500"
+              required
+            ></textarea>
+            <div class="char-count">{{ noiDungBinhLuan.length }}/500</div>
+          </div>
+
+          <button 
+            type="submit" 
+            class="btn-submit-review" 
+            :disabled="isSubmitting"
+          >
+            {{ isSubmitting ? 'Đang gửi...' : 'Gửi đánh giá' }}
+          </button>
+        </form>
+      </div>
+    </div>
+  </section>
 
     <!-- ===== CTA ===== -->
     <section class="cta-section">
@@ -355,10 +459,33 @@
 </template>
 
 <script setup>
-import { ref, onMounted, onUnmounted } from 'vue'
+import { ref, computed, onMounted, onUnmounted } from 'vue'
 import { useRouter } from 'vue-router'
 
 const router = useRouter()
+
+const currentUser = JSON.parse(localStorage.getItem('user') || '{}')
+
+const danhGiaList = ref([])
+const noiDungBinhLuan = ref('')
+const soSaoDanhGia = ref(5)
+const isSubmitting = ref(false)
+const selectedFilter = ref('ALL') // 'ALL', 5, 4, 3, 2, 1
+
+// Computed lọc danh sách đánh giá theo số sao được chọn
+const filteredDanhGiaList = computed(() => {
+  if (selectedFilter.value === 'ALL') {
+    return danhGiaList.value
+  }
+  return danhGiaList.value.filter(item => item.rating === selectedFilter.value)
+})
+
+// Đếm số lượng đánh giá cho từng loại sao
+const getCountByStar = (star) => {
+  if (star === 'ALL') return danhGiaList.value.length
+  return danhGiaList.value.filter(item => item.rating === star).length
+}
+
 
 // BANNER SLIDER
 const slides = [
@@ -386,6 +513,7 @@ onMounted(() => {
   }, 4000)
   fetchSanNoiBat()
   fetchBaiVietTrangChu()
+  fetchDanhGia() // Gọi API lấy đánh giá
 })
 onUnmounted(() => clearInterval(slideInterval))
 
@@ -516,7 +644,12 @@ async function xemChiTietBaiViet(post) {
 
 function formatDate(dateStr) {
   if (!dateStr) return 'Mới đăng'
-  return new Date(dateStr).toLocaleDateString('vi-VN')
+  
+  const d = new Date(dateStr)
+  // Nếu dateStr truyền vào không hợp lệ thì trả về 'Mới đăng'
+  if (isNaN(d.getTime())) return 'Mới đăng' 
+  
+  return d.toLocaleDateString('vi-VN')
 }
 
 function getShortSummary(content) {
@@ -544,6 +677,84 @@ function getCategoryClass(cat) {
   }
   return map[cat] || 'cat-news'
 }
+
+
+
+// Hàm tải danh sách đánh giá từ API
+// Thay đổi URL gọi API từ /api/danh-gia sang /api/danh-gia-he-thong
+const fetchDanhGia = async () => {
+  try {
+    const res = await fetch('http://localhost:8080/api/danh-gia-he-thong')
+    
+    if (res.ok) {
+      const data = await res.json()
+      
+      // 👉 CHÈN CONSOLE.LOG VÀO ĐÂY ĐỂ IN DỮ LIỆU RA CONSOLE F12
+      // console.log('Dữ liệu đánh giá nhận được từ Backend:', data)
+
+      danhGiaList.value = data
+    } else {
+      console.error('Lỗi khi tải danh sách đánh giá. Status:', res.status)
+    }
+  } catch (err) {
+    console.error('Lỗi kết nối API lấy đánh giá:', err)
+  }
+}
+
+// Hàm gửi đánh giá mới lên API
+const guiDanhGia = async () => {
+  if (!noiDungBinhLuan.value.trim()) {
+    alert('Vui lòng nhập nội dung đánh giá!')
+    return
+  }
+
+  // Lấy token từ localStorage (kiểm tra lại key lưu token của bạn)
+  const token = localStorage.getItem('token') 
+  if (!token) {
+    alert('Vui lòng đăng nhập để gửi đánh giá!')
+    return
+  }
+
+  isSubmitting.value = true
+
+  try {
+    const res = await fetch('http://localhost:8080/api/danh-gia-he-thong', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': `Bearer ${token}` // Gửi Token để Backend nhận diện email
+      },
+      body: JSON.stringify({
+        quote: noiDungBinhLuan.value,
+        rating: soSaoDanhGia.value
+      })
+    })
+
+    if (res.ok) {
+      alert('Cảm ơn bạn đã gửi đánh giá!')
+      noiDungBinhLuan.value = ''
+      soSaoDanhGia.value = 5
+      // Tải lại danh sách đánh giá sau khi thêm thành công
+      await fetchDanhGia() 
+    } else if (res.status === 401 || res.status === 403) {
+      alert('Phiên đăng nhập đã hết hạn. Vui lòng đăng nhập lại!')
+    } else {
+      const errorText = await res.text()
+      alert('Không thể gửi đánh giá: ' + errorText)
+    }
+  } catch (err) {
+    console.error('Lỗi khi gửi đánh giá:', err)
+    alert('Có lỗi xảy ra khi kết nối máy chủ!')
+  } finally {
+    isSubmitting.value = false
+  }
+}
+// Hàm tạo chữ cái đại diện từ tên người dùng
+function getInitials(name) {
+  if (!name || typeof name !== 'string') return 'KH'
+  return name.trim().split(' ').filter(Boolean).map(w => w[0]).join('').toUpperCase().slice(0, 2)
+}
+
 
 </script>
 
@@ -1037,6 +1248,422 @@ function getCategoryClass(cat) {
   .posts-grid {
     grid-template-columns: 1fr;
   }
+}
+
+/* ===== STYLES FORM & DANH SÁCH ĐÁNH GIÁ ===== */
+
+/* 1. Layout chung cho Section Đánh giá */
+.review-section {
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 40px 20px;
+}
+
+.section-title-container {
+  text-align: center;
+  margin-bottom: 32px;
+}
+
+.section-title-container h2 {
+  font-size: 28px;
+  font-weight: 800;
+  color: #0f172a;
+  margin-bottom: 8px;
+}
+
+.section-title-container p {
+  color: #64748b;
+  font-size: 15px;
+}
+
+/* 2. Styling Bộ Lọc (Filter Bar) */
+.review-filter-bar {
+  display: flex;
+  justify-content: center;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-bottom: 24px;
+}
+
+.filter-btn {
+  padding: 8px 16px;
+  background-color: #f1f5f9;
+  border: 1px solid #cbd5e1;
+  border-radius: 999px;
+  font-size: 14px;
+  font-weight: 600;
+  color: #475569;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.filter-btn:hover {
+  background-color: #e2e8f0;
+}
+
+.filter-btn.active {
+  background-color: #10b981;
+  color: #ffffff;
+  border-color: #10b981;
+  box-shadow: 0 2px 6px rgba(16, 185, 129, 0.2);
+}
+
+/* 3. Empty State (Chưa có đánh giá) */
+.empty-review-state {
+  text-align: center;
+  background: #f8fafc;
+  border: 2px dashed #e2e8f0;
+  border-radius: 12px;
+  padding: 40px 20px;
+  margin-bottom: 40px;
+}
+
+.empty-icon {
+  font-size: 40px;
+  margin-bottom: 12px;
+}
+
+.empty-review-state h3 {
+  font-size: 18px;
+  font-weight: 700;
+  color: #334155;
+  margin-bottom: 6px;
+}
+
+.empty-review-state p {
+  color: #64748b;
+  font-size: 14px;
+}
+
+/* 4. Khối Container Lướt Ngang */
+.review-list-container {
+  margin-bottom: 40px;
+  width: 100%;
+}
+
+.review-scroll-wrapper {
+  display: flex;
+  gap: 20px;
+  overflow-x: auto;
+  padding: 12px 8px 20px 8px;
+  scroll-behavior: smooth;
+  justify-content: center;
+}
+
+@media (max-width: 768px), (min-width: 769px) {
+  .review-scroll-wrapper {
+    justify-content: safe center;
+  }
+}
+
+/* Custom Thanh Cuộn Ngang */
+.review-scroll-wrapper::-webkit-scrollbar {
+  height: 6px;
+}
+
+.review-scroll-wrapper::-webkit-scrollbar-track {
+  background: #f1f5f9;
+  border-radius: 10px;
+}
+
+.review-scroll-wrapper::-webkit-scrollbar-thumb {
+  background: #cbd5e1;
+  border-radius: 10px;
+}
+
+.review-scroll-wrapper::-webkit-scrollbar-thumb:hover {
+  background: #94a3b8;
+}
+
+/* 5. GIAO DIỆN MỚI CHO THẺ ĐÁNH GIÁ (REVIEW CARD) */
+.review-card {
+  flex: 0 0 340px;
+  max-width: 340px;
+  background: #ffffff;
+  border: 1px solid #e2e8f0;
+  border-radius: 14px;
+  padding: 18px 20px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.04);
+  display: flex;
+  flex-direction: column;
+  justify-content: flex-start; /* 👉 Đổi từ space-between sang flex-start */
+  transition: transform 0.2s ease, box-shadow 0.2s ease;
+}
+
+.review-card:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 6px 16px rgba(0, 0, 0, 0.08);
+}
+
+/* Header người đánh giá */
+.card-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  margin-bottom: 12px;
+}
+
+.user-name {
+  font-size: 1.05rem;
+  font-weight: 700;
+  color: #1e293b;
+  margin: 0 0 2px 0;
+}
+
+.sub-info {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 0.825rem;
+  color: #64748b;
+}
+
+.user-role {
+  color: #10b981;
+  font-weight: 600;
+}
+
+.dot {
+  color: #cbd5e1;
+}
+
+.review-date {
+  color: #94a3b8;
+  font-size: 0.8rem;
+}
+
+/* Ngôi sao */
+.star-rating .star {
+  font-size: 1.1rem;
+  color: #cbd5e1;
+}
+
+.star-rating .star.filled,
+.star-rating .star.active {
+  color: #f59e0b;
+}
+
+/* Trích dẫn nhận xét */
+.review-quote {
+  font-size: 0.95rem;
+  color: #334155;
+  line-height: 1.5;
+  margin: 0 0 16px 0; /* 👉 Tăng margin-bottom nhẹ */
+  word-break: break-word;
+  flex-grow: 1; /* 👉 Giúp quote chiếm khoảng không dư thừa và tự đẩy reply-box xuống đáy nếu có */
+}
+
+/* 6. KHUNG PHẢN HỒI (REPLY BOX STYLE MỚI) */
+.reply-box {
+  background-color: #f8fafc;
+  border-left: 3px solid #10b981;
+  border-radius: 0 10px 10px 0;
+  padding: 10px 12px;
+  margin-top: 12px;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.reply-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 6px;
+}
+
+.replier-identity {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.reply-icon {
+  font-size: 13px;
+  line-height: 1;
+}
+
+.replier-name {
+  font-size: 13px;
+  font-weight: 700;
+  color: #0f172a;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  max-width: 150px; /* Tự cắt ngắn bằng ... nếu tên vượt quá */
+}
+
+/* Badge Vai trò (STAFF / ADMIN) */
+.role-badge {
+  font-size: 10px;
+  font-weight: 800;
+  padding: 2px 6px;
+  border-radius: 4px;
+  letter-spacing: 0.5px;
+  flex-shrink: 0;
+}
+
+.role-badge.staff {
+  background-color: #d1fae5;
+  color: #047857;
+}
+
+.role-badge.admin {
+  background-color: #fee2e2;
+  color: #b91c1c;
+}
+
+.reply-date {
+  font-size: 0.775rem;
+  color: #94a3b8;
+}
+
+.reply-text {
+  font-size: 0.875rem;
+  color: #475569;
+  margin: 0;
+  line-height: 1.45;
+  word-break: break-word;
+}
+
+/* 7. Khối Form Thêm Đánh Giá */
+.add-review-wrapper {
+  display: flex;
+  justify-content: center;
+  width: 100%;
+}
+
+.add-review-form {
+  background: #ffffff;
+  padding: 28px;
+  border-radius: 16px;
+  border: 1px solid #e2e8f0;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
+  width: 100%;
+  max-width: 680px;
+}
+
+.add-review-form h3 {
+  font-size: 20px;
+  font-weight: 700;
+  color: #0f172a;
+  margin-bottom: 4px;
+}
+
+.sub-title {
+  font-size: 14px;
+  color: #64748b;
+  margin-bottom: 20px;
+}
+
+/* Star Input */
+.star-rating-input {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin-bottom: 16px;
+}
+
+.star-rating-input .stars {
+  display: flex;
+  gap: 4px;
+}
+
+.star-icon {
+  font-size: 28px;
+  color: #cbd5e1;
+  cursor: pointer;
+  transition: transform 0.1s ease, color 0.1s ease;
+  user-select: none;
+}
+
+.star-icon:hover {
+  transform: scale(1.15);
+}
+
+.star-icon.active {
+  color: #f59e0b;
+}
+
+.rating-text {
+  font-weight: 600;
+  color: #334155;
+  font-size: 15px;
+}
+
+/* Textarea & Count */
+.textarea-wrapper {
+  position: relative;
+  margin-bottom: 16px;
+}
+
+.textarea-wrapper textarea {
+  width: 100%;
+  padding: 12px 14px;
+  border: 1px solid #cbd5e1;
+  border-radius: 8px;
+  font-size: 14px;
+  outline: none;
+  resize: vertical;
+  box-sizing: border-box;
+}
+
+.textarea-wrapper textarea:focus {
+  border-color: #10b981;
+  box-shadow: 0 0 0 3px rgba(16, 185, 129, 0.1);
+}
+
+.char-count {
+  text-align: right;
+  font-size: 12px;
+  color: #94a3b8;
+  margin-top: 4px;
+}
+
+/* Submit Button */
+.btn-submit-review {
+  padding: 10px 24px;
+  background-color: #10b981;
+  color: white;
+  border: none;
+  border-radius: 8px;
+  font-weight: 600;
+  font-size: 15px;
+  cursor: pointer;
+  transition: background-color 0.2s ease;
+}
+
+.btn-submit-review:hover {
+  background-color: #059669;
+}
+
+.btn-submit-review:disabled {
+  background-color: #94a3b8;
+  cursor: not-allowed;
+}
+
+.reply-time {
+  font-size: 11px;
+  color: #94a3b8;
+  padding-left: 19px; /* Căn lề thẳng hàng với Tên (tránh đè lên icon) */
+  margin-bottom: 4px;
+}
+
+/* Dòng 3: Nội dung phản hồi */
+.reply-content {
+  margin: 0;
+  padding-left: 19px;
+  font-size: 13px;
+  color: #334155;
+  line-height: 1.4;
+  word-break: break-word;
+}
+
+.reply-user-info {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  width: 100%;
 }
 
 </style>

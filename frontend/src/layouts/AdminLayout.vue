@@ -69,9 +69,15 @@
             <svg viewBox="0 0 24 24" fill="none"><path d="M12 2.5l3 6.4 6.7.7-5 4.6 1.4 6.8L12 17.7 5.9 21l1.4-6.8-5-4.6 6.7-.7 3-6.4Z" stroke="currentColor" stroke-width="1.5" stroke-linejoin="round"/></svg>
             Quản lý đánh giá
           </router-link>
-          <router-link to="/admin/binh-luan" class="sidebar__item" :class="{ active: isActive('/admin/binh-luan') }">
-            <svg viewBox="0 0 24 24" fill="none"><path d="M21 12a8 8 0 0 1-8 8H7l-4 3V12a8 8 0 0 1 8-8h2a8 8 0 0 1 8 8Z" stroke="currentColor" stroke-width="1.7" stroke-linejoin="round"/></svg>
-            Quản lý bình luận
+          <router-link 
+            to="/admin/danh-gia-he-thong" 
+            class="sidebar__item" 
+            :class="{ active: isActive('/admin/danh-gia-he-thong') }"
+          >
+            <svg viewBox="0 0 24 24" fill="none">
+              <path d="M21 11.5a8.38 8.38 0 0 1-.9 3.8 8.5 8.5 0 0 1-7.6 4.7 8.38 8.38 0 0 1-3.8-.9L3 21l1.9-5.7a8.38 8.38 0 0 1-.9-3.8 8.5 8.5 0 0 1 4.7-7.6 8.38 8.38 0 0 1 3.8-.9h.5a8.48 8.48 0 0 1 8 8v.5z" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"/>
+            </svg>
+            Q.Lý đánh giá hệ thống
           </router-link>
           <!-- Thêm vào bên trong <div class="sidebar__group"> của nhóm Nội dung -->
           <router-link to="/admin/bai-viet" class="sidebar__item" :class="{ active: isActive('/admin/bai-viet') }">
@@ -290,4 +296,5 @@ function dangXuat() {
 @media (max-width: 960px) {
   .sidebar { display: none; }
 }
+
 </style>

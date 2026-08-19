@@ -22,6 +22,7 @@ import QuanLyThanhToanStaff from '../views/Staff/QuanLyThanhToan.vue'
 import QuanLyLichSan from '../views/Staff/QuanLyLichSan.vue'
 import XemHoaDonStaff from '../views/Staff/XemHoaDon.vue'
 import QuanLyBaiViet from '../views/staff/QuanLyBaiViet.vue'
+import PhanHoiTrangChu from '../views/Staff/PhanHoiTrangChu.vue'
 import HoTroKhachHang from '../views/Staff/HoTroKhachHang.vue'
 import ThongTinCaNhanStaff from '../views/Staff/ThongTinCaNhan.vue'
 
@@ -38,7 +39,7 @@ import QuanLyDatSanAdmin from '../views/Admin/QuanLyDatSan.vue'
 import QuanLyThanhToanAdmin from '../views/Admin/QuanLyThanhToan.vue'
 import XemHoaDonAdmin from '../views/Admin/XemHoaDon.vue'
 import ThongTinCaNhanAdmin from '../views/Admin/ThongTinCaNhan.vue'
-import QuanLyBinhLuan from '../views/Admin/QuanLyBinhLuan.vue'
+import QuanLyDanhGiaHeThong from '../views/Admin/QuanLyDanhGiaHeThong.vue'
 import QuanLyBaiVietAdmin from '../views/Admin/QuanLyBaiViet.vue'
 import QuanLyVoucher from '../views/Admin/QuanLyVoucher.vue'
 
@@ -70,6 +71,7 @@ const routes = [
   { path: '/staff/bai-viet', name: 'StaffBaiViet', component: QuanLyBaiViet, meta: { layout: 'staff', requiresAuth: true, roles: ['Staff'] } },
   { path: '/staff/ho-tro', name: 'HoTroKhachHang', component: HoTroKhachHang, meta: { layout: 'staff', requiresAuth: true, roles: ['Staff'] } },
   { path: '/staff/ca-nhan', name: 'ThongTinCaNhanStaff', component: ThongTinCaNhanStaff, meta: { layout: 'staff', requiresAuth: true, roles: ['Staff'] } },
+  { path: '/staff/phan-hoi-trang-chu', name: 'StaffPhanHoiTrangChu', component: PhanHoiTrangChu, meta: { layout: 'staff', requiresAuth: true, roles: ['Staff']}},
 
   // ---- Admin (Yêu cầu đăng nhập và có quyền 'Admin') ----
   { path: '/admin', name: 'DashboardAdmin', component: DashboardAdmin, meta: { layout: 'admin', requiresAuth: true, roles: ['Admin'] } },
@@ -82,7 +84,7 @@ const routes = [
   { path: '/admin/doanh-thu', name: 'ThongKeDoanhThu', component: ThongKeDoanhThu, meta: { layout: 'admin', requiresAuth: true, roles: ['Admin'] } },
   { path: '/admin/thong-bao', name: 'QuanLyThongBao', component: QuanLyThongBao, meta: { layout: 'admin', requiresAuth: true, roles: ['Admin'] } },
   { path: '/admin/danh-gia', name: 'QuanLyDanhGia', component: QuanLyDanhGia, meta: { layout: 'admin', requiresAuth: true, roles: ['Admin'] } },
-  { path: '/admin/binh-luan', name: 'QuanLyBinhLuan', component: QuanLyBinhLuan, meta: { layout: 'admin', requiresAuth: true, roles: ['Admin'] } },
+  { path: '/admin/danh-gia-he-thong', name: 'QuanLyDanhGiaHeThong', component: QuanLyDanhGiaHeThong, meta: {layout: 'admin', requiresAuth: true, roles: ['Admin']}},
   { path: '/admin/san-pham', name: 'QuanLySanPham', component: QuanLySanPham, meta: { layout: 'admin', requiresAuth: true, roles: ['Admin'] } },
   { path: '/admin/ca-nhan', name: 'ThongTinCaNhanAdmin', component: ThongTinCaNhanAdmin, meta: { layout: 'admin', requiresAuth: true, roles: ['Admin'] } },
   { path: '/admin/voucher', name: 'QuanLyVoucher', component: QuanLyVoucher, meta: { layout: 'admin', requiresAuth: true, roles: ['Admin'], title: 'Quản lý Voucher' } },

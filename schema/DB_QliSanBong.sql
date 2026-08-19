@@ -545,3 +545,22 @@ VALUES
  'CO_DINH', 100000, NULL, 300000, 'DIAMOND', 50, 0, 1,
  GETDATE(), DATEADD(DAY, 30, GETDATE()), 'HOAT_DONG');
 GO
+
+CREATE TABLE DANH_GIA_HE_THONG (
+    id UNIQUEIDENTIFIER PRIMARY KEY DEFAULT NEWID(),
+    nguoi_dung_id UNIQUEIDENTIFIER NULL,
+    ten_nguoi_dung NVARCHAR(255) NOT NULL,
+    vai_tro NVARCHAR(100) NOT NULL,
+    so_sao INT NOT NULL CHECK (so_sao BETWEEN 1 AND 5),
+    noi_dung NVARCHAR(MAX) NOT NULL,
+    hien_thi BIT DEFAULT 1,
+    ngay_danh_gia DATETIME DEFAULT GETDATE(),
+    
+    -- Các cột bổ sung cho tính năng Phản hồi (Staff / Admin)
+    phan_hoi NVARCHAR(MAX) NULL,
+    ngay_phan_hoi DATETIME NULL,
+    nguoi_phan_hoi_id UNIQUEIDENTIFIER NULL,
+
+    CONSTRAINT FK_DGHT_NGUOI_DUNG FOREIGN KEY (nguoi_dung_id) REFERENCES users(id),
+    CONSTRAINT FK_DGHT_NGUOI_PHAN_HOI FOREIGN KEY (nguoi_phan_hoi_id) REFERENCES users(id)
+);

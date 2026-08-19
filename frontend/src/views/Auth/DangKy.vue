@@ -276,27 +276,10 @@
           </button>
         </form>
 
-        <div class="auth-divider">Hoặc đăng ký với</div>
+        <div class="auth-divider">Hoặc</div>
 
-        <div class="social-row">
-          <button type="button" class="social-btn" @click="socialNotice">
-            <svg width="18" height="18" viewBox="0 0 24 24">
-              <path fill="#4285F4" d="M23.49 12.27c0-.79-.07-1.54-.2-2.27H12v4.51h6.47a5.53 5.53 0 0 1-2.4 3.63v3.02h3.86c2.26-2.09 3.56-5.17 3.56-8.89Z" />
-              <path fill="#34A853" d="M12 24c3.24 0 5.95-1.08 7.93-2.84l-3.86-3.02c-1.07.72-2.45 1.15-4.07 1.15-3.13 0-5.78-2.11-6.73-4.96H1.27v3.12C3.24 21.3 7.27 24 12 24Z" />
-              <path fill="#FBBC05" d="M5.27 14.33A7.2 7.2 0 0 1 4.89 12c0-.81.14-1.6.38-2.33V6.55H1.27A11.98 11.98 0 0 0 0 12c0 1.93.46 3.76 1.27 5.45l4-3.12Z" />
-              <path fill="#EA4335" d="M12 4.75c1.77 0 3.35.61 4.6 1.8l3.42-3.42C17.95 1.19 15.24 0 12 0 7.27 0 3.24 2.7 1.27 6.55l4 3.12C6.22 6.86 8.87 4.75 12 4.75Z" />
-            </svg>
-            Google
-          </button>
-          <button type="button" class="social-btn" @click="socialNotice">
-            <svg width="18" height="18" viewBox="0 0 24 24">
-              <path
-                fill="#1877F2"
-                d="M24 12.07C24 5.4 18.63 0 12 0S0 5.4 0 12.07c0 5.99 4.39 10.96 10.13 11.86v-8.39H7.1v-3.47h3.03V9.41c0-3 1.79-4.66 4.53-4.66 1.31 0 2.69.23 2.69.23v2.96h-1.51c-1.49 0-1.96.92-1.96 1.87v2.26h3.33l-.53 3.47h-2.8V24C19.6 23.03 24 18.06 24 12.07Z"
-              />
-            </svg>
-            Facebook
-          </button>
+        <div class="google-auth-box">
+          <div id="googleSignUpBtn" class="google-btn-slot"></div>
         </div>
 
         <p class="auth-switch">Đã có tài khoản? <router-link to="/dang-nhap">Đăng nhập</router-link></p>
@@ -306,11 +289,32 @@
 </template>
 
 <script setup>
-import { reactive, ref, computed } from 'vue'
+import { reactive, ref, computed, onMounted } from 'vue'
 import { useRouter } from 'vue-router'
 import authService from '../../services/authService'
+import { initGoogleSignIn } from '../../services/googleAuth'
 
 const router = useRouter()
+
+onMounted(() => {
+  initGoogleSignIn('googleSignUpBtn', handleGoogleSuccess)
+})
+
+async function handleGoogleSuccess(credential) {
+  errorMessage.value = ''
+  infoMessage.value = ''
+  submitting.value = true
+
+  try {
+    const user = await authService.loginWithGoogle(credential)
+    const redirectUrl = authService.duongDanTheoVaiTro(user.vaiTro)
+    router.push(redirectUrl)
+  } catch (err) {
+    errorMessage.value = err.message || 'Đăng ký / Đăng nhập bằng Google thất bại. Vui lòng thử lại!'
+  } finally {
+    submitting.value = false
+  }
+}
 
 const form = reactive({
   hoTen: '',
@@ -499,10 +503,19 @@ function socialNotice() {
 .auth-divider { display: flex; align-items: center; text-align: center; color: var(--gray-500); font-size: 13px; font-weight: 500; margin: 24px 0; }
 .auth-divider::before, .auth-divider::after { content: ""; flex: 1; border-bottom: 1px solid var(--gray-100); }
 .auth-divider::before { margin-right: 16px; }
-.auth-divider::after { margin-left: 16px; }
-.social-row { display: flex; gap: 14px; margin-bottom: 24px; }
-.social-btn { flex: 1; display: flex; align-items: center; justify-content: center; gap: 10px; height: 46px; background-color: var(--white); border: 1.5px solid var(--gray-100); border-radius: var(--radius-sm); font-size: 14px; font-weight: 600; color: var(--navy-900); transition: background-color 0.15s, border-color 0.15s; }
-.social-btn:hover { background-color: var(--gray-50); border-color: var(--gray-300); }
+/* Khối nút đăng ký / đăng nhập Google */
+.google-auth-box {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  margin-bottom: 24px;
+  width: 100%;
+}
+.google-btn-slot {
+  display: flex;
+  justify-content: center;
+  width: 100%;
+}
 .auth-switch { text-align: center; font-size: 14.5px; color: var(--gray-600); }
 .auth-switch a { color: var(--green-600); font-weight: 700; transition: color 0.15s; }
 .auth-switch a:hover { color: var(--green-700); text-decoration: underline; }

@@ -3,6 +3,7 @@ import { createRouter, createWebHistory } from 'vue-router'
 // Auth Views
 import DangNhap from '../views/Auth/DangNhap.vue'
 import DangKy from '../views/Auth/DangKy.vue'
+import QuenMatKhau from '../views/Auth/QuenMatKhau.vue'
 
 // Views - User
 import TrangChu from '../views/User/TrangChu.vue'
@@ -45,6 +46,7 @@ const routes = [
   // ---- Auth (Công khai công cộng, ai cũng có thể vào) ----
   { path: '/dang-nhap', name: 'DangNhap', component: DangNhap },
   { path: '/dang-ky', name: 'DangKy', component: DangKy },
+  { path: '/quen-mat-khau', name: 'QuenMatKhau', component: QuenMatKhau },
 
   // ---- User ----
 // Các trang công khai (Chưa đăng nhập vẫn xem được)

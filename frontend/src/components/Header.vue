@@ -36,7 +36,10 @@
 
       <!-- Khối thông tin User -->
       <div class="topbar__user" ref="accountRef" @click="showDropdown = !showDropdown">
-        <div class="topbar__avatar">{{ tenVietTat }}</div>
+        <div class="topbar__avatar">
+          <img v-if="avatarUrl" :src="avatarUrl" alt="Avatar" class="avatar-img-round" />
+          <span v-else>{{ tenVietTat }}</span>
+        </div>
         <div class="topbar__user-info">
           <span class="topbar__user-name">{{ tenNguoiDung }}</span>
           
@@ -51,7 +54,10 @@
 
         <div class="topbar__dropdown" v-show="showDropdown" @click.stop>
           <div class="dropdown__header">
-            <div class="topbar__avatar topbar__avatar--lg">{{ tenVietTat }}</div>
+            <div class="topbar__avatar topbar__avatar--lg">
+              <img v-if="avatarUrl" :src="avatarUrl" alt="Avatar" class="avatar-img-round" />
+              <span v-else>{{ tenVietTat }}</span>
+            </div>
             <div>
               <p class="dropdown__user-name">{{ tenNguoiDung }}</p>
               <!-- Hiển thị vai trò trong dropdown luôn cho đồng bộ -->
@@ -63,7 +69,7 @@
           <div class="dropdown__divider"></div>
           
           <!-- Thêm một lối tắt vào trang quản lý ngay bên trong Menu Dropdown phòng trường hợp cần -->
-          <router-link v-if="vaiTro === 'Staff' || vaiTro === 'Admin'" :to="vaiTro === 'ADMIN' ? '/admin' : '/staff'" class="dropdown__item" style="color: var(--green-600); font-weight: 600;">
+          <router-link v-if="vaiTro === 'Staff' || vaiTro === 'Admin'" :to="vaiTro === 'Admin' ? '/admin' : '/staff'" class="dropdown__item" style="color: var(--green-600); font-weight: 600;">
             <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7"><rect x="3" y="3" width="18" height="18" rx="2"/><path d="M9 3v18M3 9h18"/></svg>
             Vào trang quản lý
           </router-link>
@@ -164,7 +170,7 @@
           <router-link to="/thong-bao" class="nav-item nav-item--bell">
             <svg width="18" height="18" viewBox="0 0 24 24" fill="none"><path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9" stroke="currentColor" stroke-width="1.8"/><path d="M13.73 21a2 2 0 0 1-3.46 0" stroke="currentColor" stroke-width="1.8"/></svg>
             Thông báo
-            <span v-if="soThongBao > 0" class="nav-badge">{{ soThongBao }}</span>
+            <span v-if="soThongBao > 0 && dangNhap" class="nav-badge">{{ soThongBao }}</span>
           </router-link>
           <router-link to="/ho-tro" class="nav-item">
             <svg width="18" height="18" viewBox="0 0 24 24" fill="none"><circle cx="12" cy="12" r="9" stroke="currentColor" stroke-width="1.8"/><path d="M9.5 9a2.5 2.5 0 0 1 4.7 1.2c0 1.6-2.2 1.8-2.2 3.3" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/><circle cx="12" cy="17" r="0.9" fill="currentColor"/></svg>
@@ -197,6 +203,14 @@ const tenNguoiDung = ref('')
 const soThongBao = ref(0) // Số thông báo CHƯA ĐỌC - lấy thật từ API, không còn hardcode nữa
 const vaiTro = ref('') // Sẽ nhận các giá trị chuẩn hóa: 'Admin', 'Staff', hoặc 'User'
 
+function getActiveAvatar() {
+  const uid = localStorage.getItem('userId')
+  if (!uid) return ''
+  return localStorage.getItem(`avatar_${uid}`) || ''
+}
+
+const avatarUrl = ref('')
+
 let thongBaoInterval = null // interval polling số thông báo chưa đọc
 
 const tenVietTat = computed(() => {
@@ -221,34 +235,38 @@ function kiemTraDangNhap() {
     tenNguoiDung.value = localStorage.getItem('hoTen') || 'Người dùng'
     // ĐỔI TỪ 'vaiTro' THÀNH 'userRole' ĐỂ ĐỌC ĐÚNG GIÁ TRỊ CHUẨN HÓA ('Admin', 'Staff')
     vaiTro.value = localStorage.getItem('userRole') || '' 
+    avatarUrl.value = getActiveAvatar()
   } else {
     dangNhap.value = false
     tenNguoiDung.value = ''
     vaiTro.value = '' 
+    avatarUrl.value = ''
     soThongBao.value = 0
   }
 }
 
-// ===== THÔNG BÁO: số voucher đang hoạt động =====
+// ===== THÔNG BÁO: lấy số lượng chưa đọc + tự động polling =====
 async function taiSoThongBaoChuaDoc() {
+  if (!dangNhap.value) {
+    soThongBao.value = 0
+    return
+  }
+  const token = localStorage.getItem('token')
   try {
-    const res = await fetch(`${API}/voucher/dang-hoat-dong`, {
-      method: 'GET',
-      headers: { 'Accept': 'application/json' }
+    const res = await fetch(`${API}/thong-bao/chua-doc`, {
+      headers: { 'Authorization': `Bearer ${token}` }
     })
     if (!res.ok) return
-    const text = await res.text()
-    if (!text.trim()) return
-    const data = JSON.parse(text)
-    soThongBao.value = Array.isArray(data) ? data.length : 0
+    const data = await res.json()
+    soThongBao.value = data.soLuong
   } catch {
-    // Giữ số hiện tại nếu API tạm thời không phản hồi.
+    // im lặng bỏ qua lỗi tạm thời, sẽ thử lại ở lần polling tiếp theo
   }
 }
 
 function batDauPollingThongBao() {
   dungPollingThongBao()
-  thongBaoInterval = setInterval(taiSoThongBaoChuaDoc, 30000)
+  thongBaoInterval = setInterval(taiSoThongBaoChuaDoc, 10000) // hỏi lại mỗi 10 giây
 }
 
 function dungPollingThongBao() {
@@ -258,7 +276,7 @@ function dungPollingThongBao() {
   }
 }
 
-// Cập nhật số voucher đang hoạt động khi chuyển trang.
+// Theo dõi sát sao mỗi khi chuyển trang để cập nhật giao diện ngay lập tức mà không cần F5
 watch(() => route.path, () => {
   kiemTraDangNhap()
   taiSoThongBaoChuaDoc()
@@ -346,7 +364,13 @@ function onClickOutside(e) {
 }
 
 onMounted(() => {
+  // Dọn dẹp các key dùng chung cũ nếu còn sót lại
+  localStorage.removeItem('user_avatar')
+  localStorage.removeItem('admin_avatar')
+  localStorage.removeItem('staff_avatar')
+
   document.addEventListener('click', onClickOutside)
+  window.addEventListener('user-profile-updated', kiemTraDangNhap)
   kiemTraDangNhap() // Gọi hàm kiểm tra ngay khi vừa mount trang chủ
   taiSoThongBaoChuaDoc()
   batDauPollingThongBao()
@@ -354,6 +378,7 @@ onMounted(() => {
 
 onUnmounted(() => {
   document.removeEventListener('click', onClickOutside)
+  window.removeEventListener('user-profile-updated', kiemTraDangNhap)
   dungPollingThongBao()
 })
 </script>
@@ -388,8 +413,10 @@ onUnmounted(() => {
   width: 34px; height: 34px; border-radius: 50%; background: var(--green-600);
   color: var(--white); font-size: 14px; font-weight: 700;
   display: flex; align-items: center; justify-content: center; flex-shrink: 0;
+  overflow: hidden;
 }
 .topbar__avatar--lg { width: 40px; height: 40px; font-size: 16px; }
+.avatar-img-round { width: 100%; height: 100%; object-fit: cover; }
 .topbar__user-name { font-size: 14px; font-weight: 600; color: var(--white); display: block; line-height: 1.2; }
 .topbar__user-role { font-size: 11px; color: rgba(255,255,255,0.5); display: block; }
 

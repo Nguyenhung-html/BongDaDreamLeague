@@ -173,6 +173,7 @@
               <span class="check__box"></span>
               Ghi nhớ đăng nhập
             </label>
+            <router-link to="/quen-mat-khau" class="auth-forgot">Quên mật khẩu?</router-link>
           </div>
 
           <button type="submit" class="btn btn-primary btn-block" :disabled="submitting">
@@ -183,25 +184,8 @@
 
         <div class="auth-divider">Hoặc tiếp tục với</div>
 
-        <div class="social-row">
-          <button type="button" class="social-btn" @click="socialNotice">
-            <svg width="18" height="18" viewBox="0 0 24 24">
-              <path fill="#4285F4" d="M23.49 12.27c0-.79-.07-1.54-.2-2.27H12v4.51h6.47a5.53 5.53 0 0 1-2.4 3.63v3.02h3.86c2.26-2.09 3.56-5.17 3.56-8.89Z" />
-              <path fill="#34A853" d="M12 24c3.24 0 5.95-1.08 7.93-2.84l-3.86-3.02c-1.07.72-2.45 1.15-4.07 1.15-3.13 0-5.78-2.11-6.73-4.96H1.27v3.12C3.24 21.3 7.27 24 12 24Z" />
-              <path fill="#FBBC05" d="M5.27 14.33A7.2 7.2 0 0 1 4.89 12c0-.81.14-1.6.38-2.33V6.55H1.27A11.98 11.98 0 0 0 0 12c0 1.93.46 3.76 1.27 5.45l4-3.12Z" />
-              <path fill="#EA4335" d="M12 4.75c1.77 0 3.35.61 4.6 1.8l3.42-3.42C17.95 1.19 15.24 0 12 0 7.27 0 3.24 2.7 1.27 6.55l4 3.12C6.22 6.86 8.87 4.75 12 4.75Z" />
-            </svg>
-            Google
-          </button>
-          <button type="button" class="social-btn" @click="socialNotice">
-            <svg width="18" height="18" viewBox="0 0 24 24">
-              <path
-                fill="#1877F2"
-                d="M24 12.07C24 5.4 18.63 0 12 0S0 5.4 0 12.07c0 5.99 4.39 10.96 10.13 11.86v-8.39H7.1v-3.47h3.03V9.41c0-3 1.79-4.66 4.53-4.66 1.31 0 2.69.23 2.69.23v2.96h-1.51c-1.49 0-1.96.92-1.96 1.87v2.26h3.33l-.53 3.47h-2.8V24C19.6 23.03 24 18.06 24 12.07Z"
-              />
-            </svg>
-            Facebook
-          </button>
+        <div class="google-auth-box">
+          <div id="googleSignInBtn" class="google-btn-slot"></div>
         </div>
 
         <p class="auth-switch">Chưa có tài khoản? <router-link to="/dang-ky">Đăng ký ngay</router-link></p>
@@ -214,6 +198,7 @@
 import { reactive, ref, onMounted } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import authService from '../../services/authService'
+import { initGoogleSignIn } from '../../services/googleAuth'
 
 const router = useRouter()
 const route = useRoute()
@@ -244,7 +229,26 @@ onMounted(() => {
   if (route.query.registered) {
     infoMessage.value = 'Tạo tài khoản thành công! Vui lòng đăng nhập để tiếp tục.'
   }
+
+  // Khởi tạo nút đăng nhập Google thật bằng Google Identity Services
+  initGoogleSignIn('googleSignInBtn', handleGoogleSuccess)
 })
+
+async function handleGoogleSuccess(credential) {
+  errorMessage.value = ''
+  infoMessage.value = ''
+  submitting.value = true
+
+  try {
+    const user = await authService.loginWithGoogle(credential)
+    const redirectUrl = authService.duongDanTheoVaiTro(user.vaiTro)
+    router.push(redirectUrl)
+  } catch (err) {
+    errorMessage.value = err.message || 'Đăng nhập bằng Google thất bại. Vui lòng thử lại!'
+  } finally {
+    submitting.value = false
+  }
+}
 
 function validateField(field) {
   if (field === 'identifier') {
@@ -274,60 +278,18 @@ async function onSubmit() {
 
   submitting.value = true
   try {
-    // 1. GỌI API THẬT XUỐNG SPRING BOOT
-    const response = await fetch('http://localhost:8080/api/xac-thuc/dang-nhap', {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json'
-      },
-      body: JSON.stringify({
-        email: form.identifier, 
-        matKhau: form.password
-      })
+    const user = await authService.login({
+      identifier: form.identifier,
+      password: form.password
     })
 
-    // 2. NẾU SPRING BOOT BÁO LỖI
-    if (!response.ok) {
-      const errorText = await response.text()
-      throw new Error(errorText || 'Đăng nhập thất bại!')
-    }
-
-    // 3. NẾU THÀNH CÔNG: Lấy cục data JSON từ backend trả về
-    const data = await response.json()
-
-    // 4. CHUẨN HÓA VAI TRÒ ĐỂ KHỚP VỚI ROUTER (Chuyển ADMIN -> Admin, STAFF -> Staff, USER -> User)
-    let standardizedRole = 'User' // Mặc định nếu không khớp là User
-    if (data.vaiTro === 'ADMIN') standardizedRole = 'Admin'
-    if (data.vaiTro === 'STAFF') standardizedRole = 'Staff'
-
-    // 5. LƯU THÔNG TIN VÀO LOCAL STORAGE (Đúng key, đúng định dạng router cần)
-    localStorage.setItem('token', data.token)
-    localStorage.setItem('hoTen', data.hoTen)
-    localStorage.setItem('soDienThoai', data.soDienThoai)   // ← thêm dòng này
-    localStorage.setItem('isLoggedIn', 'true')       // Thêm dòng này để router biết đã đăng nhập!
-    localStorage.setItem('userRole', standardizedRole) // Lưu vai trò đã chuẩn hóa ('Admin', 'Staff', 'User')
-
-    // 6. ĐIỀU HƯỚNG THEO VAI TRÒ
-    if (standardizedRole === 'Admin') {
-      router.push('/admin')
-    } else if (standardizedRole === 'Staff') {
-      router.push('/staff')
-    } else {
-      router.push('/') // Khách hàng về trang chủ
-    }
-
+    const redirectUrl = authService.duongDanTheoVaiTro(user.vaiTro)
+    router.push(redirectUrl)
   } catch (err) {
     errorMessage.value = err.message || 'Email hoặc mật khẩu không đúng. Vui lòng thử lại.'
   } finally {
     submitting.value = false
   }
-}
-
-function socialNotice() {
-  infoMessage.value = 'Đăng nhập bằng mạng xã hội sẽ sớm được hỗ trợ.'
-  setTimeout(() => {
-    infoMessage.value = ''
-  }, 3500)
 }
 </script>
 
@@ -651,9 +613,23 @@ function socialNotice() {
   font-weight: 500;
 }
 
-/* Checkbox ghi nhớ đăng nhập */
+/* Checkbox ghi nhớ đăng nhập & Quên mật khẩu */
 .auth-options {
   margin-bottom: 24px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.auth-forgot {
+  font-size: 13.5px;
+  font-weight: 600;
+  color: var(--green-600);
+  transition: color 0.15s ease;
+}
+.auth-forgot:hover {
+  color: var(--green-700);
+  text-decoration: underline;
 }
 
 .check {
@@ -740,33 +716,18 @@ function socialNotice() {
 .auth-divider::before { margin-right: 16px; }
 .auth-divider::after { margin-left: 16px; }
 
-/* Hàng nút bấm mạng xã hội */
-.social-row {
+/* Khối nút đăng nhập Google */
+.google-auth-box {
   display: flex;
-  gap: 14px;
-  margin-bottom: 24px;
-}
-.social-btn {
-  flex: 1;
-  display: flex;
-  align-items: center;
   justify-content: center;
-  gap: 10px;
-  height: 46px;
-  background-color: var(--white);
-  border: 1.5px solid var(--gray-100);
-  border-radius: var(--radius-sm);
-  font-size: 14px;
-  font-weight: 600;
-  color: var(--navy-900);
-  transition: background-color 0.15s, border-color 0.15s;
+  align-items: center;
+  margin-bottom: 24px;
+  width: 100%;
 }
-.social-btn:hover {
-  background-color: var(--gray-50);
-  border-color: var(--gray-300);
-}
-.social-btn svg {
-  flex-shrink: 0;
+.google-btn-slot {
+  display: flex;
+  justify-content: center;
+  width: 100%;
 }
 
 /* Liên kết chuyển trạng thái đổi trang */

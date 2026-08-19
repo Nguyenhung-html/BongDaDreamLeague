@@ -16,6 +16,7 @@ import java.util.UUID;
 public interface NguoiDungRepository extends JpaRepository<NguoiDung, UUID> {
 
     Optional<NguoiDung> findByEmail(String email);
+    Optional<NguoiDung> findBySoDienThoai(String soDienThoai);
 
     Optional<NguoiDung> findByEmailOrSoDienThoai(String email, String soDienThoai);
 

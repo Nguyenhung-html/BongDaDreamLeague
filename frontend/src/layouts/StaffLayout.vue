@@ -120,9 +120,12 @@
       </nav>
       <div class="dashboard__sidebar-bottom">
         <div class="sidebar-user">
-          <div class="sidebar-user__avatar">{{ userInitial }}</div>
+           <div class="sidebar-user__avatar">
+            <img v-if="avatarUrl" :src="avatarUrl" alt="Avatar" class="avatar-img-round" />
+            <span v-else>{{ userInitial }}</span>
+          </div>
           <div class="sidebar-user__info">
-            <p class="sidebar-user__name">Nhân viên</p>
+             <p class="sidebar-user__name">{{ tenNguoiDung }}</p>
             <p class="sidebar-user__role">Staff</p>
           </div>
         </div>
@@ -168,13 +171,25 @@ const router = useRouter()
 const route = useRoute()
 const sidebarOpen = ref(false)
 const isMobile = ref(false)
-const userInitial = computed(() => 'N')
+
+function getActiveAvatar() {
+  const uid = localStorage.getItem('userId')
+  if (!uid) return ''
+  return localStorage.getItem(`avatar_${uid}`) || ''
+}
 
 // ===== AUTH STATE =====
 const dangNhap = ref(false)
-const tenNguoiDung = ref('')
+const tenNguoiDung = ref(localStorage.getItem('hoTen') || 'Nhân viên')
+const avatarUrl = ref(getActiveAvatar())
 const vaiTro = ref('')
 const showDropdown = ref(false)
+
+const userInitial = computed(() => {
+  if (!tenNguoiDung.value) return 'S'
+  const parts = tenNguoiDung.value.trim().split(' ')
+  return parts[parts.length - 1].charAt(0).toUpperCase()
+})
 
 const breadcrumbLabel = computed(() => {
   const labels = {
@@ -198,6 +213,15 @@ function isActive(path) {
   return route.path.startsWith(path)
 }
 
+function handleProfileUpdated(event) {
+  if (event.detail && event.detail.hoTen) {
+    tenNguoiDung.value = event.detail.hoTen
+  } else {
+    tenNguoiDung.value = localStorage.getItem('hoTen') || 'Nhân viên'
+  }
+  avatarUrl.value = getActiveAvatar()
+}
+
 function logout() {
   localStorage.removeItem('token')
   localStorage.removeItem('hoTen')
@@ -208,6 +232,7 @@ function logout() {
   dangNhap.value = false
   tenNguoiDung.value = ''
   vaiTro.value = ''
+  avatarUrl.value = ''
   showDropdown.value = false
   
   alert('Đã đăng xuất tài khoản thành công!')
@@ -219,11 +244,20 @@ function handleResize() {
 }
 
 onMounted(() => {
+  // Dọn dẹp key cũ
+  localStorage.removeItem('user_avatar')
+  localStorage.removeItem('admin_avatar')
+  localStorage.removeItem('staff_avatar')
+
+  tenNguoiDung.value = localStorage.getItem('hoTen') || 'Nhân viên'
+  avatarUrl.value = getActiveAvatar()
   handleResize()
   window.addEventListener('resize', handleResize)
+  window.addEventListener('user-profile-updated', handleProfileUpdated)
 })
 
 onUnmounted(() => {
   window.removeEventListener('resize', handleResize)
+  window.removeEventListener('user-profile-updated', handleProfileUpdated)
 })
 </script>

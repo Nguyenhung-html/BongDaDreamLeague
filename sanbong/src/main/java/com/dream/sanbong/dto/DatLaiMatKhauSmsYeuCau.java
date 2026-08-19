@@ -5,9 +5,9 @@ import jakarta.validation.constraints.Size;
 import lombok.Data;
 
 @Data
-public class DatLaiMatKhauYeuCau {
-    @NotBlank(message = "Email không được để trống!")
-    private String email;
+public class DatLaiMatKhauSmsYeuCau {
+    @NotBlank(message = "Số điện thoại không được để trống!")
+    private String soDienThoai;
 
     @NotBlank(message = "Mã xác thực không được để trống!")
     private String maXacThuc;

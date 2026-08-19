@@ -13,14 +13,17 @@ import java.util.Map;
 import java.util.UUID;
 
 @RestController
-@RequestMapping("/api/staff/profile")
+@RequestMapping("/api/user/profile")
 @RequiredArgsConstructor
 @CrossOrigin(origins = "*")
-public class StaffProfileController {
+public class UserProfileController {
 
     private final NguoiDungService nguoiDungService;
 
-    // 1. Lấy thông tin cá nhân Staff
+    /**
+     * 1. Lấy thông tin cá nhân khách hàng
+     * Endpoint: GET /api/user/profile/{id}
+     */
     @GetMapping("/{id}")
     public ResponseEntity<?> getProfile(@PathVariable UUID id) {
         try {
@@ -31,7 +34,10 @@ public class StaffProfileController {
         }
     }
 
-    // 2. Chỉnh sửa thông tin cá nhân Staff
+    /**
+     * 2. Chỉnh sửa thông tin cá nhân khách hàng (Họ tên, SĐT, Email, Địa chỉ)
+     * Endpoint: PUT /api/user/profile/{id}
+     */
     @PutMapping("/{id}")
     public ResponseEntity<?> updateProfile(
             @PathVariable UUID id,
@@ -44,7 +50,10 @@ public class StaffProfileController {
         }
     }
 
-    // 3. Đổi mật khẩu tài khoản Staff
+    /**
+     * 3. Đổi mật khẩu tài khoản
+     * Endpoint: PUT /api/user/profile/{id}/doi-mat-khau
+     */
     @PutMapping("/{id}/doi-mat-khau")
     public ResponseEntity<?> doiMatKhau(
             @PathVariable UUID id,

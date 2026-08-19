@@ -10,4 +10,6 @@ public class CapNhatProfileYeuCau {
     private String hoTen;
     private String soDienThoai;
     private String email;
+    private String diaChi;
+    private String avatar;
 }

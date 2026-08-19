@@ -96,7 +96,10 @@
       </nav>
 
       <div class="sidebar__user">
-        <div class="sidebar__avatar">{{ tenVietTat }}</div>
+        <div class="sidebar__avatar">
+          <img v-if="avatarUrl" :src="avatarUrl" alt="Avatar" class="avatar-img-round" />
+          <span v-else>{{ tenVietTat }}</span>
+        </div>
         <div>
           <p class="sidebar__user-name">{{ tenNguoiDung }}</p>
           <p class="sidebar__user-role">Admin</p>
@@ -118,20 +121,52 @@
 </template>
 
 <script setup>
-import { computed } from 'vue'
+import { ref, computed, onMounted, onUnmounted } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 
 const route = useRoute()
 const router = useRouter()
 
-const tenNguoiDung = computed(() => localStorage.getItem('hoTen') || 'Quản trị viên')
+function getActiveAvatar() {
+  const uid = localStorage.getItem('userId')
+  if (!uid) return ''
+  return localStorage.getItem(`avatar_${uid}`) || ''
+}
+
+const tenNguoiDung = ref(localStorage.getItem('hoTen') || 'Quản trị viên')
+const avatarUrl = ref(getActiveAvatar())
 
 const tenVietTat = computed(() => {
+  if (!tenNguoiDung.value) return 'A'
   const ten = tenNguoiDung.value.trim().split(' ')
   return ten[ten.length - 1].charAt(0).toUpperCase()
 })
 
 const tieuDeTrang = computed(() => route.meta?.title || route.name || '')
+
+function handleProfileUpdated(event) {
+  if (event.detail && event.detail.hoTen) {
+    tenNguoiDung.value = event.detail.hoTen
+  } else {
+    tenNguoiDung.value = localStorage.getItem('hoTen') || 'Quản trị viên'
+  }
+  avatarUrl.value = getActiveAvatar()
+}
+
+onMounted(() => {
+  // Dọn dẹp key cũ
+  localStorage.removeItem('user_avatar')
+  localStorage.removeItem('admin_avatar')
+  localStorage.removeItem('staff_avatar')
+
+  tenNguoiDung.value = localStorage.getItem('hoTen') || 'Quản trị viên'
+  avatarUrl.value = getActiveAvatar()
+  window.addEventListener('user-profile-updated', handleProfileUpdated)
+})
+
+onUnmounted(() => {
+  window.removeEventListener('user-profile-updated', handleProfileUpdated)
+})
 
 // exact: chỉ khớp đúng path (dùng cho Dashboard vì "/admin" là tiền tố của mọi route con)
 // mặc định: khớp cả path con, phòng khi trang gộp (thanh toán & hoá đơn, đánh giá & bình luận)
@@ -222,6 +257,12 @@ function dangXuat() {
   background: var(--green-600, #16a34a); color: white;
   display: flex; align-items: center; justify-content: center;
   font-size: 14px; font-weight: 700; flex-shrink: 0;
+  overflow: hidden;
+}
+.sidebar__avatar img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
 }
 .sidebar__user-name { font-size: 13.5px; font-weight: 700; color: #0f172a; }
 .sidebar__user-role { font-size: 11.5px; color: #94a3b8; }

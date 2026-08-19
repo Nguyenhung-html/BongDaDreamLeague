@@ -15,6 +15,7 @@ CREATE TABLE USERS(
     email VARCHAR(100) NOT NULL UNIQUE,
     mat_khau VARCHAR(255) NOT NULL,
     dia_chi NVARCHAR(255),
+    avatar NVARCHAR(MAX),
     vai_tro VARCHAR(20) NOT NULL, -- USER/STAFF/ADMIN
     trang_thai BIT DEFAULT 1,
     ngay_tao DATETIME DEFAULT GETDATE()

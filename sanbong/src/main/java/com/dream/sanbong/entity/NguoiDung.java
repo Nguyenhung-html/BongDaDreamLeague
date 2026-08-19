@@ -21,7 +21,7 @@ public class NguoiDung {
     @Column(name = "ho_ten", nullable = false, length = 100)
     private String hoTen;
 
-    @Column(name = "so_dien_thoai", nullable = false, length = 15, unique = true)
+    @Column(name = "so_dien_thoai", length = 15, unique = true)
     private String soDienThoai;
 
     @Column(nullable = false, length = 100, unique = true)
@@ -32,6 +32,9 @@ public class NguoiDung {
 
     @Column(name = "dia_chi", length = 256)
     private String diaChi;
+
+    @Column(name = "avatar", columnDefinition = "NVARCHAR(MAX)")
+    private String avatar;
 
     @Enumerated(EnumType.STRING)
     @Column(name = "vai_tro", nullable = false)

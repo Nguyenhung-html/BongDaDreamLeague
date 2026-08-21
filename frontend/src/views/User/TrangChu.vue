@@ -95,7 +95,7 @@
           </div>
           <div>
             <p class="san-highlight__label">Hotline đặt sân</p>
-            <p class="san-highlight__val">0901 234 567 &nbsp;·&nbsp; Hỗ trợ 24/7</p>
+            <p class="san-highlight__val">0343 831 316 &nbsp;·&nbsp; Hỗ trợ 24/7</p>
           </div>
         </div>
       </div>

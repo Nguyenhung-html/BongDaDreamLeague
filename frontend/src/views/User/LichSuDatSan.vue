@@ -240,14 +240,37 @@ async function taiLichSu() {
   dangTai.value = true
   loiTai.value = ''
   try {
-    const token = localStorage.getItem('token')
+    // Kiểm tra tất cả các key token phổ biến nếu bị đặt tên khác
+    const token = localStorage.getItem('token') || localStorage.getItem('accessToken') || localStorage.getItem('jwt')
+
+    if (!token) {
+      throw new Error('Chưa đăng nhập hoặc phiên làm việc đã hết hạn. Vui lòng đăng nhập lại!')
+    }
+
     const res = await fetch(`${API}/dat-san/lich-su`, {
-      headers: { 'Authorization': `Bearer ${token}` }
+      method: 'GET',
+      headers: { 
+        'Content-Type': 'application/json',
+        'Authorization': `Bearer ${token}` 
+      }
     })
-    if (!res.ok) throw new Error('Không tải được lịch sử')
+
+    if (res.status === 403) {
+      throw new Error('Lỗi 403: Tài khoản không có quyền xem lịch sử hoặc phiên đăng nhập bị hết hạn!')
+    }
+
+    if (res.status === 401) {
+      throw new Error('Lỗi 401: Token không hợp lệ. Vui lòng đăng nhập lại!')
+    }
+
+    if (!res.ok) {
+      throw new Error(`Không tải được lịch sử đặt sân (Mã lỗi: ${res.status})`)
+    }
+
     danhSach.value = await res.json()
   } catch (e) {
     loiTai.value = e.message
+    console.error('Lỗi taiLichSu:', e)
   } finally {
     dangTai.value = false
   }

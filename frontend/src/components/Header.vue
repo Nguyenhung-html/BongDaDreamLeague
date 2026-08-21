@@ -253,8 +253,12 @@ async function taiSoThongBaoChuaDoc() {
   }
   const token = localStorage.getItem('token')
   try {
-    const res = await fetch(`${API}/thong-bao/chua-doc`, {
-      headers: { 'Authorization': `Bearer ${token}` }
+    const res = await fetch('http://localhost:8080/api/dat-san/lich-su', {
+      method: 'GET',
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': `Bearer ${token}`
+      }
     })
     if (!res.ok) return
     const data = await res.json()

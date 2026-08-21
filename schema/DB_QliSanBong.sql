@@ -564,3 +564,41 @@ CREATE TABLE DANH_GIA_HE_THONG (
     CONSTRAINT FK_DGHT_NGUOI_DUNG FOREIGN KEY (nguoi_dung_id) REFERENCES users(id),
     CONSTRAINT FK_DGHT_NGUOI_PHAN_HOI FOREIGN KEY (nguoi_phan_hoi_id) REFERENCES users(id)
 );
+
+-- 1. Tạo bảng Tickets (Quản lý các phiên hỗ trợ / phòng chat)
+CREATE TABLE Tickets (
+    id UNIQUEIDENTIFIER DEFAULT NEWID() PRIMARY KEY,
+    ma_ticket VARCHAR(20) NOT NULL UNIQUE,          -- Ví dụ: TK-1024, TK-1025
+    khach_hang_id UNIQUEIDENTIFIER NULL,           -- Khóa ngoại trỏ tới bảng NguoiDung/KhachHang (NULL nếu là khách vãng lai)
+    ten_khach_hang NVARCHAR(100) NULL,             -- Tên hiển thị (dùng khi chưa đăng nhập)
+    so_dien_thoai VARCHAR(15) NULL,                -- SĐT liên hệ (nếu cần)
+    nhan_vien_id UNIQUEIDENTIFIER NULL,            -- Khóa ngoại trỏ tới Admin/Staff nhận xử lý
+    chu_de NVARCHAR(255) DEFAULT N'Hỗ trợ đặt sân', -- Tiêu đề/chủ đề yêu cầu
+    trang_thai VARCHAR(20) NOT NULL DEFAULT 'CHUA_TIEP_NHAN', 
+    -- Các trạng thái: 'CHUA_TIEP_NHAN', 'DANG_XU_LY', 'DA_DONG'
+    
+    ngay_tao DATETIME2 DEFAULT GETDATE(),
+    ngay_cap_nhat DATETIME2 DEFAULT GETDATE()
+);
+
+-- 2. Tạo bảng Messages (Lưu trữ lịch sử tin nhắn)
+CREATE TABLE Messages (
+    id UNIQUEIDENTIFIER DEFAULT NEWID() PRIMARY KEY,
+    ticket_id UNIQUEIDENTIFIER NOT NULL,            -- Khóa ngoại kết nối với bảng Tickets
+    nguoi_gui_id UNIQUEIDENTIFIER NULL,            -- ID của người gửi (Admin/Staff/Khách hàng)
+    loai_nguoi_gui VARCHAR(20) NOT NULL,           -- Enum: 'KHACH_HANG', 'STAFF', 'ADMIN', 'BOT'
+    noi_dung NVARCHAR(MAX) NOT NULL,               -- Nội dung tin nhắn
+    thoi_gian_gui DATETIME2 DEFAULT GETDATE(),
+    
+    -- Các thuộc tính phục vụ chức năng SEEN (Đã xem)
+    da_doc BIT DEFAULT 0,                           -- 0: Chưa xem, 1: Đã xem
+    thoi_gian_doc DATETIME2 NULL,                  -- Thời điểm đối phương bấm vào xem
+    
+    -- Ràng buộc khóa ngoại với bảng Tickets
+    CONSTRAINT FK_Messages_Tickets FOREIGN KEY (ticket_id) 
+        REFERENCES Tickets(id) ON DELETE CASCADE
+);
+
+-- Tạo Index hỗ trợ truy vấn tin nhắn và danh sách Ticket nhanh hơn
+CREATE INDEX IX_Messages_TicketId ON Messages(ticket_id);
+CREATE INDEX IX_Tickets_TrangThai ON Tickets(trang_thai);

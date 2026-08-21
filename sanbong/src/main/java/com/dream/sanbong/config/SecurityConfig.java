@@ -35,6 +35,15 @@ public class SecurityConfig {
             // 1. Cho phép preflight request (OPTIONS)
             .requestMatchers(HttpMethod.OPTIONS, "/**").permitAll()
             
+            .requestMatchers("/ws-support/**").permitAll()
+            .requestMatchers(HttpMethod.GET, "/api/support/ticket/**").permitAll()
+            .requestMatchers(HttpMethod.POST, "/api/support/ticket/**").permitAll()
+            .requestMatchers(HttpMethod.PUT, "/api/support/ticket/**").permitAll()
+
+            .requestMatchers(HttpMethod.GET, "/api/support/admin/**").hasAnyRole("STAFF", "ADMIN")
+            .requestMatchers(HttpMethod.PUT, "/api/support/admin/**").hasAnyRole("STAFF", "ADMIN")
+
+
             .requestMatchers(HttpMethod.GET, "/api/danh-gia-he-thong/**").permitAll()
             .requestMatchers(HttpMethod.POST, "/api/danh-gia-he-thong/**").authenticated()
             .requestMatchers(HttpMethod.PUT, "/api/danh-gia-he-thong/**").hasAnyRole("STAFF", "ADMIN")

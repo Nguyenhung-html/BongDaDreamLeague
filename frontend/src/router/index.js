@@ -29,8 +29,8 @@ import QuanLyLichSan from '../views/Staff/QuanLyLichSan.vue'
 import XemHoaDonStaff from '../views/Staff/XemHoaDon.vue'
 import QuanLyBaiVietStaff from '../views/Staff/QuanLyBaiViet.vue'
 import PhanHoiTrangChu from '../views/Staff/PhanHoiTrangChu.vue'
-import HoTroKhachHang from '../views/Staff/HoTroKhachHang.vue'
 import ThongTinCaNhanStaff from '../views/Staff/ThongTinCaNhan.vue'
+import QuanLySupportStaff from '../views/Staff/QuanLySupport.vue'
 
 // =====================================================
 // ADMIN
@@ -50,6 +50,7 @@ import ThongTinCaNhanAdmin from '../views/Admin/ThongTinCaNhan.vue'
 import QuanLyDanhGiaHeThong from '../views/Admin/QuanLyDanhGiaHeThong.vue'
 import QuanLyBaiVietAdmin from '../views/Admin/QuanLyBaiViet.vue'
 import QuanLyVoucher from '../views/Admin/QuanLyVoucher.vue'
+import QuanLySupportAdmin from '../views/Admin/QuanLySupport.vue'
 
 // =====================================================
 // ROUTES
@@ -232,17 +233,6 @@ const routes = [
     }
   },
 
-  // Hỗ trợ khách hàng
-  {
-    path: '/staff/ho-tro',
-    name: 'HoTroKhachHang',
-    component: HoTroKhachHang,
-    meta: {
-      layout: 'staff',
-      requiresAuth: true,
-      roles: ['Staff']
-    }
-  },
 
   // Phản hồi trang chủ
   {
@@ -265,6 +255,17 @@ const routes = [
       layout: 'staff',
       requiresAuth: true,
       roles: ['Staff']
+    }
+  },
+
+  {
+    path: '/staff/quan-ly-support',
+    name: 'QuanLySupportStaff',
+    component: QuanLySupportStaff,
+    meta: { 
+      layout: 'staff',
+      requiresAuth: true,
+      roles: ['Staff'] // Chỉ cho phép Nhân viên và Admin truy cập
     }
   },
 
@@ -452,6 +453,17 @@ const routes = [
       layout: 'admin',
       requiresAuth: true,
       roles: ['Admin']
+    }
+  },
+
+  {
+    path: '/admin/quan-ly-support',
+    name: 'QuanLySupportAdmin',
+    component: QuanLySupportAdmin,
+    meta: { 
+      layout: 'admin',
+      requiresAuth: true,
+      roles: ['Admin'] // Chỉ cho phép Nhân viên và Admin truy cập
     }
   }
 ]

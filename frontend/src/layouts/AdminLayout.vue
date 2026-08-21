@@ -88,6 +88,18 @@
           </router-link>
         </div>
 
+        <div class="sidebar-section">
+          <p class="sidebar-section__label">KHÁCH HÀNG</p>
+          <router-link to="/admin/quan-ly-support" class="sidebar-nav-item" :class="{ active: isActive('/admin/quan-ly-support') }">
+            <span class="sidebar-nav-item__icon">
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="none">
+                <path d="M3 10a7 7 0 1 1 14 0 7 7 0 0 1-14 0Zm3 7l-3 3c-.3.3 0 .7.3.7h3.7l4 4c.3.3.7 0 .7-.3v-4.4" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" />
+              </svg>
+            </span>
+            <span class="sidebar-nav-item__label">Hỗ trợ khách hàng</span>
+          </router-link>
+        </div>
+
         <div class="sidebar__group">
           <p class="sidebar__group-title">Tài khoản</p>
           <router-link to="/admin/ca-nhan" class="sidebar__item" :class="{ active: isActive('/admin/ca-nhan') }">
@@ -99,6 +111,8 @@
             Quay lại trang chủ
           </router-link>
         </div>
+
+        
       </nav>
 
       <div class="sidebar__user">

@@ -6,6 +6,8 @@
       <main>
         <router-view />
       </main>
+      <!-- Chatbox Widget chỉ hiển thị ở giao diện Khách hàng -->
+      <ChatboxWidget />
       <Footer />
     </template>
 
@@ -32,6 +34,7 @@ import Header from './components/Header.vue'
 import Footer from './components/Footer.vue'
 import AdminLayout from './layouts/AdminLayout.vue'
 import StaffLayout from './layouts/StaffLayout.vue'
+import ChatboxWidget from './components/ChatboxWidget.vue' // Import Widget Chatbox
 
 const route = useRoute()
 </script>

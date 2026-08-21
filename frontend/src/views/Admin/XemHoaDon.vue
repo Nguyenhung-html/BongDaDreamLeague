@@ -108,14 +108,14 @@
             <div id="invoice-print-area" class="invoice-box">
                 <div class="invoice-header">
                     <h2>BÓNG ĐÁ DREAM LEAGUE</h2>
-                    <p>Địa chỉ: Số 12 Dịch Vọng Hậu, Cầu Giấy, Hà Nội</p>
-                    <p>Hotline: 0988.888.888</p>
+                    <p>Địa chỉ: Hẻm 104 Tân Sơn, Tân Sơn, Hồ Chí Minh</p>
+                    <p>Hotline: 0343 831 316</p>
                 </div>
-                
+
                 <hr class="invoice-divider" />
-                
+
                 <h3 style="text-align: center; margin: 15px 0;">HÓA ĐƠN THANH TOÁN</h3>
-                
+
                 <div class="invoice-info">
                     <p><b>Mã hóa đơn:</b> {{ chung.maHoaDon }}</p>
                     <p><b>Khách hàng:</b> {{ chung.tenKhach }}</p>
@@ -187,9 +187,8 @@
 import axios from "axios"
 import { ref, computed, onMounted, watch } from "vue"
 
+// Backend chỉ có 1 endpoint đọc hoá đơn dùng chung cho cả Admin và Staff
 const API_BASE = "http://localhost:8080/api/admin/hoa-don"
-// Backend khu vực admin chỉ đọc hoá đơn; việc thu nốt tiền còn lại dùng
-// endpoint thu tại quầy của staff.
 const API_THU_TIEN = "http://localhost:8080/api/staff/thanh-toan/thanh-toan-cuoi"
 
 function authHeader() {

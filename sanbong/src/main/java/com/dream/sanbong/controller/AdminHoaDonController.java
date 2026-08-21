@@ -12,8 +12,9 @@ import java.util.Map;
 import java.util.UUID;
 
 /**
- * [API] [Admin] Quản lý dữ liệu hoá đơn
- * Đường dẫn gốc: /api/admin/hoa-don — toàn bộ yêu cầu quyền ADMIN.
+ * [API] [Admin + Staff] Quản lý dữ liệu hoá đơn
+ * Đường dẫn gốc: /api/admin/hoa-don — cho phép cả ADMIN và STAFF đọc dữ liệu
+ * (Staff cần xem/in hoá đơn tại quầy, không chỉ Admin mới xem được).
  * Mỗi đơn đặt sân tương ứng một hoá đơn, dựng từ tiền sân + gia hạn + dịch vụ.
  */
 @RestController
@@ -42,7 +43,7 @@ public class AdminHoaDonController {
             @RequestParam(required = false) String tuKhoa,
             HttpServletRequest request) {
         try {
-            quyenTruyCap.batBuocAdmin(request);
+            quyenTruyCap.batBuocStaffHoacAdmin(request);
             return ResponseEntity.ok(hoaDonService.layDanhSach(
                     tuNgay, denNgay, trangThaiThanhToan, baoGomDaHuy, tuKhoa));
         } catch (RuntimeException e) {
@@ -61,7 +62,7 @@ public class AdminHoaDonController {
             @RequestParam(required = false, defaultValue = "false") boolean baoGomDaHuy,
             HttpServletRequest request) {
         try {
-            quyenTruyCap.batBuocAdmin(request);
+            quyenTruyCap.batBuocStaffHoacAdmin(request);
             return ResponseEntity.ok(hoaDonService.layThongKe(tuNgay, denNgay, baoGomDaHuy));
         } catch (RuntimeException e) {
             return ResponseEntity.badRequest().body(Map.of("message", e.getMessage()));
@@ -75,7 +76,7 @@ public class AdminHoaDonController {
     @GetMapping("/{datSanId}")
     public ResponseEntity<?> layChiTiet(@PathVariable UUID datSanId, HttpServletRequest request) {
         try {
-            quyenTruyCap.batBuocAdmin(request);
+            quyenTruyCap.batBuocStaffHoacAdmin(request);
             return ResponseEntity.ok(hoaDonService.layChiTiet(datSanId));
         } catch (RuntimeException e) {
             return ResponseEntity.badRequest().body(Map.of("message", e.getMessage()));

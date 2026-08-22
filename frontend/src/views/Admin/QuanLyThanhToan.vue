@@ -159,7 +159,7 @@
 import axios from "axios";
 import { ref, onMounted, watch } from "vue";
 
-const API_BASE = "http://localhost:8080/api/admin/thanh-toan";
+const API_BASE = "/api/admin/thanh-toan";
 
 function authHeader() {
   return {

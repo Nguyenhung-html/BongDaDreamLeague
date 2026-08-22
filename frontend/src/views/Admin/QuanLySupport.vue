@@ -159,7 +159,7 @@ const currentRole = route.meta?.roles?.includes('Admin') ? 'ADMIN' : 'STAFF'
 // 1. Fetch danh sách Ticket
 const fetchTickets = async () => {
   try {
-    const res = await fetch('http://localhost:8080/api/support/admin/tickets', {
+    const res = await fetch('/api/support/admin/tickets', {
       headers: { 
         'Content-Type': 'application/json',
         'Authorization': `Bearer ${token}` 
@@ -180,7 +180,7 @@ const selectTicket = async (t) => {
   
   try {
     // Tải tin nhắn
-    const res = await fetch(`http://localhost:8080/api/support/ticket/${t.id}/messages`, {
+    const res = await fetch(`/api/support/ticket/${t.id}/messages`, {
       headers: { 'Authorization': `Bearer ${token}` }
     })
     if (res.ok) {
@@ -188,7 +188,7 @@ const selectTicket = async (t) => {
     }
 
     // Đánh dấu đã đọc
-    await fetch(`http://localhost:8080/api/support/ticket/${t.id}/read?userId=${currentUserId}`, {
+    await fetch(`/api/support/ticket/${t.id}/read?userId=${currentUserId}`, {
       method: 'PUT',
       headers: { 'Authorization': `Bearer ${token}` }
     })
@@ -246,7 +246,7 @@ const sendAdminMsg = async () => {
   }
 
   try {
-    await fetch(`http://localhost:8080/api/support/ticket/${selectedTicket.value.id}/messages`, {
+    await fetch(`/api/support/ticket/${selectedTicket.value.id}/messages`, {
       method: 'POST',
       headers: { 
         'Content-Type': 'application/json',
@@ -264,7 +264,7 @@ const sendAdminMsg = async () => {
 const tiepNhan = async () => {
   if (!selectedTicket.value) return
   try {
-    const res = await fetch(`http://localhost:8080/api/support/admin/ticket/${selectedTicket.value.id}/tiep-nhan?staffId=${currentUserId}`, {
+    const res = await fetch(`/api/support/admin/ticket/${selectedTicket.value.id}/tiep-nhan?staffId=${currentUserId}`, {
       method: 'PUT',
       headers: { 'Authorization': `Bearer ${token}` }
     })
@@ -281,7 +281,7 @@ const tiepNhan = async () => {
 const dongTicket = async () => {
   if (!selectedTicket.value) return
   try {
-    const res = await fetch(`http://localhost:8080/api/support/admin/ticket/${selectedTicket.value.id}/dong`, {
+    const res = await fetch(`/api/support/admin/ticket/${selectedTicket.value.id}/dong`, {
       method: 'PUT',
       headers: { 'Authorization': `Bearer ${token}` }
     })

@@ -236,11 +236,11 @@
 import axios from "axios"
 import { ref, onMounted, watch } from "vue"
 
-const API_BASE = "http://localhost:8080/api/admin/dat-san"
-const API_SAN = "http://localhost:8080/api/san-bong"
+const API_BASE = "/api/admin/dat-san"
+const API_SAN = "/api/san-bong"
 // Backend chưa có API tạo đơn ở khu vực admin, nên đặt hộ tại quầy dùng chung
 // endpoint walk-in của staff.
-const API_DAT_HO = "http://localhost:8080/api/staff/dat-san"
+const API_DAT_HO = "/api/staff/dat-san"
 
 function authHeader() {
     return {

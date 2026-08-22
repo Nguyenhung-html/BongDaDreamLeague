@@ -188,8 +188,8 @@ import axios from "axios"
 import { ref, computed, onMounted, watch } from "vue"
 
 // Backend chỉ có 1 endpoint đọc hoá đơn dùng chung cho cả Admin và Staff
-const API_BASE = "http://localhost:8080/api/admin/hoa-don"
-const API_THU_TIEN = "http://localhost:8080/api/staff/thanh-toan/thanh-toan-cuoi"
+const API_BASE = "/api/admin/hoa-don"
+const API_THU_TIEN = "/api/staff/thanh-toan/thanh-toan-cuoi"
 
 function authHeader() {
     return {

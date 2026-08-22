@@ -153,7 +153,7 @@
 import axios from "axios"
 import { ref, computed, onMounted } from "vue"
 
-const API_BASE = "http://localhost:8080/api/admin/thong-bao"
+const API_BASE = "/api/admin/thong-bao"
 
 const loading = ref(false)
 const thongBaoList = ref([])

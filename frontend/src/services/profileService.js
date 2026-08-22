@@ -1,7 +1,7 @@
 // src/services/profileService.js
 // Service quản lý API Thông tin cá nhân (Profile) & Logic Validation dùng chung
 
-const API_BASE = 'http://localhost:8080/api'
+const API_BASE = '/api'
 
 /**
  * Lấy endpoint API tương ứng theo vai trò

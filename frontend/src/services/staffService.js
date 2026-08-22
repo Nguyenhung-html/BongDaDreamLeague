@@ -1,7 +1,7 @@
 // src/services/staffService.js
 // Tất cả API calls dành cho nhân viên Staff
 
-const BASE_URL = 'http://localhost:8080/api/staff'
+const BASE_URL = '/api/staff'
 
 function getAuthHeader() {
   const token = localStorage.getItem('token')

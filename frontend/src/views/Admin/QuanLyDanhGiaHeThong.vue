@@ -193,7 +193,7 @@
 <script setup>
 import { ref, computed, onMounted } from 'vue'
 
-const BASE_URL = 'http://localhost:8080/api/danh-gia-he-thong'
+const BASE_URL = '/api/danh-gia-he-thong'
 const danhGiaList = ref([])
 const showModal = ref(false)
 const selectedItem = ref(null)

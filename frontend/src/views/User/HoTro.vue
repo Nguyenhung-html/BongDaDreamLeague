@@ -1,7 +1,18 @@
 <template>
   <div class="ho-tro-page">
+
+    <!-- ===== LỚP NỀN ẨN DỤ (đồng bộ trang chủ) ===== -->
+    <div class="ho-tro-page__ambient" aria-hidden="true">
+      <div class="floodlight floodlight--l"></div>
+      <div class="floodlight floodlight--r"></div>
+      <div class="motes">
+        <span v-for="n in 12" :key="n" class="mote" :style="{ '--i': n }"></span>
+      </div>
+    </div>
+
     <div class="container">
       <div class="page-header">
+        <span class="eyebrow">⚽ DreamLeague</span>
         <h1>Trung tâm hỗ trợ</h1>
         <p>Mọi thông tin bạn cần khi đặt sân tại DreamLeague</p>
       </div>
@@ -144,14 +155,48 @@ onMounted(() => {
 </script>
 
 <style scoped>
+/* ===== TOKENS (đồng bộ trang chủ / danh sách sân / lịch sử / voucher / chi tiết) ===== */
 .ho-tro-page {
-  background: #f8fafc;
+  --night-950: #050b08;
+  --night-800: #0a1f13;
+  --night-700: #123321;
+  --turf-500: #23935a;
+  --turf-700: #146239;
+  --lime-400: #b6ff3c;
+  --lime-300: #d3ff8f;
+  --amber-400: #ffb020;
+  --crimson-500: #ff4757;
+  --chalk-050: #f7fbf4;
+  --chalk-200: #e3ecdf;
+  --font-display: 'Oswald', 'Manrope', sans-serif;
+  --font-body: 'Manrope', sans-serif;
+  --font-mono: 'Space Mono', monospace;
+
+  position: relative;
+  background: var(--night-950);
+  color: var(--chalk-050);
+  font-family: var(--font-body);
   min-height: calc(100vh - 76px);
-  padding: 40px 0 80px;
+  padding: 44px 0 80px;
+  overflow: hidden;
 }
+.container { max-width: 1180px; margin: 0 auto; padding: 0 24px; position: relative; z-index: 1; }
+
+/* ===== LỚP NỀN ẨN DỤ ===== */
+.ho-tro-page__ambient { position: fixed; inset: 0; z-index: 0; pointer-events: none; }
+.floodlight { position: absolute; top: -12%; width: 55vh; height: 145vh; background: conic-gradient(from 90deg at 50% 0%, transparent 42%, rgba(255,244,214,.06) 50%, transparent 58%); mix-blend-mode: screen; }
+.floodlight--l { left: -14%; animation: sweep 12s ease-in-out infinite alternate; }
+.floodlight--r { right: -14%; animation: sweep 12s ease-in-out infinite alternate-reverse; }
+@keyframes sweep { 0% { transform: rotate(-10deg); } 100% { transform: rotate(10deg); } }
+.motes { position: absolute; inset: 0; }
+.mote { position: absolute; bottom: -10px; left: calc((var(--i) * 8%) + 1%); width: 3px; height: 3px; border-radius: 50%; background: var(--lime-300); opacity: 0; animation: rise 10s linear infinite; animation-delay: calc(var(--i) * -0.7s); }
+@keyframes rise { 0% { transform: translateY(0) scale(.6); opacity: 0; } 10% { opacity: .45; } 90% { opacity: .1; } 100% { transform: translateY(-100vh) scale(1.1); opacity: 0; } }
+
+/* ===== HEADER ===== */
 .page-header { text-align: center; margin-bottom: 40px; }
-.page-header h1 { font-size: 32px; font-weight: 800; color: var(--navy-900, #0d1f3c); }
-.page-header p { color: #64748b; margin-top: 6px; }
+.eyebrow { display: inline-block; font-family: var(--font-mono); font-size: 12px; letter-spacing: .16em; text-transform: uppercase; color: var(--lime-300); }
+.page-header h1 { font-family: var(--font-display); font-size: 32px; font-weight: 600; color: var(--chalk-050); margin-top: 10px; }
+.page-header p { color: var(--chalk-200); opacity: .7; margin-top: 6px; font-size: 14.5px; }
 
 .ho-tro-layout {
   display: grid;
@@ -167,61 +212,68 @@ onMounted(() => {
   display: flex;
   flex-direction: column;
   gap: 4px;
-  background: white;
-  border: 1px solid #e2e8f0;
-  border-radius: 14px;
+  background: rgba(247,251,244,.03);
+  border: 1px solid rgba(247,251,244,.09);
+  border-radius: 16px;
   padding: 12px;
 }
 .ho-tro-nav__item {
   padding: 10px 12px;
-  border-radius: 8px;
+  border-radius: 10px;
   font-size: 13.5px;
   font-weight: 600;
-  color: #475569;
-  transition: background .15s, color .15s;
+  color: var(--chalk-200);
+  opacity: .75;
+  transition: background .15s, color .15s, opacity .15s;
 }
-.ho-tro-nav__item:hover { background: #f1f5f9; }
-.ho-tro-nav__item.active { background: var(--green-50, #f0fdf4); color: var(--green-700, #15803d); }
+.ho-tro-nav__item:hover { background: rgba(247,251,244,.05); opacity: 1; }
+.ho-tro-nav__item.active { background: rgba(182,255,60,.1); color: var(--lime-300); opacity: 1; }
 
 /* Nội dung */
 .ho-tro-content { display: flex; flex-direction: column; gap: 32px; }
 .ho-tro-section {
-  background: white;
-  border: 1px solid #e2e8f0;
-  border-radius: 16px;
+  background: rgba(247,251,244,.03);
+  border: 1px solid rgba(247,251,244,.09);
+  border-radius: 18px;
   padding: 28px 32px;
   scroll-margin-top: 90px;
+  transition: border-color .2s;
 }
-.ho-tro-section h2 { font-size: 20px; font-weight: 800; color: var(--navy-900, #0d1f3c); margin-bottom: 20px; }
+.ho-tro-section:hover { border-color: rgba(182,255,60,.2); }
+.ho-tro-section h2 { font-family: var(--font-display); font-size: 20px; font-weight: 600; color: var(--chalk-050); margin-bottom: 22px; }
 
 /* Hướng dẫn - step list */
 .step-list { display: flex; flex-direction: column; gap: 18px; }
 .step-item { display: flex; gap: 16px; }
 .step-num {
   width: 32px; height: 32px; border-radius: 50%;
-  background: var(--green-600, #16a34a); color: white;
+  background: linear-gradient(135deg, var(--turf-500), var(--turf-700)); color: var(--chalk-050);
   display: flex; align-items: center; justify-content: center;
-  font-weight: 700; flex-shrink: 0;
+  font-weight: 700; font-family: var(--font-mono); flex-shrink: 0;
 }
-.step-item h3 { font-size: 14.5px; font-weight: 700; color: var(--navy-900, #0d1f3c); margin-bottom: 4px; }
-.step-item p { font-size: 13.5px; color: #64748b; line-height: 1.6; }
+.step-item h3 { font-size: 14.5px; font-weight: 700; color: var(--chalk-050); margin-bottom: 4px; }
+.step-item p { font-size: 13.5px; color: var(--chalk-200); opacity: .75; line-height: 1.6; }
 
 /* FAQ */
 .faq-list { display: flex; flex-direction: column; gap: 10px; }
 .faq-item {
-  border: 1px solid #e2e8f0; border-radius: 10px; padding: 14px 16px;
+  border: 1px solid rgba(247,251,244,.1); border-radius: 12px; padding: 14px 16px;
+  transition: border-color .15s;
 }
-.faq-item summary { font-size: 14px; font-weight: 600; color: var(--navy-900, #0d1f3c); cursor: pointer; }
-.faq-item p { font-size: 13.5px; color: #64748b; margin-top: 10px; line-height: 1.6; }
+.faq-item:hover { border-color: rgba(182,255,60,.25); }
+.faq-item summary { font-size: 14px; font-weight: 600; color: var(--chalk-050); cursor: pointer; }
+.faq-item summary::marker { color: var(--lime-300); }
+.faq-item p { font-size: 13.5px; color: var(--chalk-200); opacity: .75; margin-top: 10px; line-height: 1.6; }
 
 /* Chính sách */
-.policy-list { display: flex; flex-direction: column; gap: 10px; list-style: none; padding: 0; }
-.policy-list li { font-size: 14px; color: #334155; line-height: 1.5; }
+.policy-list { display: flex; flex-direction: column; gap: 12px; list-style: none; padding: 0; }
+.policy-list li { font-size: 14px; color: var(--chalk-200); opacity: .85; line-height: 1.5; }
+.policy-list strong { color: var(--lime-300); }
 
 /* Điều khoản */
-.terms-content p { font-size: 14px; color: #334155; margin-bottom: 14px; }
+.terms-content p { font-size: 14px; color: var(--chalk-200); opacity: .85; margin-bottom: 14px; }
 .terms-content ol { padding-left: 20px; display: flex; flex-direction: column; gap: 10px; }
-.terms-content li { font-size: 13.5px; color: #475569; line-height: 1.6; }
+.terms-content li { font-size: 13.5px; color: var(--chalk-200); opacity: .75; line-height: 1.6; }
 
 @media (max-width: 860px) {
   .ho-tro-layout { grid-template-columns: 1fr; }

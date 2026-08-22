@@ -216,7 +216,7 @@
 import { ref, reactive, onMounted } from 'vue'
 
 // URL gốc của API bài viết
-const API_BASE_URL = 'http://localhost:8080/api/posts'
+const API_BASE_URL = '/api/posts'
 
 const posts = ref([])
 const loading = ref(false)

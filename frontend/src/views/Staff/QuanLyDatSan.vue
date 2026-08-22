@@ -255,7 +255,7 @@ import { ref, computed, onMounted } from 'vue'
 import staffService from '@/services/staffService'
 import sanService from '@/services/sanService'
 
-const API = 'http://localhost:8080/api'
+const API = '/api'
 
 const danhSach = ref([])
 const danhSachSan = ref([])
@@ -283,7 +283,7 @@ const gioOptions = ['06:00','07:00','08:00','09:00','10:00','11:00','12:00','13:
 onMounted(async () => {
   await fetchDanhSach()
   try {
-    const res = await fetch('http://localhost:8080/api/san-bong', { headers: { 'Authorization': `Bearer ${localStorage.getItem('token')}` } })
+    const res = await fetch('/api/san-bong', { headers: { 'Authorization': `Bearer ${localStorage.getItem('token')}` } })
     danhSachSan.value = await res.json()
   } catch {}
 })

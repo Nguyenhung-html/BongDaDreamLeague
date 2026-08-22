@@ -162,7 +162,7 @@
 <script setup>
 import { ref, reactive, computed, onMounted } from 'vue'
 
-const API_BASE_URL = 'http://localhost:8080/api/posts'
+const API_BASE_URL = '/api/posts'
 
 const posts = ref([])
 const loading = ref(false)

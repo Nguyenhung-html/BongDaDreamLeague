@@ -278,7 +278,7 @@ async function loadEmployees() {
     loading.value = true
     try {
         const res = await axios.get(
-            "http://localhost:8080/api/admin/nhan-vien",
+            "/api/admin/nhan-vien",
             {
                 headers: {
                     Authorization: `Bearer ${localStorage.getItem("token")}`
@@ -340,7 +340,7 @@ async function saveEmployee() {
         if (isEdit.value) {
 
             await axios.put(
-                `http://localhost:8080/api/admin/nhan-vien/${form.value.id}`,
+                `/api/admin/nhan-vien/${form.value.id}`,
                 {
                     hoTen: form.value.hoTen,
                     email: form.value.email,
@@ -358,7 +358,7 @@ async function saveEmployee() {
         } else {
 
             await axios.post(
-                "http://localhost:8080/api/admin/nhan-vien",
+                "/api/admin/nhan-vien",
                 {
                     hoTen: form.value.hoTen,
                     email: form.value.email,
@@ -378,7 +378,7 @@ async function saveEmployee() {
 if (form.value.trangThai) {
 
     await axios.put(
-        `http://localhost:8080/api/admin/nhan-vien/${form.value.id}/mo-khoa`,
+        `/api/admin/nhan-vien/${form.value.id}/mo-khoa`,
         {},
         {
             headers: {
@@ -390,7 +390,7 @@ if (form.value.trangThai) {
 } else {
 
     await axios.put(
-        `http://localhost:8080/api/admin/nhan-vien/${form.value.id}/khoa`,
+        `/api/admin/nhan-vien/${form.value.id}/khoa`,
         {},
         {
             headers: {
@@ -430,7 +430,7 @@ async function deleteEmployee() {
     try {
 
         await axios.delete(
-            `http://localhost:8080/api/admin/nhan-vien/${currentEmployee.value.id}`,
+            `/api/admin/nhan-vien/${currentEmployee.value.id}`,
             {
                 headers: {
                     Authorization: `Bearer ${localStorage.getItem("token")}`

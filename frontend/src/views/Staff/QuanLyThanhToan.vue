@@ -192,7 +192,7 @@
 import { ref, computed, onMounted } from 'vue'
 import staffService from '@/services/staffService'
 
-const API = 'http://localhost:8080/api'
+const API = '/api'
 
 const danhSach = ref([])
 const loading = ref(false)

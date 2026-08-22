@@ -143,7 +143,7 @@ const dsSanBong = ref([]) // Lấy từ API sân bóng
 const reviews = ref([])   // Lấy từ API đánh giá của sân được chọn
 
 // Cấu hình URL Backend (Bạn thay đổi Port nếu khác 8080 nhé)
-const API_BASE_URL = "http://localhost:8080/api"
+const API_BASE_URL = "/api"
 
 // Hàm lấy Token đính kèm vào Header để Spring Security kiểm tra quyền ADMIN
 const getAuthConfig = () => {

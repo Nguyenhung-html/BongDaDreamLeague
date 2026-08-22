@@ -263,7 +263,7 @@
 import { ref, computed, onMounted } from "vue"
 import axios from "axios"
 
-const API = "http://localhost:8080/api/admin/san-bong"
+const API = "/api/admin/san-bong"
 const token = localStorage.getItem("token")
 
 const config = {

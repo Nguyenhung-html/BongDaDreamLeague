@@ -3,7 +3,7 @@
 // TRƯỚC ĐÂY file này trả về dữ liệu giả (Promise.resolve({ user: null })) nên
 // bất kỳ chỗ nào gọi vào đều tưởng đăng nhập thành công dù chưa hề gọi server.
 
-const BASE_URL = 'http://localhost:8080/api/xac-thuc'
+const BASE_URL = '/api/xac-thuc'
 
 /** Chuẩn hoá vai trò từ backend (USER/STAFF/ADMIN) sang dạng router dùng (User/Staff/Admin) */
 export function chuanHoaVaiTro(vaiTro) {

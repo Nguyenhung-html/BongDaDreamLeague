@@ -1,7 +1,7 @@
 // src/services/thongKeService.js
 // API calls thống kê cho Admin Dashboard & Thống kê doanh thu
 
-const BASE_URL = 'http://localhost:8080/api/staff/thong-ke'
+const BASE_URL = '/api/staff/thong-ke'
 
 function getAuthHeader() {
   const token = localStorage.getItem('token')

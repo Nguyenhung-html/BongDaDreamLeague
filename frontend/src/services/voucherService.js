@@ -1,4 +1,4 @@
-const API='http://localhost:8080/api/voucher'
+const API='/api/voucher'
 async function read(res){const t=await res.text();let d={};try{d=t?JSON.parse(t):{}}catch{d={message:t}}if(!res.ok)throw new Error(d.message||'Yêu cầu thất bại!');return d}
 const token=()=>localStorage.getItem('token')||''
 export default {

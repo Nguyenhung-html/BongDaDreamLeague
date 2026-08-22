@@ -110,7 +110,7 @@
 <script setup>
 import { ref, computed, onMounted } from 'vue'
 
-const API = 'http://localhost:8080/api'
+const API = '/api'
 const anhMacDinh = 'https://images.unsplash.com/photo-1544145945-f90425340c7e?w=200'
 
 const dangTai = ref(true)

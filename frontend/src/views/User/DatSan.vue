@@ -1,5 +1,11 @@
 <template>
   <div class="booking-page">
+    <div class="booking-page__ambient" aria-hidden="true">
+      <div class="floodlight floodlight--l"></div>
+      <div class="floodlight floodlight--r"></div>
+      <div class="motes"><span v-for="n in 14" :key="n" class="mote" :style="{ '--i': n }"></span></div>
+    </div>
+
     <div class="container">
       <!-- Loading -->
       <div v-if="dangTai" class="loading-state">
@@ -19,6 +25,7 @@
             <svg width="16" height="16" viewBox="0 0 24 24" fill="none"><path d="M19 12H5M5 12l7 7M5 12l7-7" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg>
             Quay lại
           </button>
+          <span class="eyebrow">Xác nhận lịch đá</span>
           <h1>Đặt sân bóng</h1>
           <p>Chọn thời gian và hoàn tất đặt sân nhanh chóng</p>
         </div>
@@ -28,6 +35,7 @@
           <div class="field-info">
             <div class="field-img-wrap">
               <img :src="sanBong.hinhAnh || 'https://images.unsplash.com/photo-1574629810360-7efbbe195018'" alt="Sân bóng" />
+              <div class="field-img-overlay"></div>
               <span class="badge-loai" :class="sanBong.loaiSan === 5 ? 'badge-blue' : 'badge-green'">
                 Sân {{ sanBong.loaiSan }} người
               </span>
@@ -35,11 +43,11 @@
             <div class="field-content">
               <h2>{{ sanBong.tenSan }}</h2>
               <div class="field-detail">
-                <svg width="14" height="14" viewBox="0 0 24 24" fill="none"><path d="M12 22s7-7.58 7-12.5A7 7 0 1 0 5 9.5C5 14.42 12 22 12 22Z" stroke="var(--green-600)" stroke-width="2"/></svg>
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none"><path d="M12 22s7-7.58 7-12.5A7 7 0 1 0 5 9.5C5 14.42 12 22 12 22Z" stroke="var(--lime-400)" stroke-width="2"/></svg>
                 {{ sanBong.diaChi }}
               </div>
               <div class="field-detail">
-                <svg width="14" height="14" viewBox="0 0 24 24" fill="none"><circle cx="12" cy="12" r="9" stroke="var(--green-600)" stroke-width="2"/><path d="M12 7v5l3 2" stroke="var(--green-600)" stroke-width="2" stroke-linecap="round"/></svg>
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none"><circle cx="12" cy="12" r="9" stroke="var(--lime-400)" stroke-width="2"/><path d="M12 7v5l3 2" stroke="var(--lime-400)" stroke-width="2" stroke-linecap="round"/></svg>
                 Hoạt động 06:00 – 22:00 hàng ngày
               </div>
               <div class="field-detail mo-ta">{{ sanBong.moTa }}</div>
@@ -86,129 +94,135 @@
 
           <!-- Form đặt sân -->
           <div class="booking-card">
-            <!-- Bước 1: Thông tin -->
-            <div v-if="buoc === 1">
-              <h3>Thông tin đặt sân</h3>
-              <div class="form-group">
-                <label>Họ và tên <span class="req">*</span></label>
-                <input v-model="form.hoTenDat" type="text" placeholder="Nhập họ và tên người đặt" />
-              </div>
-              <div class="form-group">
-                <label>Số điện thoại <span class="req">*</span></label>
-                <input v-model="form.soDienThoai" type="tel" placeholder="Nhập số điện thoại" />
-              </div>
-              <div class="voucher-box">
-                <label>Mã voucher</label>
-                <div class="voucher-row"><input v-model="voucherMa" placeholder="Nhập mã giảm giá..."/><button type="button" @click="kiemTraVoucher" :disabled="dangKiemVoucher">{{dangKiemVoucher?'Đang kiểm tra...':'Áp dụng mã'}}</button></div>
-                <p v-if="voucherThongBao" :class="voucherHopLe?'voucher-ok':'voucher-error'">{{voucherThongBao}}</p>
-                <p v-if="voucherHopLe" class="voucher-note">Giảm {{formatTien(voucherGiam)}}đ • Còn thanh toán {{formatTien(giaSauVoucher)}}đ</p>
-              </div>
+            <Transition name="step-fade" mode="out-in">
+              <div :key="buoc">
 
-              <div class="form-group">
-                <label>Ngày đá <span class="req">*</span></label>
-                <input v-model="form.ngayDa" type="date" :min="ngayToiThieu" />
-              </div>
-              <div class="form-group">
-                <label>Khung giờ <span class="req">*</span></label>
-                <div class="khung-gio-da-chon" :class="{ 'chua-chon': !khungGioChon }">
-                  {{ khungGioChon
-                    ? `${khungGioChon.gioBatDau} – ${khungGioChon.gioKetThuc} | ${formatTien(khungGioChon.giaTien)}đ`
-                    : 'Vui lòng chọn khung giờ ở bảng giá bên trái' }}
-                </div>
-              </div>
+                <!-- Bước 1: Thông tin -->
+                <div v-if="buoc === 1">
+                  <h3>Thông tin đặt sân</h3>
+                  <div class="form-group">
+                    <label>Họ và tên <span class="req">*</span></label>
+                    <input v-model="form.hoTenDat" type="text" placeholder="Nhập họ và tên người đặt" />
+                  </div>
+                  <div class="form-group">
+                    <label>Số điện thoại <span class="req">*</span></label>
+                    <input v-model="form.soDienThoai" type="tel" placeholder="Nhập số điện thoại" />
+                  </div>
+                  <div class="voucher-box">
+                    <label>Mã voucher</label>
+                    <div class="voucher-row"><input v-model="voucherMa" placeholder="Nhập mã giảm giá..."/><button type="button" @click="kiemTraVoucher" :disabled="dangKiemVoucher">{{dangKiemVoucher?'Đang kiểm tra...':'Áp dụng mã'}}</button></div>
+                    <p v-if="voucherThongBao" :class="voucherHopLe?'voucher-ok':'voucher-error'">{{voucherThongBao}}</p>
+                    <p v-if="voucherHopLe" class="voucher-note">Giảm {{formatTien(voucherGiam)}}đ • Còn thanh toán {{formatTien(giaSauVoucher)}}đ</p>
+                  </div>
 
-              <!-- Tóm tắt giá -->
-              <div class="summary" v-if="khungGioChon">
-                <div class="summary-row">
-                  <span>Giá thuê</span>
-                  <strong>{{ formatTien(khungGioChon.giaTien) }} VNĐ</strong>
-                </div>
-                <div v-if="voucherHopLe && voucherGiam > 0" class="summary-row">
-                  <span>Giảm voucher</span>
-                  <strong class="text-green">-{{ formatTien(voucherGiam) }} VNĐ</strong>
-                </div>
-                <div class="summary-row">
-                  <span>Tiền cọc (50%)</span>
-                  <strong class="text-green">{{ formatTien(tienCoc) }} VNĐ</strong>
-                </div>
-                <div class="summary-row total">
-                  <span>Thanh toán ngay</span>
-                  <strong>{{ formatTien(tienCoc) }} VNĐ</strong>
-                </div>
-              </div>
-              <p v-if="loiForm" class="loi-form">{{ loiForm }}</p>
-              <div class="btn-group">
-                <select v-model="form.phuongThuc" class="select-tt">
-                  <option value="QR">💳 Thanh toán QR (Online)</option>
-                  <option value="TIEN_MAT">💵 Trả tiền mặt tại sân</option>
-                </select>
-                <button class="btn-book" @click="buocTiep" :disabled="dangGui">
-                  {{ form.phuongThuc === 'QR' ? 'Tiếp tục – Quét mã QR thanh toán' : 'Xác nhận đặt sân' }}
-                </button>
-              </div>
-            </div>
+                  <div class="form-group">
+                    <label>Ngày đá <span class="req">*</span></label>
+                    <input v-model="form.ngayDa" type="date" :min="ngayToiThieu" />
+                  </div>
+                  <div class="form-group">
+                    <label>Khung giờ <span class="req">*</span></label>
+                    <div class="khung-gio-da-chon" :class="{ 'chua-chon': !khungGioChon }">
+                      {{ khungGioChon
+                        ? `${khungGioChon.gioBatDau} – ${khungGioChon.gioKetThuc} | ${formatTien(khungGioChon.giaTien)}đ`
+                        : 'Vui lòng chọn khung giờ ở bảng giá bên trái' }}
+                    </div>
+                  </div>
 
-            <!-- Bước 2: QR thanh toán + Countdown -->
-            <div v-else-if="buoc === 2" class="qr-step">
-              <div class="countdown-wrapper">
-                <CountdownTimer
-                  v-if="expireAtTimestamp"
-                  ref="countdownRef"
-                  :expireAt="expireAtTimestamp"
-                  :allow-dismiss="false"
-                  @expired="dungKiemTraThanhToan"
-                  @redirect="handleCountdownExpired"
-                />
-              </div>
+                  <!-- Tóm tắt giá -->
+                  <div class="summary" v-if="khungGioChon">
+                    <div class="summary-row">
+                      <span>Giá thuê</span>
+                      <strong>{{ formatTien(khungGioChon.giaTien) }} VNĐ</strong>
+                    </div>
+                    <div v-if="voucherHopLe && voucherGiam > 0" class="summary-row">
+                      <span>Giảm voucher</span>
+                      <strong class="text-lime">-{{ formatTien(voucherGiam) }} VNĐ</strong>
+                    </div>
+                    <div class="summary-row">
+                      <span>Tiền cọc (50%)</span>
+                      <strong class="text-lime">{{ formatTien(tienCoc) }} VNĐ</strong>
+                    </div>
+                    <div class="summary-row total">
+                      <span>Thanh toán ngay</span>
+                      <strong>{{ formatTien(tienCoc) }} VNĐ</strong>
+                    </div>
+                  </div>
+                  <p v-if="loiForm" class="loi-form">{{ loiForm }}</p>
+                  <div class="btn-group">
+                    <select v-model="form.phuongThuc" class="select-tt">
+                      <option value="QR">💳 Thanh toán QR (Online)</option>
+                      <option value="TIEN_MAT">💵 Trả tiền mặt tại sân</option>
+                    </select>
+                    <button class="btn-book" @click="buocTiep" :disabled="dangGui">
+                      {{ form.phuongThuc === 'QR' ? 'Tiếp tục – Quét mã QR thanh toán' : 'Xác nhận đặt sân' }}
+                    </button>
+                  </div>
+                </div>
 
-              <div class="qr-header">
-                <svg width="40" height="40" viewBox="0 0 24 24" fill="none"><path d="M9 12l2 2 4-4" stroke="#22c55e" stroke-width="2.5" stroke-linecap="round"/><circle cx="12" cy="12" r="10" stroke="#22c55e" stroke-width="2"/></svg>
-                <h3>Quét mã QR để đặt cọc</h3>
-                <p>Chuyển khoản <strong>{{ formatTien(soTienThanhToan) }} VNĐ</strong> để xác nhận booking</p>
-              </div>
-              <div class="qr-box">
-                <img :src="qrUrl" alt="QR thanh toán" class="qr-img" />
-              </div>
-              <div class="qr-info">
-                <div class="info-row"><span>Ngân hàng</span><strong>MB Bank (970422)</strong></div>
-                <div class="info-row"><span>Số TK</span><strong>0973728967</strong></div>
-                <div class="info-row"><span>Chủ TK</span><strong>NGUYEN TIEN HUNG</strong></div>
-                <div class="info-row"><span>Số tiền</span><strong class="text-green">{{ formatTien(soTienThanhToan) }} VNĐ</strong></div>
-                <div class="info-row"><span>Nội dung</span><strong>DatSan {{ maGiaoDichHienTai }}</strong></div>
-              </div>
-              <div class="dang-cho-thanh-toan">
-                <div class="spinner-nho"></div>
-                <p>Đang chờ xác nhận thanh toán tự động...</p>
-              </div>
-              <button class="btn-back-step" @click="huyChoThanhToan">← Quay lại chọn giờ khác</button>
-            </div>
+                <!-- Bước 2: QR thanh toán + Countdown -->
+                <div v-else-if="buoc === 2" class="qr-step">
+                  <div class="countdown-wrapper">
+                    <CountdownTimer
+                      v-if="expireAtTimestamp"
+                      ref="countdownRef"
+                      :expireAt="expireAtTimestamp"
+                      :allow-dismiss="false"
+                      @expired="dungKiemTraThanhToan"
+                      @redirect="handleCountdownExpired"
+                    />
+                  </div>
 
-            <!-- Bước 3: Thành công -->
-            <div v-else-if="buoc === 3" class="success-step">
-              <template v-if="thanhToanQRThanhCong">
-                <div class="success-icon">✅</div>
-                <h3>Thanh toán thành công!</h3>
-                <p>Bạn đã đặt cọc thành công cho sân <strong>{{ sanBong?.tenSan }}</strong>.</p>
-                <p class="luu-y-xac-nhan">
-                  🎉 Booking của bạn đã được <strong>xác nhận tự động</strong> ngay khi hệ thống nhận được tiền cọc.
-                  Vui lòng đến đúng khung giờ đã đặt và thanh toán 50% còn lại tại sân.
-                </p>
-              </template>
-              <template v-else>
-                <div class="success-icon">⏳</div>
-                <h3>Đã ghi nhận yêu cầu đặt sân!</h3>
-                <p>{{ ketQua?.thongBao }}</p>
-                <p class="luu-y-xac-nhan">
-                  ⚠️ Đơn của bạn đang ở trạng thái <strong>Chờ xác nhận</strong>.
-                  Nhân viên sẽ kiểm tra giao dịch chuyển khoản và xác nhận trong ít phút.
-                  Bạn sẽ nhận thông báo khi đơn được xác nhận chính thức.
-                </p>
-              </template>
-              <div class="success-actions">
-                <button class="btn-book" @click="$router.push('/lich-su-dat-san')">Theo dõi trạng thái đơn</button>
-                <button class="btn-outline" @click="$router.push('/san')">Đặt sân khác</button>
+                  <div class="qr-header">
+                    <svg width="40" height="40" viewBox="0 0 24 24" fill="none"><path d="M9 12l2 2 4-4" stroke="var(--lime-400)" stroke-width="2.5" stroke-linecap="round"/><circle cx="12" cy="12" r="10" stroke="var(--lime-400)" stroke-width="2"/></svg>
+                    <h3>Quét mã QR để đặt cọc</h3>
+                    <p>Chuyển khoản <strong>{{ formatTien(soTienThanhToan) }} VNĐ</strong> để xác nhận booking</p>
+                  </div>
+                  <div class="qr-box">
+                    <img :src="qrUrl" alt="QR thanh toán" class="qr-img" />
+                  </div>
+                  <div class="qr-info">
+                    <div class="info-row"><span>Ngân hàng</span><strong>MB Bank (970422)</strong></div>
+                    <div class="info-row"><span>Số TK</span><strong>0973728967</strong></div>
+                    <div class="info-row"><span>Chủ TK</span><strong>NGUYEN TIEN HUNG</strong></div>
+                    <div class="info-row"><span>Số tiền</span><strong class="text-lime">{{ formatTien(soTienThanhToan) }} VNĐ</strong></div>
+                    <div class="info-row"><span>Nội dung</span><strong>DatSan {{ maGiaoDichHienTai }}</strong></div>
+                  </div>
+                  <div class="dang-cho-thanh-toan">
+                    <div class="spinner-nho"></div>
+                    <p>Đang chờ xác nhận thanh toán tự động...</p>
+                  </div>
+                  <button class="btn-back-step" @click="huyChoThanhToan">← Quay lại chọn giờ khác</button>
+                </div>
+
+                <!-- Bước 3: Thành công -->
+                <div v-else-if="buoc === 3" class="success-step">
+                  <template v-if="thanhToanQRThanhCong">
+                    <div class="success-icon">✅</div>
+                    <h3>Thanh toán thành công!</h3>
+                    <p>Bạn đã đặt cọc thành công cho sân <strong>{{ sanBong?.tenSan }}</strong>.</p>
+                    <p class="luu-y-xac-nhan">
+                      🎉 Booking của bạn đã được <strong>xác nhận tự động</strong> ngay khi hệ thống nhận được tiền cọc.
+                      Vui lòng đến đúng khung giờ đã đặt và thanh toán 50% còn lại tại sân.
+                    </p>
+                  </template>
+                  <template v-else>
+                    <div class="success-icon">⏳</div>
+                    <h3>Đã ghi nhận yêu cầu đặt sân!</h3>
+                    <p>{{ ketQua?.thongBao }}</p>
+                    <p class="luu-y-xac-nhan">
+                      ⚠️ Đơn của bạn đang ở trạng thái <strong>Chờ xác nhận</strong>.
+                      Nhân viên sẽ kiểm tra giao dịch chuyển khoản và xác nhận trong ít phút.
+                      Bạn sẽ nhận thông báo khi đơn được xác nhận chính thức.
+                    </p>
+                  </template>
+                  <div class="success-actions">
+                    <button class="btn-book" @click="$router.push('/lich-su-dat-san')">Theo dõi trạng thái đơn</button>
+                    <button class="btn-outline" @click="$router.push('/san')">Đặt sân khác</button>
+                  </div>
+                </div>
+
               </div>
-            </div>
+            </Transition>
           </div>
         </div>
       </template>
@@ -221,7 +235,7 @@ import { ref, computed, onMounted, onUnmounted, watch } from 'vue'
 import { useRoute } from 'vue-router'
 import CountdownTimer from '../../components/CountdownTimer.vue'
 
-const API = 'http://localhost:8080/api'
+const API = '/api'
 const route = useRoute()
 
 // ── State Core ──
@@ -647,294 +661,190 @@ onUnmounted(() => {
 })
 </script>
 
+<style>
+@import url('https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Oswald:wght@500;600;700&family=Manrope:wght@400;500;600;700;800&family=Space+Mono:wght@400;700&display=swap');
+</style>
+
 <style scoped>
 .booking-page {
-  background: #f0f4f8;
-  min-height: calc(100vh - 76px);
-  padding: 40px 0 80px;
-}
-.page-header {
-  text-align: center;
-  margin-bottom: 36px;
+  --night-950: #050b08;
+  --night-800: #0a1f13;
+  --night-700: #123321;
+  --turf-500: #23935a;
+  --turf-700: #146239;
+  --lime-400: #b6ff3c;
+  --lime-300: #d3ff8f;
+  --amber-400: #ffb020;
+  --crimson-500: #ff4757;
+  --chalk-050: #f7fbf4;
+  --chalk-200: #e3ecdf;
+  --font-display: 'Oswald', 'Manrope', sans-serif;
+  --font-body: 'Manrope', sans-serif;
+  --font-mono: 'Space Mono', monospace;
+
   position: relative;
-}
-.btn-back {
-  position: absolute;
-  left: 0;
-  top: 0;
-  display: inline-flex;
-  align-items: center;
-  gap: 6px;
-  background: white;
-  border: 1.5px solid #e2e8f0;
-  color: #374151;
-  padding: 8px 16px;
-  border-radius: 999px;
-  font-size: 13.5px;
-  cursor: pointer;
-  transition: .2s;
-}
-.btn-back:hover { border-color: var(--green-600); color: var(--green-600); }
-.page-header h1 { font-size: 34px; font-weight: 800; color: #0d1f3c; }
-.page-header p { margin-top: 6px; color: #6b7280; }
-.booking-layout {
-  display: grid;
-  grid-template-columns: 1.1fr 0.9fr;
-  gap: 28px;
-  align-items: start;
-}
-/* ── Field Info ── */
-.field-info {
-  background: white;
-  border-radius: 20px;
+  background: var(--night-950);
+  color: var(--chalk-050);
+  font-family: var(--font-body);
+  min-height: calc(100vh - 76px);
+  padding: 48px 0 90px;
   overflow: hidden;
-  box-shadow: 0 4px 24px rgba(10,37,64,.08);
 }
+.container { max-width: 1200px; margin: 0 auto; padding: 0 24px; position: relative; z-index: 1; }
+
+/* ── Ambient ── */
+.booking-page__ambient { position: absolute; inset: 0; z-index: 0; pointer-events: none; }
+.floodlight { position: absolute; top: -14%; width: 50vh; height: 130vh; background: conic-gradient(from 90deg at 50% 0%, transparent 42%, rgba(255,244,214,.07) 50%, transparent 58%); mix-blend-mode: screen; animation: sweep 11s ease-in-out infinite alternate; }
+.floodlight--l { left: -12%; }
+.floodlight--r { right: -12%; animation-direction: alternate-reverse; }
+@keyframes sweep { 0% { transform: rotate(-9deg); } 100% { transform: rotate(9deg); } }
+.motes { position: absolute; inset: 0; }
+.mote { position: absolute; bottom: -10px; left: calc((var(--i) * 7%) + 1%); width: 3px; height: 3px; border-radius: 50%; background: var(--lime-300); opacity: 0; animation: rise 9s linear infinite; animation-delay: calc(var(--i) * -0.6s); }
+@keyframes rise { 0% { transform: translateY(0) scale(.6); opacity: 0; } 10% { opacity: .5; } 90% { opacity: .12; } 100% { transform: translateY(-100vh) scale(1.1); opacity: 0; } }
+
+/* ── Header ── */
+.page-header { text-align: center; margin-bottom: 36px; position: relative; }
+.eyebrow { display: inline-block; font-family: var(--font-mono); font-size: 12px; letter-spacing: .16em; text-transform: uppercase; color: var(--lime-300); }
+.btn-back {
+  position: absolute; left: 0; top: 0; display: inline-flex; align-items: center; gap: 6px;
+  background: rgba(247,251,244,.05); border: 1.5px solid rgba(247,251,244,.18); color: var(--chalk-200);
+  padding: 8px 16px; border-radius: 999px; font-size: 13.5px; cursor: pointer; transition: .2s;
+}
+.btn-back:hover { border-color: var(--lime-400); color: var(--lime-300); background: rgba(182,255,60,.08); }
+.page-header h1 { font-family: var(--font-display); font-size: 34px; font-weight: 600; color: var(--chalk-050); margin-top: 10px; }
+.page-header p { margin-top: 6px; color: var(--chalk-200); opacity: .7; }
+
+.booking-layout { display: grid; grid-template-columns: 1.1fr 0.9fr; gap: 28px; align-items: start; }
+
+/* ── Field Info ── */
+.field-info { background: rgba(247,251,244,.03); border: 1px solid rgba(247,251,244,.08); border-radius: 20px; overflow: hidden; }
 .field-img-wrap { position: relative; }
-.field-img-wrap img { width: 100%; height: 280px; object-fit: cover; display: block; }
-.badge-loai {
-  position: absolute; top: 14px; left: 14px;
-  padding: 4px 14px; border-radius: 999px; font-size: 12px; font-weight: 700;
-}
-.badge-blue { background: rgba(219,234,254,.95); color: #1d4ed8; }
-.badge-green { background: rgba(220,252,231,.95); color: #15803d; }
-.field-content { padding: 24px; }
-.field-content h2 { font-size: 22px; font-weight: 800; color: #0d1f3c; margin-bottom: 12px; }
-.field-detail {
-  display: flex; align-items: flex-start; gap: 8px;
-  margin-bottom: 8px; color: #4b5563; font-size: 14px;
-}
-.mo-ta { color: #6b7280; line-height: 1.6; margin-top: 4px; }
-.gia-section { margin-top: 20px; }
-.gia-section h3 { font-size: 14px; font-weight: 700; color: #0d1f3c; margin-bottom: 10px; }
-.gia-grid {
-  display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(130px, 1fr));
-  gap: 8px;
-}
+.field-img-wrap img { width: 100%; height: 260px; object-fit: cover; display: block; }
+.field-img-overlay { position: absolute; inset: 0; background: linear-gradient(to top, rgba(5,11,8,.75), transparent 55%); }
+.badge-loai { position: absolute; top: 14px; left: 14px; padding: 4px 14px; border-radius: 999px; font-size: 12px; font-weight: 700; }
+.badge-blue { background: rgba(56,189,248,.9); color: #0c2f42; }
+.badge-green { background: rgba(182,255,60,.92); color: var(--night-950); }
+.field-content { padding: 26px; }
+.field-content h2 { font-family: var(--font-display); font-size: 22px; font-weight: 600; color: var(--chalk-050); margin-bottom: 14px; }
+.field-detail { display: flex; align-items: flex-start; gap: 8px; margin-bottom: 8px; color: var(--chalk-200); opacity: .85; font-size: 14px; }
+.mo-ta { opacity: .65; line-height: 1.6; margin-top: 4px; }
+
+.gia-section { margin-top: 22px; }
+.gia-section h3 { font-size: 14px; font-weight: 700; color: var(--chalk-050); margin-bottom: 10px; font-family: var(--font-mono); text-transform: uppercase; letter-spacing: .04em; }
+.gia-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(130px, 1fr)); gap: 8px; }
 .gia-item {
-  display: flex; flex-direction: column; gap: 2px;
-  padding: 8px 10px; border-radius: 10px;
-  background: #f8fafc; border: 1px solid #e2e8f0;
+  display: flex; flex-direction: column; gap: 2px; padding: 9px 10px; border-radius: 12px;
+  background: rgba(247,251,244,.04); border: 1px solid rgba(247,251,244,.1);
   cursor: pointer; transition: .15s; position: relative;
 }
-.gia-item:hover:not(.gia-da-dat) {
-  border-color: var(--green-600);
-  transform: translateY(-1px);
-}
-.gia-sang { border-color: #bfdbfe; background: #eff6ff; }
-.gia-toi { border-color: #bbf7d0; background: #f0fdf4; }
-.gia-item.gia-dang-chon {
-  border-color: var(--green-600);
-  background: #dcfce7;
-  box-shadow: 0 0 0 2px var(--green-600);
-}
-.gia-item.gia-da-dat {
-  opacity: 0.45;
-  filter: grayscale(60%);
-  cursor: not-allowed;
-  pointer-events: none;
-}
-.gia-tag-dat {
-  position: absolute;
-  top: 4px;
-  right: 4px;
-  font-size: 10px;
-  background: #999;
-  color: white;
-  padding: 1px 5px;
-  border-radius: 4px;
-}
-.gia-gio { font-size: 11px; font-weight: 600; color: #374151; }
-.gia-tien { font-size: 13px; font-weight: 700; color: var(--green-600); }
-.hint-ngay {
-  font-size: 12px;
-  color: #888;
-  margin-top: 8px;
-}
-.policy-box {
-  margin-top: 20px; padding: 16px;
-  background: #fffbeb; border: 1px solid #fde68a;
-  border-radius: 12px;
-}
-.policy-box h4 { font-size: 13px; font-weight: 700; color: #92400e; margin-bottom: 8px; }
+.gia-item:hover:not(.gia-da-dat) { border-color: var(--lime-400); transform: translateY(-2px); }
+.gia-sang { border-color: rgba(56,189,248,.3); background: rgba(56,189,248,.06); }
+.gia-toi { border-color: rgba(182,255,60,.25); background: rgba(182,255,60,.05); }
+.gia-item.gia-dang-chon { border-color: var(--lime-400); background: rgba(182,255,60,.12); box-shadow: 0 0 0 2px rgba(182,255,60,.35); }
+.gia-item.gia-da-dat { opacity: .4; filter: grayscale(60%); cursor: not-allowed; pointer-events: none; }
+.gia-tag-dat { position: absolute; top: 4px; right: 4px; font-size: 10px; background: rgba(0,0,0,.5); color: var(--chalk-200); padding: 1px 5px; border-radius: 4px; }
+.gia-gio { font-size: 11px; font-weight: 600; color: var(--chalk-200); }
+.gia-tien { font-size: 13px; font-weight: 700; color: var(--lime-300); }
+.hint-ngay { font-size: 12px; color: var(--chalk-200); opacity: .55; margin-top: 8px; }
+
+.policy-box { margin-top: 22px; padding: 16px; background: rgba(255,176,32,.08); border: 1px solid rgba(255,176,32,.28); border-radius: 14px; }
+.policy-box h4 { font-size: 13px; font-weight: 700; color: var(--amber-400); margin-bottom: 8px; }
 .policy-box ul { padding-left: 4px; list-style: none; }
-.policy-box li { font-size: 13px; color: #78350f; margin-bottom: 4px; }
+.policy-box li { font-size: 13px; color: var(--chalk-200); opacity: .85; margin-bottom: 4px; }
+
 /* ── Booking Card ── */
-.booking-card {
-  background: white; border-radius: 20px; padding: 28px;
-  box-shadow: 0 4px 24px rgba(10,37,64,.08);
-  position: sticky; top: 90px;
-}
-.booking-card h3 { font-size: 20px; font-weight: 800; color: #0d1f3c; margin-bottom: 22px; }
+.booking-card { background: rgba(247,251,244,.03); border: 1px solid rgba(247,251,244,.08); border-radius: 20px; padding: 28px; position: sticky; top: 90px; overflow: hidden; }
+.booking-card h3 { font-family: var(--font-display); font-size: 20px; font-weight: 600; color: var(--chalk-050); margin-bottom: 22px; }
+
+.step-fade-enter-active, .step-fade-leave-active { transition: opacity .25s ease, transform .25s ease; }
+.step-fade-enter-from { opacity: 0; transform: translateX(10px); }
+.step-fade-leave-to { opacity: 0; transform: translateX(-10px); }
+
 .form-group { margin-bottom: 16px; }
-.form-group label { display: block; margin-bottom: 6px; font-size: 13.5px; font-weight: 600; color: #0d1f3c; }
-.req { color: #ef4444; }
-.form-group input,
-.form-group select {
-  width: 100%; padding: 12px 14px;
-  border: 1.5px solid #d1d5db; border-radius: 12px;
-  outline: none; font-size: 14px; font-family: inherit;
-  background: #f9fafb; transition: border-color .15s;
-  box-sizing: border-box;
+.form-group label { display: block; margin-bottom: 6px; font-size: 13.5px; font-weight: 600; color: var(--chalk-050); }
+.req { color: #ff6a56; }
+.form-group input, .form-group select {
+  width: 100%; padding: 12px 14px; border: 1.5px solid rgba(247,251,244,.16); border-radius: 12px;
+  outline: none; font-size: 14px; font-family: inherit; background: rgba(5,11,8,.4); color: var(--chalk-050);
+  transition: border-color .15s; box-sizing: border-box;
 }
-.form-group input:focus,
-.form-group select:focus { border-color: var(--green-600); background: white; }
-.khung-gio-da-chon {
-  padding: 12px 14px;
-  border: 1.5px solid var(--green-600);
-  border-radius: 12px;
-  background: #f0fdf4;
-  font-size: 14px;
-  font-weight: 600;
-  color: #0d1f3c;
-}
-.khung-gio-da-chon.chua-chon {
-  border-color: #d1d5db;
-  background: #f9fafb;
-  font-weight: 400;
-  color: #9ca3af;
-}
-.summary {
-  margin: 20px 0 0;
-  padding: 16px; background: #f0fdf4;
-  border: 1.5px solid #bbf7d0; border-radius: 14px;
-}
-.summary-row {
-  display: flex; justify-content: space-between;
-  font-size: 14px; color: #374151; margin-bottom: 8px;
-}
-.summary-row.total {
-  font-size: 17px; font-weight: 700; color: #0d1f3c;
-  border-top: 1px solid #bbf7d0; padding-top: 10px; margin-top: 4px; margin-bottom: 0;
-}
-.text-green { color: var(--green-600); }
-.loi-form {
-  color: #dc2626; font-size: 13px; background: #fef2f2;
-  border: 1px solid #fecaca; padding: 10px 14px;
-  border-radius: 10px; margin-top: 14px;
-}
+.form-group input::placeholder { color: var(--chalk-200); opacity: .4; }
+.form-group input:focus, .form-group select:focus { border-color: var(--lime-400); box-shadow: 0 0 0 3px rgba(182,255,60,.12); }
+
+.khung-gio-da-chon { padding: 12px 14px; border: 1.5px solid var(--lime-400); border-radius: 12px; background: rgba(182,255,60,.08); font-size: 14px; font-weight: 600; color: var(--chalk-050); }
+.khung-gio-da-chon.chua-chon { border-color: rgba(247,251,244,.16); background: rgba(5,11,8,.3); font-weight: 400; color: var(--chalk-200); opacity: .6; }
+
+.summary { margin: 20px 0 0; padding: 16px; background: rgba(182,255,60,.06); border: 1.5px solid rgba(182,255,60,.25); border-radius: 14px; }
+.summary-row { display: flex; justify-content: space-between; font-size: 14px; color: var(--chalk-200); margin-bottom: 8px; }
+.summary-row.total { font-size: 17px; font-weight: 700; color: var(--chalk-050); border-top: 1px solid rgba(182,255,60,.2); padding-top: 10px; margin-top: 4px; margin-bottom: 0; }
+.text-lime { color: var(--lime-300); }
+
+.loi-form { color: #ff9686; font-size: 13px; background: rgba(255,71,87,.1); border: 1px solid rgba(255,71,87,.28); padding: 10px 14px; border-radius: 10px; margin-top: 14px; }
+
 .btn-group { margin-top: 20px; display: flex; flex-direction: column; gap: 10px; }
-.select-tt {
-  width: 100%; padding: 11px 14px; border: 1.5px solid #d1d5db;
-  border-radius: 12px; font-size: 14px; font-family: inherit;
-  background: #f9fafb; outline: none; cursor: pointer;
-}
+.select-tt { width: 100%; padding: 11px 14px; border: 1.5px solid rgba(247,251,244,.16); border-radius: 12px; font-size: 14px; font-family: inherit; background: rgba(5,11,8,.4); color: var(--chalk-050); outline: none; cursor: pointer; }
 .btn-book {
-  width: 100%; padding: 15px; border: none;
-  border-radius: 14px;
-  background: linear-gradient(135deg, var(--green-500), var(--green-600));
-  color: white; font-size: 16px; font-weight: 700;
-  cursor: pointer; transition: .3s;
+  width: 100%; padding: 15px; border: none; border-radius: 14px;
+  background: linear-gradient(135deg, var(--turf-500), var(--turf-700)); color: var(--chalk-050);
+  font-size: 16px; font-weight: 700; cursor: pointer; transition: .25s;
+  box-shadow: 0 10px 26px -10px rgba(20,98,57,.7);
 }
-.btn-book:hover:not(:disabled) { transform: translateY(-2px); box-shadow: 0 8px 24px rgba(34,197,94,.35); }
-.btn-book:disabled { opacity: .6; cursor: not-allowed; }
+.btn-book:hover:not(:disabled) { transform: translateY(-2px); box-shadow: 0 16px 34px -10px rgba(182,255,60,.35); }
+.btn-book:disabled { opacity: .55; cursor: not-allowed; }
+
 /* ── QR Step ── */
 .qr-step { text-align: center; }
 .qr-header { margin-bottom: 20px; }
-.qr-header h3 { font-size: 20px; font-weight: 800; color: #0d1f3c; margin: 10px 0 6px; }
-.qr-header p { color: #6b7280; font-size: 14px; }
+.qr-header h3 { font-family: var(--font-display); font-size: 20px; font-weight: 600; color: var(--chalk-050); margin: 10px 0 6px; }
+.qr-header p { color: var(--chalk-200); opacity: .75; font-size: 14px; }
 .qr-box { display: flex; justify-content: center; margin: 16px 0; }
-.qr-img { width: 220px; height: 220px; border-radius: 16px; border: 2px solid #e2e8f0; }
-.qr-info { text-align: left; background: #f8fafc; border-radius: 12px; padding: 14px; margin-bottom: 20px; }
-.info-row { display: flex; justify-content: space-between; font-size: 13.5px; color: #374151; padding: 5px 0; border-bottom: 1px solid #e2e8f0; }
+.qr-img { width: 220px; height: 220px; border-radius: 16px; border: 3px solid var(--chalk-050); background: var(--chalk-050); padding: 6px; box-shadow: 0 0 0 3px rgba(182,255,60,.25); }
+.qr-info { text-align: left; background: rgba(247,251,244,.04); border: 1px solid rgba(247,251,244,.08); border-radius: 12px; padding: 14px; margin-bottom: 20px; }
+.info-row { display: flex; justify-content: space-between; font-size: 13.5px; color: var(--chalk-200); padding: 5px 0; border-bottom: 1px solid rgba(247,251,244,.08); }
 .info-row:last-child { border-bottom: none; }
-.btn-back-step {
-  width: 100%; margin-top: 10px; padding: 12px;
-  border: 1.5px solid #e2e8f0; background: white;
-  border-radius: 12px; font-size: 14px; color: #6b7280;
-  cursor: pointer; transition: .2s;
-}
-.btn-back-step:hover { border-color: var(--green-600); color: var(--green-600); }
+.btn-back-step { width: 100%; margin-top: 10px; padding: 12px; border: 1.5px solid rgba(247,251,244,.16); background: transparent; border-radius: 12px; font-size: 14px; color: var(--chalk-200); cursor: pointer; transition: .2s; }
+.btn-back-step:hover { border-color: var(--lime-400); color: var(--lime-300); }
+
 /* ── Success Step ── */
 .success-step { text-align: center; }
 .success-icon { font-size: 56px; margin-bottom: 12px; }
-.success-step h3 { font-size: 22px; font-weight: 800; color: #0d1f3c; margin-bottom: 8px; }
-.success-step > p { color: #374151; font-size: 14px; line-height: 1.6; margin-bottom: 20px; }
-.result-card {
-  text-align: left; background: #f0fdf4;
-  border: 1.5px solid #bbf7d0; border-radius: 14px;
-  padding: 16px; margin-bottom: 20px;
-}
-.result-row {
-  display: flex; justify-content: space-between; align-items: center;
-  font-size: 13.5px; color: #374151; padding: 6px 0;
-  border-bottom: 1px solid #dcfce7;
-}
-.result-row:last-child { border-bottom: none; }
-.badge-trang-thai {
-  background: #fef3c7; color: #92400e;
-  padding: 2px 10px; border-radius: 999px; font-size: 12px; font-weight: 700;
-}
+.success-step h3 { font-family: var(--font-display); font-size: 22px; font-weight: 600; color: var(--chalk-050); margin-bottom: 8px; }
+.success-step > p { color: var(--chalk-200); opacity: .85; font-size: 14px; line-height: 1.6; margin-bottom: 20px; }
 .success-actions { display: flex; flex-direction: column; gap: 10px; }
-.btn-outline {
-  width: 100%; padding: 13px; border: 1.5px solid var(--green-600);
-  background: white; border-radius: 14px; color: var(--green-600);
-  font-size: 14px; font-weight: 600; cursor: pointer; transition: .2s;
-}
-.btn-outline:hover { background: var(--green-50); }
+.btn-outline { width: 100%; padding: 13px; border: 1.5px solid var(--lime-400); background: transparent; border-radius: 14px; color: var(--lime-300); font-size: 14px; font-weight: 600; cursor: pointer; transition: .2s; }
+.btn-outline:hover { background: rgba(182,255,60,.08); }
+
 /* ── Loading / Error ── */
-.loading-state, .error-state {
-  text-align: center; padding: 80px 0; color: #6b7280;
-}
-.spinner {
-  width: 44px; height: 44px; border: 4px solid #e2e8f0;
-  border-top-color: var(--green-600); border-radius: 50%;
-  animation: spin .7s linear infinite; margin: 0 auto 16px;
-}
+.loading-state, .error-state { text-align: center; padding: 80px 0; color: var(--chalk-200); opacity: .8; }
+.spinner { width: 44px; height: 44px; border: 4px solid rgba(247,251,244,.12); border-top-color: var(--lime-400); border-radius: 50%; animation: spin .7s linear infinite; margin: 0 auto 16px; }
 @keyframes spin { to { transform: rotate(360deg); } }
-.error-state button {
-  margin-top: 16px; padding: 10px 24px; background: var(--green-600);
-  color: white; border: none; border-radius: 12px; cursor: pointer;
+.error-state button { margin-top: 16px; padding: 10px 24px; background: var(--turf-500); color: var(--chalk-050); border: none; border-radius: 12px; cursor: pointer; }
+
+.luu-y-xac-nhan { background: rgba(255,176,32,.08); border: 1px solid rgba(255,176,32,.28); color: var(--amber-400); font-size: 13px; padding: 12px 16px; border-radius: 10px; text-align: left; margin-bottom: 20px; }
+.dang-cho-thanh-toan { display: flex; align-items: center; justify-content: center; gap: 10px; padding: 14px; background: rgba(56,189,248,.08); border: 1px solid rgba(56,189,248,.28); border-radius: 12px; margin-bottom: 14px; color: #7dd3fc; font-size: 13.5px; }
+.spinner-nho { width: 18px; height: 18px; border: 3px solid rgba(125,211,252,.3); border-top-color: #7dd3fc; border-radius: 50%; animation: spin .7s linear infinite; }
+.countdown-wrapper { display: flex; justify-content: center; margin-bottom: 20px; pointer-events: auto; }
+@media (max-width: 640px) {
+  .countdown-wrapper { position: fixed; top: auto; bottom: 80px; right: 16px; padding: 0; }
 }
+
+.gia-grid.disabled-grid { opacity: 0.55; pointer-events: none; cursor: not-allowed; }
+
+.voucher-box { margin: 16px 0; padding: 14px; border: 1px dashed rgba(182,255,60,.35); border-radius: 12px; background: rgba(182,255,60,.05); }
+.voucher-box label { display: block; font-size: 13px; font-weight: 700; color: var(--chalk-050); margin-bottom: 7px; }
+.voucher-row { display: flex; gap: 8px; }
+.voucher-row input { flex: 1; border: 1px solid rgba(247,251,244,.16); border-radius: 8px; padding: 10px; background: rgba(5,11,8,.4); color: var(--chalk-050); }
+.voucher-row button { border: 0; border-radius: 8px; background: var(--turf-500); color: var(--chalk-050); padding: 0 14px; font-weight: 700; cursor: pointer; }
+.voucher-row button:hover:not(:disabled) { background: var(--lime-400); color: var(--night-950); }
+.voucher-row button:disabled { opacity: .6; }
+.voucher-ok { color: var(--lime-300); font-size: 13px; margin: 8px 0 0; }
+.voucher-error { color: #ff9686; font-size: 13px; margin: 8px 0 0; }
+.voucher-note { color: var(--chalk-200); opacity: .75; font-size: 12px; margin: 5px 0 0; }
+
 /* ── Responsive ── */
 @media (max-width: 900px) {
   .booking-layout { grid-template-columns: 1fr; }
   .booking-card { position: static; }
   .btn-back { position: static; display: inline-flex; margin-bottom: 16px; }
 }
-.luu-y-xac-nhan {
-  background: #fffbeb;
-  border: 1px solid #fde68a;
-  color: #92400e;
-  font-size: 13px;
-  padding: 12px 16px;
-  border-radius: 10px;
-  text-align: left;
-  margin-bottom: 20px;
-}
-.dang-cho-thanh-toan {
-  display: flex; align-items: center; justify-content: center; gap: 10px;
-  padding: 14px; background: #eff6ff; border: 1px solid #bfdbfe;
-  border-radius: 12px; margin-bottom: 14px; color: #1d4ed8; font-size: 13.5px;
-}
-.spinner-nho {
-  width: 18px; height: 18px; border: 3px solid #bfdbfe;
-  border-top-color: #1d4ed8; border-radius: 50%;
-  animation: spin .7s linear infinite;
-}
-.countdown-wrapper {
-  display: flex;
-  justify-content: center;
-  margin-bottom: 20px;
-  pointer-events: auto;
-}
-@media (max-width: 640px) {
-  .countdown-wrapper {
-    position: fixed;
-    top: auto;
-    bottom: 80px;
-    right: 16px;
-    padding: 0;
-  }
-}
-
-/* Khóa bảng chọn khung giờ khi đang thanh toán QR */
-.gia-grid.disabled-grid {
-  opacity: 0.6;
-  pointer-events: none; /* Chặn hoàn toàn mọi thao tác rê chuột / click */
-  cursor: not-allowed;
-}
-
-.voucher-box{margin:16px 0;padding:14px;border:1px dashed #bbf7d0;border-radius:12px;background:#f0fdf4}.voucher-box label{display:block;font-size:13px;font-weight:700;color:#334155;margin-bottom:7px}.voucher-row{display:flex;gap:8px}.voucher-row input{flex:1;border:1px solid #cbd5e1;border-radius:8px;padding:10px}.voucher-row button{border:0;border-radius:8px;background:#16a34a;color:#fff;padding:0 14px;font-weight:700;cursor:pointer}.voucher-row button:disabled{opacity:.6}.voucher-ok{color:#15803d;font-size:13px;margin:8px 0 0}.voucher-error{color:#dc2626;font-size:13px;margin:8px 0 0}.voucher-note{color:#475569;font-size:12px;margin:5px 0 0}
 </style>

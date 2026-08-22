@@ -123,7 +123,7 @@
 <script setup>
 import { ref, computed, onMounted } from 'vue'
 
-const API_BASE_URL = 'http://localhost:8080/api/danh-gia-he-thong'
+const API_BASE_URL = '/api/danh-gia-he-thong'
 const reviews = ref([])
 const loading = ref(false)
 const submitting = ref(false)
@@ -190,7 +190,7 @@ async function submitReply() {
   const token = localStorage.getItem('token') || localStorage.getItem('accessToken')
   
   try {
-    const res = await fetch(`http://localhost:8080/api/danh-gia-he-thong/${selectedReview.value.id}/phan-hoi`, {
+    const res = await fetch(`/api/danh-gia-he-thong/${selectedReview.value.id}/phan-hoi`, {
       method: 'POST', // Khớp với @PostMapping ở Controller của bạn
       headers: {
         'Content-Type': 'application/json',

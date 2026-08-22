@@ -282,7 +282,7 @@
 import axios from "axios"
 import { ref, computed, onMounted, watch } from "vue"
 
-const API_BASE = "http://localhost:8080/api/admin/khach-hang"
+const API_BASE = "/api/admin/khach-hang"
 
 const keyword = ref('')
 const filterTrangThai = ref("")

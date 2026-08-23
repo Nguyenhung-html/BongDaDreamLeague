@@ -687,7 +687,7 @@ function getInitials(name) {
 let revealObserver = null
 
 onMounted(() => {
-  slideInterval = setInterval(() => {
+slideInterval = setInterval(() => {
     slideHienTai.value = (slideHienTai.value + 1) % slides.length
   }, 4500)
 

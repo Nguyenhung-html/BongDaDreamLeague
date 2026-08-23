@@ -3,17 +3,13 @@
     <aside class="dashboard__sidebar" :class="{ open: sidebarOpen }">
       <div class="dashboard__sidebar-top">
         <router-link to="/" class="dashboard__sidebar-brand">
-          <svg width="28" height="28" viewBox="0 0 36 36" fill="none">
-            <circle cx="18" cy="18" r="17" stroke="var(--green-600)" stroke-width="2" />
-            <path d="M10 13L18 8L26 13L24 22L18 26L12 22L10 13Z" fill="var(--navy-900)" />
-            <circle cx="18" cy="17" r="4.2" fill="var(--white)" />
-          </svg>
+          <img :src="logo" alt="DreamLeague" class="dashboard__sidebar-brand-logo" />
           <span><strong>Dream</strong>League</span>
         </router-link>
       </div>
       <nav class="dashboard__sidebar-nav">
         <div class="sidebar-section">
-          <p class="sidebar-section__label">QUẢN LÝ</p>
+          <p class="sidebar-section__label">Quản lý</p>
           <router-link to="/staff" class="sidebar-nav-item" :class="{ active: isActive('/staff') }">
             <span class="sidebar-nav-item__icon">
               <svg width="18" height="18" viewBox="0 0 24 24" fill="none">
@@ -63,9 +59,8 @@
           </router-link>
         </div>
 
-        <!-- THÊM BẮT ĐẦU: SECTION TRUYỀN THÔNG & BÀI VIẾT -->
         <div class="sidebar-section">
-          <p class="sidebar-section__label">TRUYỀN THÔNG</p>
+          <p class="sidebar-section__label">Truyền thông</p>
           <router-link to="/staff/bai-viet" class="sidebar-nav-item" :class="{ active: isActive('/staff/bai-viet') }">
             <span class="sidebar-nav-item__icon">
               <svg width="18" height="18" viewBox="0 0 24 24" fill="none">
@@ -84,10 +79,9 @@
             <span class="sidebar-nav-item__label">Phản hồi Trang chủ</span>
           </router-link>
         </div>
-        <!-- THÊM KẾT THÚC -->
 
         <div class="sidebar-section">
-          <p class="sidebar-section__label">KHÁCH HÀNG</p>
+          <p class="sidebar-section__label">Khách hàng</p>
           <router-link to="/staff/quan-ly-support" class="sidebar-nav-item" :class="{ active: isActive('/staff/quan-ly-support') }">
             <span class="sidebar-nav-item__icon">
               <svg width="18" height="18" viewBox="0 0 24 24" fill="none">
@@ -97,8 +91,9 @@
             <span class="sidebar-nav-item__label">Hỗ trợ khách hàng</span>
           </router-link>
         </div>
+
         <div class="sidebar-section">
-          <p class="sidebar-section__label">TÀI KHOẢN</p>
+          <p class="sidebar-section__label">Tài khoản</p>
           <router-link to="/staff/ca-nhan" class="sidebar-nav-item" :class="{ active: isActive('/staff/ca-nhan') }">
             <span class="sidebar-nav-item__icon">
               <svg width="18" height="18" viewBox="0 0 24 24" fill="none">
@@ -120,21 +115,28 @@
       </nav>
       <div class="dashboard__sidebar-bottom">
         <div class="sidebar-user">
-           <div class="sidebar-user__avatar">
+          <div class="sidebar-user__avatar">
             <img v-if="avatarUrl" :src="avatarUrl" alt="Avatar" class="avatar-img-round" />
             <span v-else>{{ userInitial }}</span>
           </div>
           <div class="sidebar-user__info">
-             <p class="sidebar-user__name">{{ tenNguoiDung }}</p>
+            <p class="sidebar-user__name">{{ tenNguoiDung }}</p>
             <p class="sidebar-user__role">Staff</p>
           </div>
         </div>
       </div>
     </aside>
+
+    <div v-if="isMobile && sidebarOpen" class="dashboard__overlay" @click="sidebarOpen = false"></div>
+
     <div class="dashboard__content">
       <header class="dashboard__header">
         <div class="dashboard__header-left">
-          <button class="dashboard__btn-logout" @click="sidebarOpen = !sidebarOpen" v-if="isMobile" style="border: none; background: none; padding: 0;">
+          <button
+            class="dashboard__btn-menu"
+            @click="sidebarOpen = !sidebarOpen"
+            v-if="isMobile"
+          >
             <svg width="20" height="20" viewBox="0 0 24 24" fill="none">
               <line x1="3" y1="6" x2="21" y2="6" stroke="currentColor" stroke-width="2" stroke-linecap="round" />
               <line x1="3" y1="12" x2="21" y2="12" stroke="currentColor" stroke-width="2" stroke-linecap="round" />
@@ -166,6 +168,7 @@
 <script setup>
 import { ref, computed, onMounted, onUnmounted } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
+import logo from '../Image/logo DreamLeague.webp'
 
 const router = useRouter()
 const route = useRoute()
@@ -228,19 +231,20 @@ function logout() {
   localStorage.removeItem('isLoggedIn')
   localStorage.removeItem('userRole')
   localStorage.removeItem('vaiTro')
-  
+
   dangNhap.value = false
   tenNguoiDung.value = ''
   vaiTro.value = ''
   avatarUrl.value = ''
   showDropdown.value = false
-  
+
   alert('Đã đăng xuất tài khoản thành công!')
   router.push('/dang-nhap')
 }
 
 function handleResize() {
   isMobile.value = window.innerWidth < 768
+  if (!isMobile.value) sidebarOpen.value = false
 }
 
 onMounted(() => {
@@ -261,3 +265,141 @@ onUnmounted(() => {
   window.removeEventListener('user-profile-updated', handleProfileUpdated)
 })
 </script>
+
+<style>
+@import url('https://fonts.googleapis.com/css2?family=Oswald:wght@500;600;700&family=Manrope:wght@400;500;600;700;800&family=Space+Mono:wght@400;700&display=swap');
+</style>
+
+<style scoped>
+.dashboard {
+  --night-950: #050b08;
+  --night-800: #0a1f13;
+  --night-700: #123321;
+  --turf-500: #23935a;
+  --turf-700: #146239;
+  --lime-400: #b6ff3c;
+  --lime-300: #d3ff8f;
+  --amber-400: #ffb020;
+  --crimson-500: #ff4757;
+  --chalk-050: #f7fbf4;
+  --chalk-200: #e3ecdf;
+  --font-display: 'Oswald', 'Manrope', sans-serif;
+  --font-body: 'Manrope', sans-serif;
+  --font-mono: 'Space Mono', monospace;
+
+  display: flex;
+  min-height: 100vh;
+  background: var(--night-950);
+  color: var(--chalk-050);
+  font-family: var(--font-body);
+}
+
+/* ===== SIDEBAR ===== */
+.dashboard__sidebar {
+  width: 264px;
+  flex-shrink: 0;
+  background: var(--night-800);
+  border-right: 1px solid rgba(247, 251, 244, 0.08);
+  display: flex;
+  flex-direction: column;
+  height: 100vh;
+  position: sticky;
+  top: 0;
+  overflow-y: auto;
+  z-index: 40;
+}
+
+.dashboard__sidebar-top { padding: 22px 20px 18px; border-bottom: 1px solid rgba(247, 251, 244, 0.08); }
+
+.dashboard__sidebar-brand {
+  display: flex; align-items: center; gap: 10px; text-decoration: none;
+  color: var(--chalk-050); font-family: var(--font-display); font-size: 17px; font-weight: 600;
+}
+.dashboard__sidebar-brand-logo { width: 34px; height: 34px; object-fit: contain; border-radius: 8px; flex-shrink: 0; }
+.dashboard__sidebar-brand strong { color: var(--lime-300); font-weight: 700; }
+
+.dashboard__sidebar-nav { flex: 1; padding: 18px 14px; display: flex; flex-direction: column; gap: 22px; }
+
+.sidebar-section { display: flex; flex-direction: column; gap: 3px; }
+.sidebar-section__label {
+  font-family: var(--font-mono); font-size: 10.5px; font-weight: 700; letter-spacing: .1em;
+  text-transform: uppercase; color: var(--lime-300); opacity: .6; margin: 0 10px 6px;
+}
+
+.sidebar-nav-item {
+  display: flex; align-items: center; gap: 11px; padding: 10px 12px; border-radius: 10px;
+  color: var(--chalk-200); text-decoration: none; font-size: 13.5px; font-weight: 500;
+  transition: background .15s ease, color .15s ease;
+  position: relative;
+}
+.sidebar-nav-item__icon { display: flex; align-items: center; justify-content: center; flex-shrink: 0; opacity: .85; }
+.sidebar-nav-item__label { white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+
+.sidebar-nav-item:hover { background: rgba(247, 251, 244, 0.05); color: var(--chalk-050); }
+
+.sidebar-nav-item.active {
+  background: rgba(35, 147, 90, 0.16);
+  color: var(--lime-300);
+  font-weight: 700;
+}
+.sidebar-nav-item.active .sidebar-nav-item__icon { opacity: 1; }
+.sidebar-nav-item.active::before {
+  content: ''; position: absolute; left: -14px; top: 50%; transform: translateY(-50%);
+  width: 3px; height: 60%; background: var(--lime-400); border-radius: 0 3px 3px 0;
+}
+
+/* ===== SIDEBAR BOTTOM / USER ===== */
+.dashboard__sidebar-bottom { padding: 14px; border-top: 1px solid rgba(247, 251, 244, 0.08); }
+.sidebar-user { display: flex; align-items: center; gap: 10px; padding: 8px; border-radius: 10px; background: rgba(247, 251, 244, 0.03); }
+.sidebar-user__avatar {
+  width: 38px; height: 38px; border-radius: 50%; flex-shrink: 0; overflow: hidden;
+  background: linear-gradient(135deg, var(--turf-500), var(--turf-700));
+  color: var(--chalk-050); display: flex; align-items: center; justify-content: center;
+  font-weight: 700; font-size: 14px; font-family: var(--font-display);
+}
+.avatar-img-round { width: 100%; height: 100%; object-fit: cover; }
+.sidebar-user__info { min-width: 0; }
+.sidebar-user__name { margin: 0; font-size: 13px; font-weight: 700; color: var(--chalk-050); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.sidebar-user__role { margin: 1px 0 0; font-size: 11px; color: var(--lime-300); opacity: .75; }
+
+/* ===== MOBILE OVERLAY ===== */
+.dashboard__overlay { position: fixed; inset: 0; background: rgba(0, 0, 0, .55); z-index: 35; }
+
+/* ===== CONTENT ===== */
+.dashboard__content { flex: 1; display: flex; flex-direction: column; min-width: 0; }
+
+.dashboard__header {
+  height: 62px; flex-shrink: 0; padding: 0 26px; background: var(--night-800);
+  border-bottom: 1px solid rgba(247, 251, 244, 0.08);
+  display: flex; align-items: center; justify-content: space-between;
+  position: sticky; top: 0; z-index: 30;
+}
+.dashboard__header-left { display: flex; align-items: center; gap: 14px; }
+.dashboard__btn-menu { border: none; background: none; color: var(--chalk-050); padding: 4px; cursor: pointer; display: flex; }
+
+.dashboard__breadcrumb { font-size: 12.5px; color: var(--chalk-200); opacity: .7; }
+.dashboard__breadcrumb a { color: var(--lime-300); text-decoration: none; opacity: 1; }
+.dashboard__breadcrumb a:hover { text-decoration: underline; }
+
+.dashboard__header-right { display: flex; align-items: center; gap: 12px; }
+.dashboard__btn-logout {
+  display: flex; align-items: center; gap: 7px;
+  background: rgba(255, 71, 87, 0.1); color: #ff9686; border: 1px solid rgba(255, 71, 87, 0.3);
+  padding: 8px 14px; border-radius: 8px; font-size: 12.5px; font-weight: 600; cursor: pointer;
+  transition: background .15s ease; font-family: var(--font-body);
+}
+.dashboard__btn-logout:hover { background: rgba(255, 71, 87, 0.2); }
+
+.dashboard__main { flex: 1; padding: 22px; overflow-y: auto; }
+
+/* ===== RESPONSIVE ===== */
+@media (max-width: 768px) {
+  .dashboard__sidebar {
+    position: fixed; left: 0; top: 0; height: 100vh;
+    transform: translateX(-100%); transition: transform .22s ease; z-index: 45;
+  }
+  .dashboard__sidebar.open { transform: translateX(0); }
+  .dashboard__main { padding: 14px; }
+  .dashboard__header { padding: 0 16px; }
+}
+</style>

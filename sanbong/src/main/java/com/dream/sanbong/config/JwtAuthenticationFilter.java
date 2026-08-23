@@ -31,12 +31,18 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
         // 2. Kiểm tra xem Header có đúng chuẩn "Bearer <Token>" hay không
         if (authHeader != null && authHeader.startsWith("Bearer ")) {
             String token = authHeader.substring(7); // Cắt bỏ chữ "Bearer " để lấy lõi Token
+boolean valid = jwtUtils.validateToken(token);
 
             // 3. Xác thực token xem có hợp lệ không
             if (jwtUtils.validateToken(token)) {
-                String email = jwtUtils.getEmailFromToken(token);
-                String vaiTro = jwtUtils.getVaiTroFromToken(token);
+                System.out.println("===== JWT DEBUG =====");
+System.out.println("JWT VALID = TRUE");
 
+String email = jwtUtils.getEmailFromToken(token);
+String vaiTro = jwtUtils.getVaiTroFromToken(token);
+
+System.out.println("EMAIL = " + email);
+System.out.println("ROLE = " + vaiTro);
                 // 4. Nếu hợp lệ, tạo đối tượng xác thực để thông báo cho Spring Security cho phép đi qua
                 SimpleGrantedAuthority authority = new SimpleGrantedAuthority("ROLE_" + vaiTro);
                 UsernamePasswordAuthenticationToken authentication = 
@@ -45,6 +51,7 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
                 // Lưu thông tin đăng nhập vào hệ thống chạy ngầm của luồng request này
                 SecurityContextHolder.getContext().setAuthentication(authentication);
             }
+            
         }
 
         // Cho phép request tiếp tục đi tới Controller

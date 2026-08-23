@@ -30,27 +30,42 @@ public class DanhGiaHeThongController {
     }
 
     @PostMapping
-    public ResponseEntity<?> createDanhGia(
-            @RequestBody DanhGiaHeThongRequest request, 
-            Authentication authentication) {
-        
-        // 1. Kiểm tra xem người dùng đã đăng nhập chưa (Token có hợp lệ không)
-        if (authentication == null || !authentication.isAuthenticated()) {
-            return ResponseEntity.status(HttpStatus.UNAUTHORIZED)
-                                .body("Vui lòng đăng nhập để gửi đánh giá.");
-        }
+public ResponseEntity<?> createDanhGia(
+        @RequestBody DanhGiaHeThongRequest request,
+        Authentication authentication) {
 
-        // 2. Validate nội dung bình luận
-        if (request.getQuote() == null || request.getQuote().trim().isEmpty()) {
-            return ResponseEntity.badRequest().body("Nội dung đánh giá không được để trống");
-        }
+    System.out.println("========== CREATE DANH GIA ==========");
+    System.out.println("AUTHENTICATION = " + authentication);
 
-        // 3. Lấy email/username của tài khoản từ Authentication Object
-        String userEmail = authentication.getName();
-
-        // 4. Gọi Service tạo đánh giá (Truyền thêm userEmail vào Service)
-        return ResponseEntity.ok(danhGiaHTService.createDanhGia(request, userEmail));
+    if (authentication != null) {
+        System.out.println("AUTH NAME = " + authentication.getName());
+        System.out.println("AUTHORITIES = " + authentication.getAuthorities());
+        System.out.println("AUTHENTICATED = " + authentication.isAuthenticated());
     }
+
+    System.out.println("=====================================");
+
+    if (authentication == null || !authentication.isAuthenticated()) {
+        return ResponseEntity.status(HttpStatus.UNAUTHORIZED)
+                .body("Vui lòng đăng nhập để gửi đánh giá.");
+    }
+
+    if (request.getQuote() == null || request.getQuote().trim().isEmpty()) {
+        return ResponseEntity.badRequest()
+                .body("Nội dung đánh giá không được để trống");
+    }
+
+    String userEmail = authentication.getName();
+
+    System.out.println("Gọi Service với email = " + userEmail);
+
+    DanhGiaHeThong result =
+            danhGiaHTService.createDanhGia(request, userEmail);
+
+    System.out.println("CREATE DANH GIA THÀNH CÔNG");
+
+    return ResponseEntity.ok(result);
+}
 
     // --- STAFF & ADMIN ENDPOINTS ---
     

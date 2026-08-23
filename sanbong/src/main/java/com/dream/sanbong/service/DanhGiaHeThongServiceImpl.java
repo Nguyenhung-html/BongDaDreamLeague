@@ -59,7 +59,11 @@ public class DanhGiaHeThongServiceImpl implements DanhGiaHeThongService {
                 dg.setNguoiDungId(user.getId());
                 String fullName = user.getHoTen();
                 dg.setTenNguoiDung(fullName != null && !fullName.isBlank() ? fullName : user.getEmail());
-                String roleName = formatRoleName(user.getVaiTro() != null ? user.getVaiTro().name() : null);
+                String roleName = user.getVaiTro() != null
+        ? user.getVaiTro().name()
+        : "USER";
+
+dg.setVaiTro(roleName);
                 dg.setVaiTro(roleName);
             } else {
                 setFallbackUserInfo(dg, request);

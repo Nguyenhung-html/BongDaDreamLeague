@@ -1,127 +1,116 @@
 <template>
-  <div class="admin-review-layout">
-    <!-- CỘT TRÁI: DANH SÁCH SÂN BÓNG -->
-    <div class="sidebar-san-bong">
-      <h3 class="sidebar-title">⚽ Danh sách sân bóng</h3>
-      <div class="search-san-wrapper">
-        <input 
-          v-model="searchSan" 
-          type="text" 
-          placeholder="Tìm nhanh sân bóng..." 
-          class="sidebar-search"
-        />
+  <div class="qldg">
+
+    <!-- ===== CỘT TRÁI: DANH SÁCH SÂN BÓNG ===== -->
+    <div class="sidebar-san">
+      <div class="sidebar-header">
+        <span class="eyebrow">⚽ Chọn sân</span>
+        <h3 class="sidebar-title">Danh sách sân bóng</h3>
       </div>
-      <ul class="san-bong-list">
-        <li 
-          v-for="san in filteredSanBong" 
+
+      <div class="search-wrap">
+        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="7"/><path d="M21 21l-4.3-4.3"/></svg>
+        <input v-model="searchSan" type="text" placeholder="Tìm nhanh sân bóng..." class="search-input"/>
+      </div>
+
+      <ul class="san-list">
+        <li
+          v-for="san in filteredSanBong"
           :key="san.id"
-          :class="{ 'active-san': selectedSanBongId === san.id }"
+          :class="{ 'san-item--active': selectedSanBongId === san.id }"
+          class="san-item"
           @click="selectSanBong(san.id)"
         >
-          <span class="san-icon">⚽</span>
-          <span class="san-name">{{ san.tenSan }}</span>
+          <span class="san-item__icon">⚽</span>
+          <span class="san-item__name">{{ san.tenSan }}</span>
         </li>
-        <li v-if="filteredSanBong.length === 0" class="no-san">
-          Không tìm thấy sân bóng nào.
-        </li>
+        <li v-if="filteredSanBong.length === 0" class="san-empty">Không tìm thấy sân bóng nào.</li>
       </ul>
     </div>
 
-    <!-- CỘT PHẢI: QUẢN LÝ ĐÁNH GIÁ CỦA SÂN ĐƯỢC CHỌN -->
-    <div class="main-content-review">
-      <h1 class="dashboard__page-title">Quản lý đánh giá</h1>
-      <p class="dashboard__page-desc">
-        Chọn sân bóng ở cột bên trái để quản lý, ẩn/hiện hoặc xóa các đánh giá vi phạm tiêu chuẩn của khách hàng.
-      </p>
+    <!-- ===== CỘT PHẢI: QUẢN LÝ ĐÁNH GIÁ ===== -->
+    <div class="main-review">
+      <div class="page-header">
+        <span class="eyebrow">⚽ Bảng điều khiển · Admin</span>
+        <h1 class="page-title">Quản lý đánh giá</h1>
+        <p class="page-desc">Chọn sân bóng ở cột bên trái để quản lý, ẩn/hiện hoặc xóa các đánh giá vi phạm tiêu chuẩn của khách hàng.</p>
+      </div>
 
-      <!-- GIAO DIỆN KHI CHƯA CHỌN SÂN BÓNG -->
+      <!-- CHƯA CHỌN SÂN -->
       <div v-if="!selectedSanBongId" class="empty-state">
-        <div class="empty-icon">👈</div>
+        <div class="empty-state__icon">👈</div>
         <h3>Vui lòng chọn một sân bóng ở danh sách bên trái</h3>
         <p>Hệ thống sẽ hiển thị toàn bộ lịch sử đánh giá chi tiết của sân đó tại đây.</p>
       </div>
 
-      <!-- GIAO DIỆN KHI ĐÃ CHỌN SÂN BÓNG -->
+      <!-- ĐÃ CHỌN SÂN -->
       <div v-else>
-        <!-- Toolbar bộ lọc đánh giá -->
-        <div class="toolbar">
-          <input
-            v-model="keyword"
-            class="search-box"
-            placeholder="Tìm tên khách, nội dung..."
-          />
-          <select
-            v-model="ratingFilter"
-            class="filter-box"
-          >
-            <option value="">Tất cả số sao</option>
-            <option value="5">5 Sao ⭐⭐⭐⭐⭐</option>
-            <option value="4">4 Sao ⭐⭐⭐⭐</option>
-            <option value="3">3 Sao ⭐⭐⭐</option>
-            <option value="2">2 Sao ⭐⭐</option>
-            <option value="1">1 Sao ⭐</option>
-          </select>
+        <!-- BỘ LỌC -->
+        <div class="filter-card">
+          <div class="filter-top">
+            <div class="search-wrap search-wrap--wide">
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="7"/><path d="M21 21l-4.3-4.3"/></svg>
+              <input v-model="keyword" class="search-input" placeholder="Tìm tên khách, nội dung..."/>
+            </div>
+
+            <div class="pill-select">
+              <label>Số sao</label>
+              <select v-model="ratingFilter" class="form-control">
+                <option value="">Tất cả số sao</option>
+                <option value="5">5 Sao ⭐⭐⭐⭐⭐</option>
+                <option value="4">4 Sao ⭐⭐⭐⭐</option>
+                <option value="3">3 Sao ⭐⭐⭐</option>
+                <option value="2">2 Sao ⭐⭐</option>
+                <option value="1">1 Sao ⭐</option>
+              </select>
+            </div>
+          </div>
         </div>
 
-        <!-- TABLE LỊCH SỬ ĐÁNH GIÁ -->
-        <div class="table-wrapper">
-          <table>
-            <thead>
-              <tr>
-                <th>ID</th>
-                <th>Khách hàng</th>
-                <th>Điểm số</th>
-                <th>Nội dung bình luận</th>
-                <th>Ngày đánh giá</th>
-                <th>Trạng thái hiển thị</th>
-                <th width="180">Thao tác</th>
-              </tr>
-            </thead>
-            <tbody>
-              <tr v-for="item in filteredReviews" :key="item.id">
-                <td>{{ item.id }}</td>
-                <td><b>{{ item.customer }}</b></td>
-                <td>
-                  <span class="stars-text">
-                    {{ item.rating }} ⭐
-                  </span>
-                </td>
-                <td>
-                  <div class="comment-text">
-                    {{ item.comment }}
-                  </div>
-                </td>
-                <td>{{ item.date }}</td>
-                <td>
-                  <span class="badge success" v-if="item.visible">
-                    Đang hiển thị
-                  </span>
-                  <span class="badge cancel" v-else>
-                    Đã ẩn
-                  </span>
-                </td>
-                <td>
-                  <button
-                    :class="item.visible ? 'btn-cancel' : 'btn-confirm'"
-                    @click="toggleVisibility(item)"
-                  >
-                    {{ item.visible ? 'Ẩn đi' : 'Hiện lại' }}
-                  </button>
-                  <button
-                    class="btn-delete"
-                    @click="deleteReview(item)"
-                  >
-                    Xóa
-                  </button>
-                </td>
-              </tr>
-              <tr v-if="filteredReviews.length === 0">
-                <td colspan="7" style="text-align: center; color: #64748b;">
-                  Sân bóng này hiện không có đánh giá nào phù hợp.
-                </td>
-              </tr>
-            </tbody>
-          </table>
+        <!-- BẢNG ĐÁNH GIÁ -->
+        <div class="table-card">
+          <div class="table-responsive">
+            <table class="data-table">
+              <thead>
+                <tr>
+                  <th width="60">ID</th>
+                  <th>Khách hàng</th>
+                  <th>Điểm số</th>
+                  <th>Nội dung bình luận</th>
+                  <th>Ngày đánh giá</th>
+                  <th>Trạng thái hiển thị</th>
+                  <th style="text-align:center" width="200">Thao tác</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr v-for="item in filteredReviews" :key="item.id">
+                  <td><span class="sub">#{{ item.id }}</span></td>
+                  <td><span class="bold">{{ item.customer }}</span></td>
+                  <td><span class="stars-text">{{ item.rating }} ⭐</span></td>
+                  <td><div class="comment-text">{{ item.comment }}</div></td>
+                  <td><span class="sub">{{ item.date }}</span></td>
+                  <td>
+                    <span class="badge badge-success" v-if="item.visible"><span class="badge__dot"></span>Đang hiển thị</span>
+                    <span class="badge badge-cancel" v-else><span class="badge__dot"></span>Đã ẩn</span>
+                  </td>
+                  <td>
+                    <div class="actions">
+                      <button :class="['btn-act', item.visible ? 'hide' : 'show']" @click="toggleVisibility(item)">
+                        {{ item.visible ? '🙈 Ẩn đi' : '👁️ Hiện lại' }}
+                      </button>
+                      <button class="btn-act remove" @click="deleteReview(item)">🗑️ Xóa</button>
+                    </div>
+                  </td>
+                </tr>
+                <tr v-if="filteredReviews.length === 0">
+                  <td colspan="7" class="no-data">
+                    <div class="no-data__icon">💬</div>
+                    Sân bóng này hiện không có đánh giá nào phù hợp.
+                  </td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
         </div>
       </div>
     </div>
@@ -161,10 +150,7 @@ const getAuthConfig = () => {
 // ==========================================
 const taiDanhSachSanBong = async () => {
   try {
-    // Gọi API lấy toàn bộ sân bóng của bạn (đổi endpoint /san-bong nếu khác nhé)
     const response = await axios.get(`${API_BASE_URL}/san-bong`, getAuthConfig())
-    
-    // Map dữ liệu từ database trả về (ví dụ: id, tenSanBong) vào mảng dsSanBong
     dsSanBong.value = response.data.map(san => ({
       id: san.id,
       tenSan: san.tenSanBong || san.tenSan
@@ -182,26 +168,37 @@ const selectSanBong = async (sanId) => {
   selectedSanBongId.value = sanId
   keyword.value = ""
   ratingFilter.value = ""
-  
+
   try {
-    // 🌟 TRUYỀN getAuthConfig() VÀO THAM SỐ THỨ 2 CỦA AXIOS.GET
     const response = await axios.get(
-      `${API_BASE_URL}/danh-gia/admin/san/${sanId}`, 
+      `${API_BASE_URL}/danh-gia/admin/san/${sanId}`,
       getAuthConfig()
     )
-    
+
+    // SỬA: lấy đúng trạng thái ẩn/hiện thật từ backend thay vì luôn gán cứng true.
+    // Chấp nhận nhiều tên field khác nhau tuỳ backend trả về (hienThi / hienThiCongKhai / an),
+    // và chỉ mặc định true khi API hoàn toàn không trả field nào liên quan.
     reviews.value = response.data.map(item => ({
       id: item.id,
       customer: item.tenNguoiDung || "Ẩn danh",
       rating: item.soSao,
       comment: item.noiDung || "(Không có nội dung)",
       date: formatNgay(item.ngayDanhGia),
-      visible: true 
+      visible: resolveVisible(item)
     }))
   } catch (error) {
     console.error("Lỗi lấy danh sách đánh giá của sân:", error)
     alert("Không thể tải đánh giá của sân bóng này!")
   }
+}
+
+// Đọc đúng trạng thái hiển thị thật từ dữ liệu backend trả về
+function resolveVisible(item) {
+  if (typeof item.hienThi === 'boolean') return item.hienThi
+  if (typeof item.hienThiCongKhai === 'boolean') return item.hienThiCongKhai
+  if (typeof item.an === 'boolean') return !item.an
+  if (typeof item.daAn === 'boolean') return !item.daAn
+  return true
 }
 
 // ==========================================
@@ -212,10 +209,7 @@ async function toggleVisibility(item) {
   if (!confirm(`Bạn có chắc chắn muốn ${hanhDong} đánh giá này không?`)) return
 
   try {
-    // Gọi API ẩn/hiển thị lại đánh giá (PUT /api/danh-gia/admin/an/{id})
     await axios.put(`${API_BASE_URL}/danh-gia/admin/an/${item.id}`, {}, getAuthConfig())
-    
-    // Cập nhật trạng thái trực tiếp trên UI
     item.visible = !item.visible
     alert(`Đã ${hanhDong} đánh giá thành công!`)
   } catch (error) {
@@ -230,10 +224,7 @@ async function toggleVisibility(item) {
 async function deleteReview(item) {
   if (confirm(`Bạn chắc chắn muốn XÓA VĨNH VIỄN đánh giá của khách ${item.customer}?`)) {
     try {
-      // Gọi API xóa vĩnh viễn (DELETE /api/danh-gia/admin/xoa/${id})
       await axios.delete(`${API_BASE_URL}/danh-gia/admin/xoa/${item.id}`, getAuthConfig())
-      
-      // Xóa item trên giao diện table ngay lập tức
       reviews.value = reviews.value.filter(x => x.id !== item.id)
       alert("Đã xóa đánh giá thành công!")
     } catch (error) {
@@ -246,15 +237,12 @@ async function deleteReview(item) {
 // ==========================================
 // BỘ LỌC SEARCH VÀ FORMAT DỮ LIỆU GIAO DIỆN
 // ==========================================
-
-// Tìm kiếm nhanh tên sân bóng ở cột bên trái
 const filteredSanBong = computed(() => {
-  return dsSanBong.value.filter(san => 
+  return dsSanBong.value.filter(san =>
     san.tenSan.toLowerCase().includes(searchSan.value.toLowerCase())
   )
 })
 
-// Bộ lọc tìm kiếm từ khóa và số sao trên danh sách đánh giá của sân đang chọn
 const filteredReviews = computed(() => {
   return reviews.value.filter(item => {
     const search = item.customer.toLowerCase().includes(keyword.value.toLowerCase()) ||
@@ -264,250 +252,172 @@ const filteredReviews = computed(() => {
   })
 })
 
-// Định dạng ngày tháng
 const formatNgay = (dateString) => {
   if (!dateString) return ""
   const date = new Date(dateString)
-  return date.toLocaleDateString("vi-VN", {
-    day: "2-digit",
-    month: "2-digit",
-    year: "numeric"
-  })
+  return date.toLocaleDateString("vi-VN", { day: "2-digit", month: "2-digit", year: "numeric" })
 }
 
-// Khi vừa load trang Admin lên, tự động lấy danh sách sân bóng đổ vào sidebar trái
 onMounted(() => {
   taiDanhSachSanBong()
 })
 </script>
 
 <style scoped>
-/* Bố cục chia đôi: Trái 300px làm menu sân bóng, Phải làm nội dung chính */
-.admin-review-layout {
+/* ============================================================
+   TOKENS — đồng bộ với trang chủ & các trang quản lý khác
+   ============================================================ */
+.qldg {
+  --night-950: #050b08;
+  --night-800: #0a1f13;
+  --night-700: #123321;
+  --turf-500: #23935a;
+  --turf-700: #146239;
+  --lime-400: #b6ff3c;
+  --lime-300: #d3ff8f;
+  --amber-400: #ffb020;
+  --crimson-500: #ff4757;
+  --info-400: #6fa8ff;
+  --chalk-050: #f7fbf4;
+  --chalk-200: #e3ecdf;
+  --font-display: 'Oswald', 'Manrope', sans-serif;
+  --font-body: 'Manrope', sans-serif;
+  --font-mono: 'Space Mono', monospace;
+
   display: flex;
-  gap: 25px;
+  gap: 22px;
   min-height: 80vh;
-  font-family: system-ui, -apple-system, sans-serif;
-}
-
-/* Giao diện cột bên trái chứa danh sách sân bóng */
-.sidebar-san-bong {
-  width: 300px;
-  background: #ffffff;
-  border-radius: 12px;
-  border: 1px solid #e2e8f0;
-  padding: 20px;
-  display: flex;
-  flex-direction: column;
-  box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05);
-}
-
-.sidebar-title {
-  font-size: 18px;
-  font-weight: 600;
-  margin-top: 0;
-  margin-bottom: 15px;
-  color: #1e293b;
-}
-
-.search-san-wrapper {
-  margin-bottom: 15px;
-}
-
-.sidebar-search {
   width: 100%;
-  padding: 8px 12px;
-  border: 1px solid #cbd5e1;
-  border-radius: 6px;
+  background: var(--night-950);
+  color: var(--chalk-050);
+  font-family: var(--font-body);
+  padding: 32px clamp(16px, 3vw, 40px) 60px;
   box-sizing: border-box;
 }
 
-.san-bong-list {
-  list-style: none;
-  padding: 0;
-  margin: 0;
-  overflow-y: auto;
-  flex-grow: 1;
-}
+.eyebrow { display: inline-block; font-family: var(--font-mono); font-size: 11.5px; letter-spacing: .14em; text-transform: uppercase; color: var(--lime-300); }
 
-.san-bong-list li {
-  padding: 12px;
-  border-radius: 8px;
-  cursor: pointer;
-  margin-bottom: 8px;
-  display: flex;
-  align-items: center;
-  gap: 10px;
-  transition: all 0.2s;
-  color: #475569;
+/* ============================================================
+   SIDEBAR SÂN BÓNG
+   ============================================================ */
+.sidebar-san {
+  width: 280px; flex-shrink: 0; background: rgba(247,251,244,.03); border: 1px solid rgba(247,251,244,.1);
+  border-radius: 18px; padding: 20px; display: flex; flex-direction: column; height: fit-content;
+  position: sticky; top: 20px;
 }
+.sidebar-header { margin-bottom: 14px; }
+.sidebar-title { font-family: var(--font-display); font-size: 17px; font-weight: 600; margin: 6px 0 0; color: var(--chalk-050); }
 
-.san-bong-list li:hover {
-  background: #f1f5f9;
-  color: #0f172a;
+.search-wrap {
+  display: flex; align-items: center; gap: 8px; background: rgba(5,11,8,.4);
+  border: 1px solid rgba(247,251,244,.15); border-radius: 10px; padding: 0 12px; margin-bottom: 14px;
 }
+.search-wrap svg { color: var(--chalk-200); opacity: .6; flex-shrink: 0; }
+.search-input { flex: 1; border: none; background: transparent; outline: none; padding: 10px 0; font-size: 13.5px; color: var(--chalk-050); font-family: var(--font-body); width: 100%; }
+.search-input::placeholder { color: var(--chalk-200); opacity: .45; }
 
-.san-bong-list li.active-san {
-  background: #eff6ff;
-  color: #2563eb;
-  font-weight: 600;
-  border-left: 4px solid #2563eb;
+.san-list { list-style: none; padding: 0; margin: 0; overflow-y: auto; max-height: 60vh; display: flex; flex-direction: column; gap: 6px; }
+.san-item {
+  padding: 11px 12px; border-radius: 10px; cursor: pointer; display: flex; align-items: center; gap: 10px;
+  transition: all .15s; color: var(--chalk-200); border: 1px solid transparent;
 }
-
-.san-icon {
-  font-size: 16px;
+.san-item:hover { background: rgba(182,255,60,.06); color: var(--chalk-050); }
+.san-item--active {
+  background: linear-gradient(135deg, var(--turf-500), var(--turf-700)); color: var(--chalk-050); font-weight: 700;
+  border-color: var(--turf-500); box-shadow: 0 8px 18px -8px rgba(182,255,60,.35);
 }
+.san-item__icon { font-size: 15px; }
+.san-item__name { font-size: 13.5px; }
+.san-empty { text-align: center; color: var(--chalk-200); opacity: .55; padding: 20px 0; font-size: 13px; }
 
-.no-san {
-  text-align: center;
-  color: #94a3b8;
-  padding: 20px 0;
-  font-size: 14px;
-}
+/* ============================================================
+   MAIN CONTENT
+   ============================================================ */
+.main-review { flex: 1; min-width: 0; }
+.page-header { margin-bottom: 22px; }
+.page-title { font-family: var(--font-display); font-weight: 600; font-size: clamp(24px, 2.6vw, 30px); margin: 8px 0 4px; color: var(--chalk-050); }
+.page-desc { font-size: 13.5px; color: var(--chalk-200); opacity: .72; margin: 0; max-width: 640px; }
 
-/* Giao diện vùng nội dung chính bên phải */
-.main-content-review {
-  flex-grow: 1;
-  background: transparent;
-}
-
-.dashboard__page-title {
-  font-size: 28px;
-  font-weight: 700;
-  margin-top: 0;
-  margin-bottom: 6px;
-}
-
-.dashboard__page-desc {
-  color: #64748b;
-  margin-bottom: 25px;
-}
-
-/* Trạng thái trống khi chưa bấm chọn gì */
+/* EMPTY STATE */
 .empty-state {
-  text-align: center;
-  padding: 60px 20px;
-  background: #f8fafc;
-  border: 2px dashed #cbd5e1;
-  border-radius: 12px;
-  color: #64748b;
-  margin-top: 20px;
+  text-align: center; padding: 60px 24px; background: rgba(247,251,244,.03);
+  border: 2px dashed rgba(247,251,244,.15); border-radius: 18px; color: var(--chalk-200);
 }
+.empty-state h3 { color: var(--chalk-050); font-family: var(--font-display); font-weight: 600; font-size: 17px; margin: 0 0 6px; }
+.empty-state p { opacity: .7; font-size: 13.5px; margin: 0; }
+.empty-state__icon { font-size: 36px; margin-bottom: 12px; animation: bounce 2s infinite; }
+@keyframes bounce { 0%, 100% { transform: translateX(0); } 50% { transform: translateX(-6px); } }
 
-.empty-icon {
-  font-size: 40px;
-  margin-bottom: 10px;
-  animation: bounce 2s infinite;
+/* ============================================================
+   FILTER CARD
+   ============================================================ */
+.filter-card {
+  background: rgba(247,251,244,.03); border: 1px solid rgba(247,251,244,.1); border-radius: 18px;
+  padding: 18px 20px; margin-bottom: 22px; backdrop-filter: blur(6px);
 }
+.filter-top { display: flex; flex-wrap: wrap; gap: 12px; align-items: flex-end; }
+.search-wrap--wide { flex: 1.6; min-width: 220px; margin-bottom: 0; }
 
-@keyframes bounce {
-  0%, 100% { transform: translateX(0); }
-  50% { transform: translateX(-5px); }
+.pill-select { display: flex; flex-direction: column; gap: 5px; min-width: 200px; }
+.pill-select label { font-family: var(--font-mono); font-size: 10.5px; text-transform: uppercase; letter-spacing: .06em; color: var(--lime-300); padding-left: 2px; }
+
+.form-control {
+  padding: 10px 13px; border: 1px solid rgba(247,251,244,.15); border-radius: 10px; font-size: 13.5px;
+  outline: none; background: rgba(5,11,8,.4); color: var(--chalk-050); font-family: var(--font-body);
+  transition: border-color .15s; width: 100%; box-sizing: border-box;
 }
+.form-control:focus { border-color: var(--lime-400); box-shadow: 0 0 0 3px rgba(182,255,60,.12); }
+select.form-control { cursor: pointer; }
+select.form-control option { background: var(--night-800); color: var(--chalk-050); }
 
-.toolbar {
-  display: flex;
-  gap: 12px;
-  margin-bottom: 20px;
-  flex-wrap: wrap;
+/* ============================================================
+   TABLE
+   ============================================================ */
+.table-card { background: rgba(247,251,244,.03); border: 1px solid rgba(247,251,244,.1); border-radius: 18px; overflow: hidden; }
+.table-responsive { overflow-x: auto; }
+.data-table { width: 100%; border-collapse: collapse; font-size: 13.5px; }
+.data-table th {
+  background: rgba(247,251,244,.04); color: var(--lime-300); font-family: var(--font-mono); font-weight: 600;
+  font-size: 11px; text-transform: uppercase; letter-spacing: .05em; padding: 14px 16px; text-align: left;
+  border-bottom: 1px solid rgba(247,251,244,.1);
 }
+.data-table td { padding: 13px 16px; border-bottom: 1px solid rgba(247,251,244,.06); vertical-align: middle; }
+.data-table tbody tr:hover { background: rgba(182,255,60,.04); }
+.bold { font-weight: 600; color: var(--chalk-050); }
+.sub { font-size: 12.5px; color: var(--chalk-200); opacity: .7; }
+.stars-text { color: var(--amber-400); font-weight: 700; white-space: nowrap; }
+.comment-text { color: var(--chalk-200); opacity: .85; line-height: 1.55; max-width: 380px; word-wrap: break-word; font-size: 13px; }
 
-.search-box,
-.filter-box {
-  padding: 10px 14px;
-  border: 1px solid #ddd;
-  border-radius: 8px;
-  min-width: 240px;
-  box-sizing: border-box;
+.badge { display: inline-flex; align-items: center; gap: 6px; padding: 5px 12px; border-radius: 20px; font-size: 11.5px; font-weight: 700; }
+.badge__dot { width: 6px; height: 6px; border-radius: 50%; flex-shrink: 0; }
+.badge-success { background: rgba(182,255,60,.15); color: var(--lime-300); }
+.badge-success .badge__dot { background: var(--lime-400); }
+.badge-cancel { background: rgba(255,71,87,.14); color: #ff9686; }
+.badge-cancel .badge__dot { background: var(--crimson-500); }
+
+.actions { display: flex; gap: 6px; justify-content: center; flex-wrap: wrap; }
+.btn-act { padding: 6px 11px; border-radius: 7px; border: none; font-size: 11.5px; font-weight: 700; cursor: pointer; transition: .15s; white-space: nowrap; }
+.btn-act.hide { background: rgba(255,176,32,.15); color: var(--amber-400); }
+.btn-act.hide:hover { background: rgba(255,176,32,.26); }
+.btn-act.show { background: rgba(182,255,60,.12); color: var(--lime-300); }
+.btn-act.show:hover { background: rgba(182,255,60,.2); }
+.btn-act.remove { background: rgba(255,71,87,.14); color: #ff9686; }
+.btn-act.remove:hover { background: rgba(255,71,87,.24); }
+
+.no-data { text-align: center; padding: 50px 20px; color: var(--chalk-200); opacity: .6; }
+.no-data__icon { font-size: 26px; margin-bottom: 8px; }
+
+/* ============================================================
+   RESPONSIVE
+   ============================================================ */
+@media (max-width: 992px) {
+  .qldg { flex-direction: column; }
+  .sidebar-san { width: 100%; position: static; }
+  .san-list { max-height: 240px; }
 }
-
-.table-wrapper {
-  background: #fff;
-  border-radius: 12px;
-  overflow: hidden;
-  box-shadow: 0 2px 10px rgba(0,0,0,.08);
-}
-
-table {
-  width: 100%;
-  border-collapse: collapse;
-}
-
-th, td {
-  padding: 15px;
-  border-bottom: 1px solid #eee;
-  text-align: left;
-}
-
-th {
-  background: #f8fafc;
-}
-
-.stars-text {
-  color: #f59e0b;
-  font-weight: 600;
-  white-space: nowrap;
-}
-
-.comment-text {
-  color: #334155;
-  line-height: 1.5;
-  max-width: 400px;
-  word-wrap: break-word;
-}
-
-.badge {
-  color: #fff;
-  padding: 5px 12px;
-  border-radius: 20px;
-  font-size: 13px;
-  display: inline-block;
-}
-
-.success { background: #16a34a; }
-.cancel { background: #dc2626; }
-
-button {
-  cursor: pointer;
-  font-weight: 500;
-}
-
-.btn-confirm {
-  background: #16a34a;
-  color: #fff;
-  border: none;
-  padding: 6px 12px;
-  border-radius: 6px;
-  margin-right: 6px;
-}
-
-.btn-cancel {
-  background: #f59e0b;
-  color: #fff;
-  border: none;
-  padding: 6px 12px;
-  border-radius: 6px;
-  margin-right: 6px;
-}
-
-.btn-delete {
-  background: #dc2626;
-  color: #fff;
-  border: none;
-  padding: 6px 12px;
-  border-radius: 6px;
-}
-
-.btn-confirm:hover, .btn-cancel:hover, .btn-delete:hover {
-  opacity: 0.85;
-}
-
-@media(max-width: 992px){
-  .admin-review-layout {
-    flex-direction: column;
-  }
-  .sidebar-san-bong {
-    width: 100%;
-  }
+@media (max-width: 720px) {
+  .filter-top { flex-direction: column; align-items: stretch; }
+  .pill-select { min-width: 0; }
+  .data-table { font-size: 12.5px; }
 }
 </style>

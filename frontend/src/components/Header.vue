@@ -104,11 +104,12 @@
             v-model="tuKhoa"
             type="text"
             class="search-input"
-            placeholder="Tìm sân A1, A2, B1... hoặc loại sân"
+            placeholder="Tìm sân, đồ uống, dịch vụ, bài viết..."
             @input="onInput"
             @keyup.enter="timKiem"
             @focus="showGoiY = ketQuaGoiY.length > 0"
           />
+          <span v-if="dangTaiGoiY" class="search-loading-dot"></span>
           <button v-if="tuKhoa" class="search-clear" @click="xoaTimKiem">
             <svg width="14" height="14" viewBox="0 0 24 24" fill="none"><path d="M18 6L6 18M6 6l12 12" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"/></svg>
           </button>
@@ -122,12 +123,12 @@
                 class="search-dropdown__item"
                 @mousedown.prevent="chonGoiY(item)"
               >
-                <span class="search-dropdown__tag" :class="item.loai === 'san5' ? 'tag--xanh' : 'tag--la'">{{ item.maSan }}</span>
-                <div>
-                  <p class="search-dropdown__ten">{{ item.ten }}</p>
-                  <p class="search-dropdown__dia">Hẻm 104 Tân Sơn, Tân Sơn, HCM</p>
+                <span class="search-dropdown__tag" :class="tagClass(item)">{{ item.tagLabel }}</span>
+                <div class="search-dropdown__text">
+                  <p class="search-dropdown__ten">{{ item.tieuDe }}</p>
+                  <p class="search-dropdown__dia">{{ item.moTa }}</p>
                 </div>
-                <span class="search-dropdown__gia">{{ item.gia }}đ/giờ</span>
+                <span v-if="item.giaHienThi" class="search-dropdown__gia">{{ item.giaHienThi }}</span>
               </div>
               <div class="search-dropdown__footer" @mousedown.prevent="timKiem">
                 Xem tất cả kết quả cho "<strong>{{ tuKhoa }}</strong>" →
@@ -182,6 +183,14 @@ const router = useRouter()
 const route = useRoute()
 
 const API = '/api'
+
+// Đường dẫn trang chi tiết theo từng loại kết quả tìm kiếm.
+// CHỈNH LẠI Ở ĐÂY nếu route thực tế trong dự án khác với giả định bên dưới.
+function duongDanKetQua(loai, raw) {
+  if (loai === 'san') return `/dat-san/${raw.id}`
+  if (loai === 'sanPham') return `/san-pham`
+  return `/tin-tuc/${raw.slug || raw.id}`
+}
 
 const dangNhap = ref(false)
 const tenNguoiDung = ref('')
@@ -259,28 +268,121 @@ watch(() => route.path, () => {
   taiSoThongBaoChuaDoc()
 })
 
-const danhSachSan = [
-  { id: 1, maSan: 'A1', ten: 'Sân 5 người — A1', loai: 'san5', gia: '350.000', tuKhoa: ['a1', 'sân 5', 'san 5', 'san5'] },
-  { id: 2, maSan: 'A2', ten: 'Sân 5 người — A2', loai: 'san5', gia: '350.000', tuKhoa: ['a2', 'sân 5', 'san 5', 'san5'] },
-  { id: 3, maSan: 'A3', ten: 'Sân 5 người — A3', loai: 'san5', gia: '350.000', tuKhoa: ['a3', 'sân 5', 'san 5', 'san5'] },
-  { id: 4, maSan: 'B1', ten: 'Sân 7 người — B1', loai: 'san7', gia: '650.000', tuKhoa: ['b1', 'sân 7', 'san 7', 'san7'] },
-  { id: 5, maSan: 'B2', ten: 'Sân 7 người — B2', loai: 'san7', gia: '650.000', tuKhoa: ['b2', 'sân 7', 'san 7', 'san7'] },
-  { id: 6, maSan: 'B3', tile: 'Sân 7 người — B3', loai: 'san7', gia: '650.000', tuKhoa: ['b3', 'sân 7', 'san 7', 'san7'] },
-]
+// =========================================================
+// TÌM KIẾM TOÀN TRANG — sân bóng + sản phẩm + bài viết
+// =========================================================
 
 const tuKhoa = ref('')
 const showGoiY = ref(false)
 const searchRef = ref(null)
+const dangTaiGoiY = ref(false)
+
+// Dữ liệu thật lấy từ API, thay cho danh sách sân cứng trước đây
+const danhSachSan = ref([])
+const danhSachSanPham = ref([])
+const danhSachBaiViet = ref([])
+
+// Bỏ dấu tiếng Việt để so khớp từ khoá "khong dau" ⇄ "không dấu"
+function boDauTiengViet(str) {
+  if (!str) return ''
+  return str
+    .toString()
+    .toLowerCase()
+    .normalize('NFD')
+    .replace(/[\u0300-\u036f]/g, '')
+    .replace(/đ/g, 'd')
+}
+
+function khopTuKhoa(text, qKhongDau) {
+  return boDauTiengViet(text).includes(qKhongDau)
+}
+
+async function taiDuLieuTimKiem() {
+  dangTaiGoiY.value = true
+
+  // Mỗi nguồn dữ liệu tự bắt lỗi riêng — một API lỗi sẽ không làm mất kết quả của 2 loại còn lại
+  await Promise.allSettled([
+    (async () => {
+      const res = await fetch(`${API}/san-bong`)
+      if (!res.ok) return
+      const data = await res.json()
+      danhSachSan.value = (Array.isArray(data) ? data : []).filter(s => s.trangThai === 'HOAT_DONG')
+    })(),
+    (async () => {
+      const res = await fetch(`${API}/san-pham/tat-ca`)
+      if (!res.ok) return
+      const data = await res.json()
+      danhSachSanPham.value = (Array.isArray(data) ? data : []).filter(sp => sp.conBan)
+    })(),
+    (async () => {
+      const res = await fetch(`${API}/posts?status=published`)
+      if (!res.ok) return
+      const data = await res.json()
+      danhSachBaiViet.value = Array.isArray(data) ? data : []
+    })()
+  ])
+
+  dangTaiGoiY.value = false
+}
+
+// Giá thấp nhất trong bảng giá của một sân, dùng để hiển thị gợi ý
+function giaThapNhatCuaSan(san) {
+  const dsGia = san.danhSachGia || []
+  const gia = dsGia.map(g => Number(g.giaTien) || 0).filter(v => v > 0)
+  if (gia.length === 0) return ''
+  return `Từ ${Math.min(...gia).toLocaleString('vi-VN')}đ/giờ`
+}
 
 const ketQuaGoiY = computed(() => {
-  const q = tuKhoa.value.trim().toLowerCase()
-  if (!q) return []
-  return danhSachSan.filter(san =>
-    san.maSan.toLowerCase().includes(q) ||
-    san.ten.toLowerCase().includes(q) ||
-    san.tuKhoa.some(k => k.includes(q))
-  )
+  const qGoc = tuKhoa.value.trim()
+  if (!qGoc) return []
+  const q = boDauTiengViet(qGoc)
+
+  const ketQuaSan = danhSachSan.value
+    .filter(s => khopTuKhoa(s.tenSan, q) || khopTuKhoa(s.diaChi, q) || khopTuKhoa(`san ${s.loaiSan}`, q))
+    .map(s => ({
+      id: `san-${s.id}`,
+      loai: 'san',
+      loaiSan: s.loaiSan,
+      tagLabel: `Sân ${s.loaiSan}`,
+      tieuDe: s.tenSan,
+      moTa: s.diaChi || 'Sân bóng',
+      giaHienThi: giaThapNhatCuaSan(s),
+      route: duongDanKetQua('san', s)
+    }))
+
+  const ketQuaSanPham = danhSachSanPham.value
+    .filter(sp => khopTuKhoa(sp.tenSanPham, q) || khopTuKhoa(sp.loai === 'DO_UONG' ? 'do uong' : 'dich vu', q))
+    .map(sp => ({
+      id: `sp-${sp.id}`,
+      loai: 'sanPham',
+      tagLabel: sp.loai === 'DO_UONG' ? 'Đồ uống' : 'Dịch vụ',
+      tieuDe: sp.tenSanPham,
+      moTa: sp.loai === 'DO_UONG' ? 'Đồ uống tại sân' : 'Dịch vụ tại sân',
+      giaHienThi: sp.gia ? `${Number(sp.gia).toLocaleString('vi-VN')}đ` : '',
+      route: duongDanKetQua('sanPham', sp)
+    }))
+
+  const ketQuaBaiViet = danhSachBaiViet.value
+    .filter(bv => khopTuKhoa(bv.title, q) || khopTuKhoa(bv.summary, q))
+    .map(bv => ({
+      id: `bv-${bv.id}`,
+      loai: 'baiViet',
+      tagLabel: 'Tin tức',
+      tieuDe: bv.title,
+      moTa: bv.summary || 'Bài viết',
+      giaHienThi: '',
+      route: duongDanKetQua('baiViet', bv)
+    }))
+
+  return [...ketQuaSan, ...ketQuaSanPham, ...ketQuaBaiViet].slice(0, 8)
 })
+
+function tagClass(item) {
+  if (item.loai === 'san') return item.loaiSan === 5 ? 'tag--xanh' : 'tag--la'
+  if (item.loai === 'sanPham') return 'tag--sp'
+  return 'tag--tin'
+}
 
 function onInput() { showGoiY.value = ketQuaGoiY.value.length > 0 }
 
@@ -295,7 +397,7 @@ function timKiem() {
 function chonGoiY(item) {
   showGoiY.value = false
   tuKhoa.value = ''
-  router.push(`/dat-san/${item.id}`)
+  router.push(item.route)
 }
 
 function xoaTimKiem() { tuKhoa.value = ''; showGoiY.value = false }
@@ -336,6 +438,7 @@ onMounted(() => {
   kiemTraDangNhap()
   taiSoThongBaoChuaDoc()
   batDauPollingThongBao()
+  taiDuLieuTimKiem()
 })
 
 onUnmounted(() => {
@@ -459,6 +562,11 @@ onUnmounted(() => {
 .search-icon-left { flex-shrink: 0; margin-right: 6px; }
 .search-input { flex: 1; border: none; background: transparent; outline: none; font-size: 14px; font-family: inherit; color: var(--chalk-050); }
 .search-input::placeholder { color: var(--chalk-200); opacity: .5; }
+.search-loading-dot {
+  width: 6px; height: 6px; border-radius: 50%; background: var(--lime-400);
+  margin-right: 6px; flex-shrink: 0; animation: dot-pulse 1s ease-in-out infinite;
+}
+@keyframes dot-pulse { 0%, 100% { opacity: .3; transform: scale(.8); } 50% { opacity: 1; transform: scale(1.1); } }
 .search-clear { background: none; border: none; cursor: pointer; color: var(--chalk-200); opacity: .6; display: flex; align-items: center; padding: 4px; transition: opacity .15s; }
 .search-clear:hover { opacity: 1; }
 .search-submit { padding: 0 16px; height: 32px; border-radius: 999px; background: var(--turf-500); border: none; color: var(--chalk-050); font-size: 13px; font-weight: 700; font-family: inherit; cursor: pointer; flex-shrink: 0; transition: background .15s; margin-left: 4px; }
@@ -469,15 +577,22 @@ onUnmounted(() => {
   background: var(--night-800); border-radius: 14px;
   box-shadow: 0 16px 40px rgba(0,0,0,.45);
   border: 1px solid rgba(182,255,60,.18); overflow: hidden; z-index: 200;
+  max-height: 420px; overflow-y: auto;
 }
 .search-dropdown__item { display: flex; align-items: center; gap: 12px; padding: 12px 16px; cursor: pointer; transition: background .12s; }
 .search-dropdown__item:hover { background: rgba(182,255,60,.07); }
-.search-dropdown__tag { width: 36px; height: 36px; border-radius: 10px; display: flex; align-items: center; justify-content: center; font-size: 12px; font-weight: 800; flex-shrink: 0; }
+.search-dropdown__text { min-width: 0; flex: 1; }
+.search-dropdown__tag {
+  padding: 4px 10px; border-radius: 8px; font-size: 10.5px; font-weight: 800;
+  flex-shrink: 0; white-space: nowrap; text-transform: uppercase; letter-spacing: .02em;
+}
 .tag--xanh { background: rgba(56,189,248,.15); color: #7dd3fc; }
 .tag--la { background: rgba(182,255,60,.12); color: var(--lime-300); }
-.search-dropdown__ten { font-size: 14px; font-weight: 600; color: var(--chalk-050); }
-.search-dropdown__dia { font-size: 12px; color: var(--chalk-200); opacity: .6; margin-top: 2px; }
-.search-dropdown__gia { margin-left: auto; font-size: 13px; font-weight: 700; color: var(--lime-300); white-space: nowrap; }
+.tag--sp { background: rgba(255,176,32,.15); color: var(--amber-400); }
+.tag--tin { background: rgba(167,139,250,.16); color: #a78bfa; }
+.search-dropdown__ten { font-size: 14px; font-weight: 600; color: var(--chalk-050); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.search-dropdown__dia { font-size: 12px; color: var(--chalk-200); opacity: .6; margin-top: 2px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.search-dropdown__gia { margin-left: auto; font-size: 13px; font-weight: 700; color: var(--lime-300); white-space: nowrap; flex-shrink: 0; }
 .search-dropdown__footer { padding: 10px 16px; font-size: 13px; color: var(--lime-300); border-top: 1px solid rgba(247,251,244,.08); cursor: pointer; transition: background .12s; }
 .search-dropdown__footer:hover { background: rgba(182,255,60,.07); }
 

@@ -43,14 +43,10 @@ import QuanLyKhachHang from '../views/Admin/QuanLyKhachHang.vue'
 import QuanLyThongBao from '../views/Admin/QuanLyThongBao.vue'
 import QuanLyDanhGia from '../views/Admin/QuanLyDanhGia.vue'
 import ThongKeDoanhThu from '../views/Admin/ThongKeDoanhThu.vue'
-import QuanLyDatSanAdmin from '../views/Admin/QuanLyDatSan.vue'
-import QuanLyThanhToanAdmin from '../views/Admin/QuanLyThanhToan.vue'
-import XemHoaDonAdmin from '../views/Admin/XemHoaDon.vue'
 import ThongTinCaNhanAdmin from '../views/Admin/ThongTinCaNhan.vue'
 import QuanLyDanhGiaHeThong from '../views/Admin/QuanLyDanhGiaHeThong.vue'
 import QuanLyBaiVietAdmin from '../views/Admin/QuanLyBaiViet.vue'
 import QuanLyVoucher from '../views/Admin/QuanLyVoucher.vue'
-import QuanLySupportAdmin from '../views/Admin/QuanLySupport.vue'
 
 // =====================================================
 // ROUTES
@@ -320,45 +316,6 @@ const routes = [
       roles: ['Admin']
     }
   },
-
-  // Quản lý đặt sân
-  {
-    path: '/admin/dat-san',
-    name: 'QuanLyDatSanAdmin',
-    component: QuanLyDatSanAdmin,
-    meta: {
-      layout: 'admin',
-      requiresAuth: true,
-      roles: ['Admin']
-    }
-  },
-
-  // Quản lý thanh toán
-  {
-    path: '/admin/thanh-toan',
-    name: 'QuanLyThanhToanAdmin',
-    component: QuanLyThanhToanAdmin,
-    meta: {
-      layout: 'admin',
-      requiresAuth: true,
-      roles: ['Admin']
-    }
-  },
-
-  // ===================================================
-  // XEM HÓA ĐƠN ADMIN
-  // ===================================================
-  {
-    path: '/admin/hoa-don',
-    name: 'XemHoaDonAdmin',
-    component: XemHoaDonAdmin,
-    meta: {
-      layout: 'admin',
-      requiresAuth: true,
-      roles: ['Admin']
-    }
-  },
-
   // Thống kê doanh thu
   {
     path: '/admin/doanh-thu',
@@ -453,17 +410,6 @@ const routes = [
       layout: 'admin',
       requiresAuth: true,
       roles: ['Admin']
-    }
-  },
-
-  {
-    path: '/admin/quan-ly-support',
-    name: 'QuanLySupportAdmin',
-    component: QuanLySupportAdmin,
-    meta: { 
-      layout: 'admin',
-      requiresAuth: true,
-      roles: ['Admin'] // Chỉ cho phép Nhân viên và Admin truy cập
     }
   }
 ]
